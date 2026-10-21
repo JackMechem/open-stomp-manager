@@ -40,9 +40,11 @@ live editing, preset management, settings, looper/drum/tuner, and eventually NAM
 - [x] Documentation + tooling
 - [ ] Fill open questions that matter for v1 ([docs/09](docs/09-open-questions.md) #4–#6): one more short capture
       session, or confirm directly with `amidi` on Linux
-- [ ] `stomp-proto` crate (pure encode/decode + tests against `captures/logs`)
+- [x] `stomp-proto` crate (pure encode/decode + tests against `captures/logs`)
+- [x] GUI live monitor (`stomp-manager`, egui): auto-connect, read-only sync, active preset, chain,
+      params, tuner/looper/drum, coalescing activity log, capture replay
 - [ ] `stompctl` CLI (info, monitor, preset get/set/backup)
-- [ ] GUI editor (egui)
+- [ ] GUI editor: send CC/PC edits, preset save/rename, settings page
 - [ ] IR upload (needs the transform: capture a short cab IR)
 - [ ] NAM upload (needs `imagelib` conversion reversed)
 

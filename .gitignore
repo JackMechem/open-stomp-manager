@@ -24,3 +24,8 @@ captures/files/
 # app screenshots (large; vendor UI)
 captures/screens/
 captures/CURRENT
+
+# Rust / Nix build outputs
+target/
+result
+result-*

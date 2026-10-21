@@ -1,0 +1,97 @@
+{
+  description = "Stomp Manager RE: open editor for the SORAN Dual Stomp (Rust + egui)";
+
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+  };
+
+  outputs =
+    { self, nixpkgs, flake-utils }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+        lib = pkgs.lib;
+        inherit (pkgs.stdenv.hostPlatform) isLinux;
+
+        # Libraries winit/glow dlopen at runtime on Linux (X11 or Wayland, OpenGL).
+        runtimeLibs = lib.optionals isLinux (
+          with pkgs;
+          [
+            libGL
+            libxkbcommon
+            wayland
+            libx11
+            libxcursor
+            libxi
+            libxrandr
+            vulkan-loader
+          ]
+        );
+
+        buildInputs = lib.optionals isLinux [ pkgs.alsa-lib ] ++ runtimeLibs;
+        nativeBuildInputs = [ pkgs.pkg-config ] ++ lib.optionals isLinux [ pkgs.makeWrapper ];
+
+        stomp-manager = pkgs.rustPlatform.buildRustPackage {
+          pname = "stomp-manager";
+          version = (lib.importTOML ./Cargo.toml).workspace.package.version;
+          src = lib.cleanSourceWith {
+            src = ./.;
+            filter =
+              path: type:
+              let
+                rel = lib.removePrefix (toString ./. + "/") (toString path);
+              in
+              rel == "Cargo.toml"
+              || rel == "Cargo.lock"
+              || rel == "crates"
+              || lib.hasPrefix "crates/" rel
+              || rel == "captures"
+              || rel == "captures/logs"
+              || lib.hasPrefix "captures/logs/" rel;
+          };
+          cargoLock.lockFile = ./Cargo.lock;
+          cargoBuildFlags = [ "-p" "stomp-manager" ];
+          inherit buildInputs nativeBuildInputs;
+
+          postInstall = lib.optionalString isLinux ''
+            wrapProgram $out/bin/stomp-manager \
+              --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath runtimeLibs}
+            install -Dm644 ${./packaging/stomp-manager.desktop} $out/share/applications/stomp-manager.desktop
+          '';
+
+          meta = {
+            description = "Open editor / live monitor for the SORAN Dual Stomp guitar pedal";
+            license = with lib.licenses; [ mit asl20 ];
+            mainProgram = "stomp-manager";
+            platforms = lib.platforms.linux ++ lib.platforms.darwin;
+          };
+        };
+      in
+      {
+        packages.default = stomp-manager;
+        packages.stomp-manager = stomp-manager;
+
+        apps.default = flake-utils.lib.mkApp { drv = stomp-manager; };
+
+        devShells.default = pkgs.mkShell {
+          inherit buildInputs;
+          nativeBuildInputs =
+            nativeBuildInputs
+            ++ (with pkgs; [
+              cargo
+              rustc
+              rustfmt
+              clippy
+              rust-analyzer
+            ])
+            ++ lib.optionals isLinux [ pkgs.alsa-utils ]; # amidi / aseqdump for poking the pedal
+          RUST_SRC_PATH = "${pkgs.rustPlatform.rustLibSrc}";
+          LD_LIBRARY_PATH = lib.makeLibraryPath runtimeLibs;
+        };
+
+        formatter = pkgs.nixfmt-rfc-style;
+      }
+    );
+}

@@ -37,7 +37,7 @@ needed to write an open editor for **Linux**; the reference implementation will 
 | System settings (input trim, global EQ, wireless, loopback) | ✅ (some bytes unknown) |
 | User AMP (NAM) / user IR upload transport | ✅ chunk protocol decoded |
 | NAM → device-format conversion, IR pre-processing | ❌ open (app-side DSP, see [docs/05](docs/05-uploads-nam-ir.md)) |
-| Rust Linux app | 🚧 next ([guide](docs/06-rust-linux-guide.md)) |
+| Rust app (`crates/`) | 🚧 live monitor works: active preset, chain, looper/drum/tuner, activity log. Editing next |
 
 ## Documentation
 
@@ -61,10 +61,34 @@ amidi -p hw:2,0,0 -S 'F0 00 21 7A 00 F7' -d -t 1    # -> F0 00 21 7A 10 56 31 2E
 amidi -p hw:2,0,0 -d                                # turn knobs on the pedal and watch the CCs
 ```
 
+## The app (Rust, cross-platform)
+
+`crates/stomp-proto` is the pure protocol library (no I/O, tested against `captures/logs/`).
+`crates/stomp-manager` is the egui desktop app. For now it is a **live monitor**: it connects
+automatically when the pedal is plugged in, reads the presets and state (the same read-only
+SysEx requests the official app sends on connect; tick *Listen only* to send nothing at all) and
+shows the active preset, signal chain, module parameters, tuner, looper and drum machine, with a
+filterable activity log of everything you do on the pedal.
+
+```sh
+nix run                       # build and run
+nix develop                   # dev shell: cargo, rust-analyzer, ALSA, amidi
+cargo run -p stomp-manager    # inside the dev shell
+cargo run -p stomp-manager -- --replay captures/logs/01-main-session.log --speed 8   # no pedal needed
+cargo test                    # protocol tests against the captures
+cargo run -p stomp-proto --example decode -- captures/logs/01-main-session.log       # text decoder
+```
+
+Without Nix you need Rust ≥ 1.88 and, on Linux, the ALSA headers (`libasound2-dev` /
+`alsa-lib-devel`). macOS and Windows need nothing extra.
+
 ## Repository layout
 
 ```
 docs/                 the documentation above
+crates/stomp-proto/   protocol library: packing, SysEx framing, catalogue, records, state tracker
+crates/stomp-manager/ egui desktop app (monitor now, editor later)
+flake.nix             Nix package + dev shell
 tools/sniffer/        macOS CoreMIDI interposer + helpers used to capture the official app
 tools/decode/         Python decoders: live.py (human-readable live decode), analyze.py, unpack.py,
                       preset_layout.py, nam_extract.py; ocr.swift (screenshot OCR)

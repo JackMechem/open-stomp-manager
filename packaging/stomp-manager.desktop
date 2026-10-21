@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Dual Stomp Manager
+Comment=Live monitor and editor for the SORAN Dual Stomp
+Exec=stomp-manager
+Icon=audio-card
+Terminal=false
+Categories=AudioVideo;Audio;Music;
+StartupWMClass=stomp-manager
