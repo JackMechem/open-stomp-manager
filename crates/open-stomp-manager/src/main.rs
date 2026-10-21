@@ -8,7 +8,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod app;
-mod device;
 mod logbook;
 mod theme;
 mod widgets;

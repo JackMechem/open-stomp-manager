@@ -1,7 +1,7 @@
 # analysis/ — static reverse-engineering artefacts
 
 Raw outputs of the static analysis of Stomp Manager 1.0.2 (macOS). The write-up is
-[`docs/08-static-analysis.md`](../docs/08-static-analysis.md).
+[`docs/08-static-analysis.md`](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/08-static-analysis.md) (in the open-stomp-lib repository).
 
 Committed: small curated text dumps (struct schema, effect DB, command call sites, dependency list, filtered strings)
 and the scripts that produced them (`scripts/`, including `blutter_macos_macho.patch` for running blutter on a macOS

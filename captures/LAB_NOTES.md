@@ -1,5 +1,5 @@
-> Raw notebook written live during capture session `logs/01-main-session.log`. Kept for provenance. **The docs in
-> `docs/` supersede it.** Known corrections: SysEx preset index == Program Change number == app P-number − 1 (not
+> Raw notebook written live during capture session `logs/01-main-session.log`. Kept for provenance. **The
+> [docs in open-stomp-lib](https://github.com/JackMechem/open-stomp-lib/tree/main/docs) supersede it.** Known corrections: SysEx preset index == Program Change number == app P-number − 1 (not
 > "PC − 1"); the module head bit 6 means OFF (fixed below); see `docs/` for the final layouts.
 
 # Live capture findings (pedal-side, session 01-main-session.log)

@@ -10,14 +10,14 @@ live editing, preset management, settings, looper/drum/tuner, and eventually NAM
 1. **Static analysis** of Stomp Manager 1.0.2 (macOS DMG / installed app): Flutter app, Dart 3.12.2 AOT
    (obfuscated). Object pool dumped with a patched blutter; whole `__text` disassembled and annotated; native libs
    (`nux_plugins` = JUCE audio converter, `imagelib` = NeuralAmpModelerCore) and firmware container inspected.
-   → [docs/08](docs/08-static-analysis.md)
+   → [docs/08](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/08-static-analysis.md)
 2. **Live capture** by hooking CoreMIDI inside an ad-hoc re-signed copy of the app (bus-level USB sniffing isn't
    possible on Apple Silicon without disabling SIP). Every pedal and app action was performed one at a time, marked
    in the log, and the app window screenshotted and OCR'd to map model numbers to names.
-   → [docs/07](docs/07-capture-methodology.md)
+   → [docs/07](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/07-capture-methodology.md)
 3. **Decoding**: CC map per module, SysEx framing, the 8-in-7 packing, the preset layout (by correlating 99 preset
    records with CC dumps), settings, the looper state machine, and the upload transport.
-   → [docs/02](docs/02-midi-cc-reference.md)–[05](docs/05-uploads-nam-ir.md)
+   → [docs/02](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/02-midi-cc-reference.md)–[05](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/05-uploads-nam-ir.md)
 
 ## Key facts (cheat sheet)
 
@@ -38,9 +38,11 @@ live editing, preset management, settings, looper/drum/tuner, and eventually NAM
 - [x] Capture + decode all pedal-side controls
 - [x] Capture + decode app-side live control, rename/save, settings, uploads (transport)
 - [x] Documentation + tooling
-- [ ] Fill open questions that matter for v1 ([docs/09](docs/09-open-questions.md) #4–#6): #5 mostly confirmed
+- [ ] Fill open questions that matter for v1 ([docs/09](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/09-open-questions.md) #4–#6): #5 mostly confirmed
       on Linux (host `0x40`/`0x42`/`0x43`); `0x4A`, tuner control, #4 and #6 still open
-- [x] `stomp-proto` crate (pure encode/decode + tests against `captures/logs`)
+- [x] `stomp-proto` crate (pure encode/decode + tests against `captures/logs`), now the standalone
+      [`open-stomp`](https://github.com/JackMechem/open-stomp-lib) library in `~/Projects/open-stomp-lib` (protocol,
+      state, request queue, connection engine; full docs copy + library guide). The GUI depends on it by path
 - [x] GUI live monitor (`open-stomp-manager`, egui): auto-connect, read-only sync, active preset, chain,
       params, tuner/looper/drum, coalescing activity log, capture replay
 - [x] Cross-platform (Linux/macOS/Windows): CI on all three, tag-triggered release packages, icons, versioning

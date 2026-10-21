@@ -1,9 +1,0 @@
-[package]
-name = "stomp-proto"
-description = "Pure encode/decode of the SORAN Dual Stomp USB-MIDI protocol (no I/O)"
-version.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-license.workspace = true
-
-[dependencies]

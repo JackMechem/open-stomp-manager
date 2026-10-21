@@ -3,7 +3,7 @@
 use std::time::Duration;
 
 use chrono::{DateTime, Local};
-use stomp_proto::{Category, Event, Origin};
+use open_stomp::{Category, Event, Origin};
 
 const MAX_ROWS: usize = 50_000;
 /// Consecutive updates to the same control within this window merge into one row.
@@ -233,7 +233,7 @@ impl LogBook {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use stomp_proto::DeviceState;
+    use open_stomp::DeviceState;
 
     #[test]
     fn knob_sweep_merges_into_one_row() {

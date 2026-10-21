@@ -1,7 +1,7 @@
 //! Colours, fonts and the egui style.
 
 use egui::{Color32, CornerRadius, FontData, FontDefinitions, FontFamily, FontId, Stroke, TextStyle};
-use stomp_proto::{Category, Module};
+use open_stomp::{Category, Module};
 
 pub const BG: Color32 = Color32::from_rgb(0x0D, 0x0F, 0x13);
 pub const PANEL: Color32 = Color32::from_rgb(0x13, 0x16, 0x1C);

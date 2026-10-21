@@ -5,16 +5,21 @@ use std::path::PathBuf;
 
 use egui::{Align, Align2, Color32, CornerRadius, Layout, RichText, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
 use egui_phosphor::regular as icon;
-use stomp_proto::catalog::{DRUM_STYLES, ParamKind, drum_pattern_name};
-use stomp_proto::midi::host;
-use stomp_proto::records::{DEFAULT_CHAIN, Settings};
-use stomp_proto::state::preset_label;
-use stomp_proto::{Category, DeviceState, Module, Origin};
+use open_stomp::catalog::{DRUM_STYLES, ParamKind, drum_pattern_name};
+use open_stomp::midi::host;
+use open_stomp::records::{DEFAULT_CHAIN, Settings};
+use open_stomp::state::preset_label;
+use open_stomp::{Category, DeviceState, Module, Origin};
 
-use crate::device::{self, Command, Status, Update};
+use chrono::{DateTime, Local};
+use open_stomp::device::{Config, Device, Status, Update};
 use crate::logbook::{Filter, LogBook, Row, RowKind};
 use crate::theme::*;
 use crate::widgets::*;
+
+fn local(at: std::time::SystemTime) -> DateTime<Local> {
+    DateTime::from(at)
+}
 
 /// Seconds a change keeps glowing.
 const FLASH_SECS: f64 = 0.9;
@@ -31,7 +36,7 @@ struct SaveDialog {
 }
 
 pub struct StompApp {
-    dev: device::Handle,
+    dev: Device,
     state: DeviceState,
     log: LogBook,
     filter: Filter,
@@ -61,7 +66,9 @@ pub struct StompApp {
 impl StompApp {
     pub fn new(cc: &eframe::CreationContext<'_>, opts: Options) -> Self {
         install(&cc.egui_ctx);
-        let dev = device::spawn(cc.egui_ctx.clone());
+        let ctx = cc.egui_ctx.clone();
+        let config = Config { client_name: "Open Stomp Manager".into(), ..Config::default() };
+        let dev = Device::spawn_with_waker(config, move || ctx.request_repaint());
         let default_log = PathBuf::from("captures/logs/01-main-session.log");
         let replay_path = opts
             .replay
@@ -70,7 +77,7 @@ impl StompApp {
             .map(|p| p.display().to_string())
             .unwrap_or_default();
         if let Some(path) = opts.replay {
-            dev.send(Command::Replay { path, speed: opts.speed });
+            dev.replay(path, opts.speed);
         }
         StompApp {
             dev,
@@ -114,20 +121,18 @@ impl StompApp {
 
     /// Send a live CC/PC. The engine echoes it back as a host message, which updates the model.
     fn send(&self, bytes: Vec<u8>) {
-        self.dev.send(Command::Send(bytes));
+        self.dev.send(bytes);
     }
 
     fn set_head(&self, m: Module, model: u8, on: bool) {
-        if let Some(b) = host::head(m, model, on) {
-            self.send(b);
-        }
+        self.dev.set_head(m, model, on);
     }
 
     fn set_settings(&self, f: impl FnOnce(&mut Settings)) {
         if let Some(s) = &self.state.settings {
             let mut s = s.clone();
             f(&mut s);
-            self.dev.send(Command::Write(vec![host::settings_write(&s)]));
+            self.dev.write_settings(&s);
         }
     }
 
@@ -137,7 +142,7 @@ impl StompApp {
         let mut p = self.state.live.clone();
         p.index = slot;
         p.name = name.trim().to_owned();
-        self.dev.send(Command::Write(host::save_preset(cur, &p)));
+        self.dev.save_preset(cur, &p);
     }
 
     fn open_save_dialog(&mut self, slot: u8) {
@@ -150,13 +155,13 @@ impl StompApp {
     }
 
     fn poll(&mut self, now: f64) {
-        while let Ok(u) = self.dev.rx.try_recv() {
+        while let Ok(u) = self.dev.try_recv() {
             match u {
                 Update::Ports(p) => {
                     self.ports = p;
                     if self.port_choice.as_ref().is_none_or(|c| !self.ports.contains(c)) {
                         self.port_choice =
-                            self.ports.iter().find(|p| device::is_stomp_port(p)).or(self.ports.first()).cloned();
+                            self.ports.iter().find(|p| open_stomp::is_stomp_port(p)).or(self.ports.first()).cloned();
                     }
                 }
                 Update::Status(s) => self.status = s,
@@ -165,9 +170,9 @@ impl StompApp {
                     self.state = DeviceState::default();
                     self.scrolled_to = None;
                 }
-                Update::Mark { at, text } => self.log.push_note(at, RowKind::Mark, text),
+                Update::Mark { at, text } => self.log.push_note(local(at), RowKind::Mark, text),
                 Update::Info { at, text, error } => {
-                    self.log.push_note(at, if error { RowKind::Error } else { RowKind::Info }, text)
+                    self.log.push_note(local(at), if error { RowKind::Error } else { RowKind::Info }, text)
                 }
                 Update::Message { at, origin, bytes } => {
                     match origin {
@@ -178,7 +183,7 @@ impl StompApp {
                     if !ev.redundant {
                         self.note_activity(&ev, &bytes, now);
                     }
-                    self.log.push_event(at, ev);
+                    self.log.push_event(local(at), ev);
                     if let Some(r) = self.log.rows.last() {
                         self.row_flash.insert(r.id, now);
                     }
@@ -190,7 +195,7 @@ impl StompApp {
         }
     }
 
-    fn note_activity(&mut self, ev: &stomp_proto::Event, bytes: &[u8], now: f64) {
+    fn note_activity(&mut self, ev: &open_stomp::Event, bytes: &[u8], now: f64) {
         match ev.category {
             Category::Effect(m) => {
                 self.module_flash.insert(m, now);
@@ -334,7 +339,7 @@ impl StompApp {
         let replaying = matches!(self.status, Status::Replaying { .. });
         if replaying {
             if ui.button(format!("{}  Stop replay", icon::STOP)).clicked() {
-                self.dev.send(Command::StopReplay);
+                self.dev.stop_replay();
             }
         } else {
             ui.menu_button(format!("{}  Replay capture", icon::FILM_STRIP), |ui| {
@@ -346,7 +351,7 @@ impl StompApp {
                     ui.add(egui::Slider::new(&mut self.replay_speed, 0.25..=50.0).logarithmic(true).suffix("×"));
                 });
                 if ui.button(format!("{}  Start", icon::PLAY)).clicked() && !self.replay_path.is_empty() {
-                    self.dev.send(Command::Replay { path: PathBuf::from(&self.replay_path), speed: self.replay_speed });
+                    self.dev.replay(&self.replay_path, self.replay_speed);
                     ui.close();
                 }
             });
@@ -356,19 +361,19 @@ impl StompApp {
         let connected = matches!(self.status, Status::Connected { .. });
         if connected {
             if ui.button(format!("{}  Disconnect", icon::PLUGS)).clicked() {
-                self.dev.send(Command::Disconnect);
+                self.dev.disconnect();
             }
             if ui
                 .button(icon::ARROWS_CLOCKWISE)
                 .on_hover_text("Re-read presets and state from the pedal")
                 .clicked()
             {
-                self.dev.send(Command::Resync);
+                self.dev.resync();
             }
         } else if let Some(port) = self.port_choice.clone()
             && ui.button(format!("{}  Connect", icon::PLUGS_CONNECTED)).clicked()
         {
-            self.dev.send(Command::Connect(port));
+            self.dev.connect(port);
         }
 
         let label = self.port_choice.clone().unwrap_or_else(|| "No MIDI ports".into());
@@ -377,10 +382,10 @@ impl StompApp {
             .width(210.0)
             .show_ui(ui, |ui| {
                 for p in self.ports.clone() {
-                    let star = if device::is_stomp_port(&p) { format!("{}  ", icon::GUITAR) } else { String::new() };
+                    let star = if open_stomp::is_stomp_port(&p) { format!("{}  ", icon::GUITAR) } else { String::new() };
                     if ui.selectable_label(self.port_choice.as_ref() == Some(&p), format!("{star}{p}")).clicked() {
                         self.port_choice = Some(p.clone());
-                        self.dev.send(Command::Connect(p));
+                        self.dev.connect(p);
                     }
                 }
             });
@@ -395,9 +400,9 @@ impl StompApp {
             .changed()
         {
             self.listen_only = listen;
-            self.dev.send(Command::SetSync(!listen));
+            self.dev.set_sync(!listen);
             if !listen {
-                self.dev.send(Command::Resync);
+                self.dev.resync();
             }
         }
     }
@@ -960,7 +965,7 @@ impl StompApp {
             ui.set_min_height(150.0);
             let live = t.detected && t.note.is_some();
             ui.horizontal(|ui| {
-                let note = if live { stomp_proto::catalog::NOTES[t.note.unwrap() as usize] } else { "—" };
+                let note = if live { open_stomp::catalog::NOTES[t.note.unwrap() as usize] } else { "—" };
                 let col = match (live, t.cents_offset()) {
                     (true, Some(c)) => tuning_color(c),
                     (true, None) => TEXT,
@@ -1462,7 +1467,7 @@ fn row_view(ui: &mut Ui, r: &Row, h: f32, vi: usize, flash: f32, raw: bool) {
         p.text(
             pos2(rect.left() + 100.0, rect.top() + 34.0),
             Align2::LEFT_CENTER,
-            stomp_proto::midi::hex(&r.raw),
+            open_stomp::midi::hex(&r.raw),
             mono(10.5),
             TEXT_FAINT,
         );
@@ -1478,7 +1483,7 @@ fn row_view(ui: &mut Ui, r: &Row, h: f32, vi: usize, flash: f32, raw: bool) {
             }
             ui.label(RichText::new(r.at.format("%Y-%m-%d %H:%M:%S%.3f").to_string()).color(TEXT_FAINT));
             if !r.raw.is_empty() {
-                ui.label(RichText::new(stomp_proto::midi::hex(&r.raw[..r.raw.len().min(96)])).font(mono(11.0)).color(TEXT_DIM));
+                ui.label(RichText::new(open_stomp::midi::hex(&r.raw[..r.raw.len().min(96)])).font(mono(11.0)).color(TEXT_DIM));
             }
         });
     }

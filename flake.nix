@@ -4,10 +4,21 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    # the pedal library, a path dependency on a sibling checkout (../open-stomp-lib).
+    # Local checkout instead: nix run --override-input open-stomp-lib path:../open-stomp-lib
+    open-stomp-lib = {
+      url = "github:JackMechem/open-stomp-lib";
+      flake = false;
+    };
   };
 
   outputs =
-    { self, nixpkgs, flake-utils }:
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+      open-stomp-lib,
+    }:
     flake-utils.lib.eachDefaultSystem (
       system:
       let
@@ -33,24 +44,26 @@
         buildInputs = lib.optionals isLinux [ pkgs.alsa-lib ] ++ runtimeLibs;
         nativeBuildInputs = [ pkgs.pkg-config ] ++ lib.optionals isLinux [ pkgs.makeWrapper ];
 
+        appSrc = lib.cleanSourceWith {
+          src = ./.;
+          filter =
+            path: type:
+            let
+              rel = lib.removePrefix (toString ./. + "/") (toString path);
+            in
+            rel == "Cargo.toml" || rel == "Cargo.lock" || rel == "crates" || lib.hasPrefix "crates/" rel;
+        };
+
         open-stomp-manager = pkgs.rustPlatform.buildRustPackage {
           pname = "open-stomp-manager";
           version = (lib.importTOML ./Cargo.toml).workspace.package.version;
-          src = lib.cleanSourceWith {
-            src = ./.;
-            filter =
-              path: type:
-              let
-                rel = lib.removePrefix (toString ./. + "/") (toString path);
-              in
-              rel == "Cargo.toml"
-              || rel == "Cargo.lock"
-              || rel == "crates"
-              || lib.hasPrefix "crates/" rel
-              || rel == "captures"
-              || rel == "captures/logs"
-              || lib.hasPrefix "captures/logs/" rel;
-          };
+          # this repo and the library side by side, as cargo expects them
+          src = pkgs.runCommand "open-stomp-src" { } ''
+            mkdir -p $out
+            cp -r ${appSrc} $out/open-stomp-manager
+            cp -r ${open-stomp-lib} $out/open-stomp-lib
+          '';
+          sourceRoot = "open-stomp-src/open-stomp-manager";
           cargoLock.lockFile = ./Cargo.lock;
           cargoBuildFlags = [ "-p" "open-stomp-manager" ];
           inherit buildInputs nativeBuildInputs;

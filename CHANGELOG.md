@@ -7,6 +7,21 @@ to 0.2.0). The format follows
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-21
+
+### Changed
+- The protocol library and the connection engine moved to a separate repository and crate,
+  [open-stomp](https://github.com/JackMechem/open-stomp-lib) (`open_stomp`), which the app now uses.
+  It replaces `crates/stomp-proto` and the app's own `device` module, carries the full protocol
+  documentation plus a library guide, and the capture-driven tests. Building the app now needs a
+  checkout of `open-stomp-lib` next to this repository (CI, the release workflow and the Nix
+  flake fetch it; CI and releases pin open-stomp-lib v0.1.0).
+- Documentation split: the protocol and reverse-engineering docs (01–09) now live in
+  [open-stomp-lib](https://github.com/JackMechem/open-stomp-lib/tree/main/docs) and this
+  repository links there. Its own docs are about the app: a [user guide](docs/user-guide.md),
+  [building](docs/building.md) and [architecture](docs/architecture.md), and the README is
+  rewritten around the app.
+
 ## [0.3.0] - 2026-10-21
 
 ### Changed
@@ -55,7 +70,8 @@ to 0.2.0). The format follows
 - `stomp-manager`: live monitor GUI with auto-connect, read-only sync, active preset, signal
   chain, parameters, tuner/looper/drum, coalescing activity log and capture replay.
 
-[Unreleased]: https://github.com/JackMechem/open-stomp-manager/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/JackMechem/open-stomp-manager/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/JackMechem/open-stomp-manager/releases/tag/v0.1.0
