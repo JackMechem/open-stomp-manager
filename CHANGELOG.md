@@ -1,10 +1,24 @@
 # Changelog
 
-All notable changes to Dual Stomp Manager. The format follows
+All notable changes to Open Stomp Manager (named Dual Stomp Manager / `stomp-manager` up
+to 0.2.0). The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.3.0] - 2026-10-21
+
+### Changed
+- **Renamed** the project and app to **Open Stomp Manager**, to keep clear of the vendor's
+  *Stomp Manager* name. The binary and crate are now `open-stomp-manager` (was `stomp-manager`),
+  the macOS app is `Open Stomp Manager.app`, the Linux desktop entry and icon are
+  `open-stomp-manager`, and the repository is
+  [JackMechem/open-stomp-manager](https://github.com/JackMechem/open-stomp-manager).
+
+### Fixed
+- Repository and release links pointed at the wrong GitHub account.
+- The declared minimum Rust version is now 1.95 (what egui 0.36 requires; 1.88 never built).
 
 ## [0.2.0] - 2026-10-21
 
@@ -41,6 +55,7 @@ All notable changes to Dual Stomp Manager. The format follows
 - `stomp-manager`: live monitor GUI with auto-connect, read-only sync, active preset, signal
   chain, parameters, tuner/looper/drum, coalescing activity log and capture replay.
 
-[Unreleased]: https://github.com/mechemjack/dual-stomp-manager-re/compare/v0.2.0...HEAD
-[0.2.0]: https://github.com/mechemjack/dual-stomp-manager-re/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/mechemjack/dual-stomp-manager-re/releases/tag/v0.1.0
+[Unreleased]: https://github.com/JackMechem/open-stomp-manager/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/JackMechem/open-stomp-manager/releases/tag/v0.1.0

@@ -24,8 +24,8 @@ fn main() {
         println!("cargo:rerun-if-changed=../../packaging/icons/icon.ico");
         let mut res = winresource::WindowsResource::new();
         res.set_icon("../../packaging/icons/icon.ico")
-            .set("ProductName", "Dual Stomp Manager")
-            .set("FileDescription", "Dual Stomp Manager")
+            .set("ProductName", "Open Stomp Manager")
+            .set("FileDescription", "Open Stomp Manager")
             .set("CompanyName", "")
             .set("LegalCopyright", "MIT OR Apache-2.0");
         // a missing resource compiler (e.g. cross builds without windres) only costs the icon

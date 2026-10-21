@@ -15,8 +15,8 @@ fail() { echo "error: $*" >&2; ok=0; }
 [[ $# -eq 0 || "$1" == "$v" ]] || fail "expected version $1, Cargo.toml has $v"
 grep -q "Version \*\*$v\*\*" README.md || fail "README.md does not say 'Version **$v**'"
 grep -q "^## \[$v\]" CHANGELOG.md || fail "CHANGELOG.md has no '## [$v]' section"
-grep -q "name = \"stomp-manager\"" Cargo.lock && \
-    awk '/name = "stomp-manager"/{getline; print}' Cargo.lock | grep -q "\"$v\"" || fail "Cargo.lock is stale (run cargo build)"
+grep -q "name = \"open-stomp-manager\"" Cargo.lock && \
+    awk '/name = "open-stomp-manager"/{getline; print}' Cargo.lock | grep -q "\"$v\"" || fail "Cargo.lock is stale (run cargo build)"
 
 ((ok)) && echo "version $v is consistent"
 ((ok))

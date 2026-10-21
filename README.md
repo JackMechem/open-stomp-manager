@@ -1,6 +1,7 @@
-# Stomp Manager RE: SORAN Dual Stomp Lite protocol
+# Open Stomp Manager
 
-**Dual Stomp Manager** · Version **0.2.0** · Linux · macOS · Windows · [changelog](CHANGELOG.md)
+An open editor and reverse-engineered protocol for the SORAN Dual Stomp Lite ·
+Version **0.3.0** · Linux · macOS · Windows · [changelog](CHANGELOG.md)
 
 Reverse-engineered USB-MIDI protocol for the **SORAN Dual Stomp Lite** guitar multi-effects pedal (USB `3962:2000`,
 "JME STOMPBOX"). The vendor's editor, *Stomp Manager*, only runs on macOS/Windows. This repo documents everything
@@ -66,7 +67,7 @@ amidi -p hw:2,0,0 -d                                # turn knobs on the pedal an
 ## The app (Rust, cross-platform)
 
 `crates/stomp-proto` is the pure protocol library (no I/O, tested against `captures/logs/`).
-`crates/stomp-manager` is the egui desktop app. It connects automatically when the pedal is
+`crates/open-stomp-manager` is the egui desktop app. It connects automatically when the pedal is
 plugged in, reads the presets and state (the same SysEx requests the official app sends on
 connect) and shows the active preset, signal chain, module parameters, tuner, looper and drum
 machine, with a filterable activity log of everything that happens on the pedal.
@@ -81,28 +82,28 @@ menu). Tick *Listen only* to send nothing at all.
 ```sh
 nix run                       # build and run
 nix develop                   # dev shell: cargo, rust-analyzer, ALSA, amidi
-cargo run -p stomp-manager    # inside the dev shell
-cargo run -p stomp-manager -- --replay captures/logs/01-main-session.log --speed 8   # no pedal needed
+cargo run -p open-stomp-manager    # inside the dev shell
+cargo run -p open-stomp-manager -- --replay captures/logs/01-main-session.log --speed 8   # no pedal needed
 cargo test                    # protocol tests against the captures
 cargo run -p stomp-proto --example decode -- captures/logs/01-main-session.log       # text decoder
 ```
 
-Without Nix you need Rust ≥ 1.88 and, on Linux, the ALSA headers (`libasound2-dev` /
-`alsa-lib-devel`). macOS and Windows need nothing extra. `stomp-manager --version` prints the
+Without Nix you need Rust ≥ 1.95 and, on Linux, the ALSA headers (`libasound2-dev` /
+`alsa-lib-devel`). macOS and Windows need nothing extra. `open-stomp-manager --version` prints the
 version and git commit; the app shows it next to its name.
 
 ### Platforms
 
-| | MIDI backend | Download (from [Releases](https://github.com/mechemjack/dual-stomp-manager-re/releases)) | Build it yourself |
+| | MIDI backend | Download (from [Releases](https://github.com/JackMechem/open-stomp-manager/releases)) | Build it yourself |
 |---|---|---|---|
-| Linux (x86_64) | ALSA | `…-linux-x86_64.tar.gz`: binary, `.desktop` file, icon | `cargo build --release -p stomp-manager`, or `nix build` |
-| macOS 11+ (Apple Silicon + Intel) | CoreMIDI | `…-macos-universal.zip`: `Dual Stomp Manager.app` | `packaging/macos/bundle.sh` (`--native` for this Mac only) |
-| Windows 10+ (x86_64) | WinMM | `…-windows-x86_64.zip`: `stomp-manager.exe` | `cargo build --release -p stomp-manager` |
+| Linux (x86_64) | ALSA | `…-linux-x86_64.tar.gz`: binary, `.desktop` file, icon | `cargo build --release -p open-stomp-manager`, or `nix build` |
+| macOS 11+ (Apple Silicon + Intel) | CoreMIDI | `…-macos-universal.zip`: `Open Stomp Manager.app` | `packaging/macos/bundle.sh` (`--native` for this Mac only) |
+| Windows 10+ (x86_64) | WinMM | `…-windows-x86_64.zip`: `open-stomp-manager.exe` | `cargo build --release -p open-stomp-manager` |
 
 The pedal is class compliant, so no driver is needed anywhere. Notes:
 
 * **macOS:** the app is ad-hoc signed, not notarized. The first time, right-click it and choose *Open* (or run
-  `xattr -dr com.apple.quarantine "Dual Stomp Manager.app"`).
+  `xattr -dr com.apple.quarantine "Open Stomp Manager.app"`).
 * **Windows:** MIDI ports can only be opened by one program at a time, so quit the official Stomp Manager first.
 * CI builds and tests every push on all three (`.github/workflows/ci.yml`).
 
@@ -122,7 +123,7 @@ The version lives in one place, `version` under `[workspace.package]` in `Cargo.
 ```
 docs/                 the documentation above
 crates/stomp-proto/   protocol library: packing, SysEx framing, catalogue, records, state tracker
-crates/stomp-manager/ egui desktop app (live monitor + editor)
+crates/open-stomp-manager/ egui desktop app (live monitor + editor)
 packaging/            icons (+ generator), Linux .desktop, macOS bundle script, version check
 .github/workflows/    CI (Linux/macOS/Windows) and tag-triggered release builds
 flake.nix             Nix package + dev shell

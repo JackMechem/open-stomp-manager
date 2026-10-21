@@ -21,7 +21,7 @@ use stomp_proto::{Assembler, Origin};
 
 const REPLY_TIMEOUT: Duration = Duration::from_secs(1);
 const SCAN_INTERVAL: Duration = Duration::from_millis(1500);
-const CLIENT_NAME: &str = "Stomp Manager RE";
+const CLIENT_NAME: &str = "Open Stomp Manager";
 
 /// Port names the official app matches (`.*JME.*`, `.*SORAN AMPEY.*`), plus the product name.
 pub fn is_stomp_port(name: &str) -> bool {

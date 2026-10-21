@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render the app icon (same geometry as `icon()` in crates/stomp-manager/src/main.rs) to
+"""Render the app icon (same geometry as `icon()` in crates/open-stomp-manager/src/main.rs) to
 icon.png (1024 px), icon.ico (Windows, 16-256 px) and icon.icns (macOS, 16-1024 px).
 
 Pure standard library: python3 packaging/icons/make_icons.py

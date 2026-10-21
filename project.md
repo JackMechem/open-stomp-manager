@@ -1,4 +1,4 @@
-# project.md: Stomp Manager reverse engineering
+# project.md: Open Stomp Manager (reverse engineering + editor)
 
 ## Goal
 
@@ -41,7 +41,7 @@ live editing, preset management, settings, looper/drum/tuner, and eventually NAM
 - [ ] Fill open questions that matter for v1 ([docs/09](docs/09-open-questions.md) #4–#6): #5 mostly confirmed
       on Linux (host `0x40`/`0x42`/`0x43`); `0x4A`, tuner control, #4 and #6 still open
 - [x] `stomp-proto` crate (pure encode/decode + tests against `captures/logs`)
-- [x] GUI live monitor (`stomp-manager`, egui): auto-connect, read-only sync, active preset, chain,
+- [x] GUI live monitor (`open-stomp-manager`, egui): auto-connect, read-only sync, active preset, chain,
       params, tuner/looper/drum, coalescing activity log, capture replay
 - [x] Cross-platform (Linux/macOS/Windows): CI on all three, tag-triggered release packages, icons, versioning
       (single source: workspace `Cargo.toml`, see CHANGELOG.md)

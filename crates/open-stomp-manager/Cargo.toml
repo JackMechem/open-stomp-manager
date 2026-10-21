@@ -1,5 +1,5 @@
 [package]
-name = "stomp-manager"
+name = "open-stomp-manager"
 description = "Open editor / monitor for the SORAN Dual Stomp"
 version.workspace = true
 edition.workspace = true

@@ -1,9 +1,9 @@
-//! Stomp Manager RE: an open editor for the SORAN Dual Stomp.
+//! Open Stomp Manager: an open editor for the SORAN Dual Stomp.
 //!
 //! A live monitor and editor: it shows and edits the active preset, signal chain, looper, drum
 //! and system settings, saves presets, and logs everything that happens on the pedal.
 //!
-//! Usage: `stomp-manager [--replay <capture.log>] [--speed <x>] [--version]`
+//! Usage: `open-stomp-manager [--replay <capture.log>] [--speed <x>] [--version]`
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
@@ -73,12 +73,12 @@ fn main() -> eframe::Result {
             "--replay" => opts.replay = args.next().map(PathBuf::from),
             "--speed" => opts.speed = args.next().and_then(|s| s.parse().ok()).unwrap_or(opts.speed),
             "-h" | "--help" => {
-                println!("Dual Stomp Manager {}", version_long());
-                println!("usage: stomp-manager [--replay <capture.log>] [--speed <x>] [--version]");
+                println!("Open Stomp Manager {}", version_long());
+                println!("usage: open-stomp-manager [--replay <capture.log>] [--speed <x>] [--version]");
                 return Ok(());
             }
             "-V" | "--version" => {
-                println!("stomp-manager {}", version_long());
+                println!("open-stomp-manager {}", version_long());
                 return Ok(());
             }
             other => eprintln!("ignoring unknown argument {other:?}"),
@@ -87,12 +87,12 @@ fn main() -> eframe::Result {
 
     let native = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_title(format!("Dual Stomp Manager {VERSION}"))
-            .with_app_id("stomp-manager")
+            .with_title(format!("Open Stomp Manager {VERSION}"))
+            .with_app_id("open-stomp-manager")
             .with_inner_size([1560.0, 960.0])
             .with_min_inner_size([1100.0, 680.0])
             .with_icon(icon()),
         ..Default::default()
     };
-    eframe::run_native("Dual Stomp Manager", native, Box::new(|cc| Ok(Box::new(app::StompApp::new(cc, opts)))))
+    eframe::run_native("Open Stomp Manager", native, Box::new(|cc| Ok(Box::new(app::StompApp::new(cc, opts)))))
 }

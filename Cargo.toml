@@ -1,13 +1,13 @@
 [workspace]
 resolver = "3"
-members = ["crates/stomp-proto", "crates/stomp-manager"]
+members = ["crates/stomp-proto", "crates/open-stomp-manager"]
 
 [workspace.package]
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
-rust-version = "1.88"
+rust-version = "1.95"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/mechemjack/dual-stomp-manager-re"
+repository = "https://github.com/JackMechem/open-stomp-manager"
 
 [profile.release]
 lto = "thin"

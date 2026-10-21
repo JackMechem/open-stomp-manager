@@ -258,9 +258,9 @@ impl StompApp {
                 ui.add_space(2.0);
                 ui.horizontal(|ui| {
                     ui.spacing_mut().item_spacing.x = 6.0;
-                    ui.label(RichText::new("Dual Stomp").font(font_b(16.0)).color(TEXT));
+                    ui.label(RichText::new("Open Stomp").font(font_b(16.0)).color(TEXT));
                     chip(ui, &format!("v{}", crate::VERSION), TEXT_DIM, CARD_HI).on_hover_text(format!(
-                        "Dual Stomp Manager {}\n{} · {}",
+                        "Open Stomp Manager {}\n{} · {}",
                         crate::version_long(),
                         std::env::consts::OS,
                         std::env::consts::ARCH

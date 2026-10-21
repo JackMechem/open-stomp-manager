@@ -1,5 +1,5 @@
 {
-  description = "Stomp Manager RE: open editor for the SORAN Dual Stomp (Rust + egui)";
+  description = "Open Stomp Manager: open editor for the SORAN Dual Stomp (Rust + egui)";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -33,8 +33,8 @@
         buildInputs = lib.optionals isLinux [ pkgs.alsa-lib ] ++ runtimeLibs;
         nativeBuildInputs = [ pkgs.pkg-config ] ++ lib.optionals isLinux [ pkgs.makeWrapper ];
 
-        stomp-manager = pkgs.rustPlatform.buildRustPackage {
-          pname = "stomp-manager";
+        open-stomp-manager = pkgs.rustPlatform.buildRustPackage {
+          pname = "open-stomp-manager";
           version = (lib.importTOML ./Cargo.toml).workspace.package.version;
           src = lib.cleanSourceWith {
             src = ./.;
@@ -52,29 +52,29 @@
               || lib.hasPrefix "captures/logs/" rel;
           };
           cargoLock.lockFile = ./Cargo.lock;
-          cargoBuildFlags = [ "-p" "stomp-manager" ];
+          cargoBuildFlags = [ "-p" "open-stomp-manager" ];
           inherit buildInputs nativeBuildInputs;
 
           postInstall = lib.optionalString isLinux ''
-            wrapProgram $out/bin/stomp-manager \
+            wrapProgram $out/bin/open-stomp-manager \
               --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath runtimeLibs}
-            install -Dm644 ${./packaging/stomp-manager.desktop} $out/share/applications/stomp-manager.desktop
-            install -Dm644 ${./packaging/icons/icon.png} $out/share/pixmaps/stomp-manager.png
+            install -Dm644 ${./packaging/open-stomp-manager.desktop} $out/share/applications/open-stomp-manager.desktop
+            install -Dm644 ${./packaging/icons/icon.png} $out/share/pixmaps/open-stomp-manager.png
           '';
 
           meta = {
             description = "Open editor / live monitor for the SORAN Dual Stomp guitar pedal";
             license = with lib.licenses; [ mit asl20 ];
-            mainProgram = "stomp-manager";
+            mainProgram = "open-stomp-manager";
             platforms = lib.platforms.linux ++ lib.platforms.darwin;
           };
         };
       in
       {
-        packages.default = stomp-manager;
-        packages.stomp-manager = stomp-manager;
+        packages.default = open-stomp-manager;
+        packages.open-stomp-manager = open-stomp-manager;
 
-        apps.default = flake-utils.lib.mkApp { drv = stomp-manager; };
+        apps.default = flake-utils.lib.mkApp { drv = open-stomp-manager; };
 
         devShells.default = pkgs.mkShell {
           inherit buildInputs;
