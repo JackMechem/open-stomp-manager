@@ -7,6 +7,8 @@ to 0.2.0). The format follows
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-21
+
 ### Added
 - Preset search above the preset list: filter by name or slot (`lead`, `5`, `P05`); Ctrl+F (⌘F) focuses it, Enter
   selects the first match, Esc clears it.
@@ -87,7 +89,8 @@ to 0.2.0). The format follows
 - `stomp-manager`: live monitor GUI with auto-connect, read-only sync, active preset, signal
   chain, parameters, tuner/looper/drum, coalescing activity log and capture replay.
 
-[Unreleased]: https://github.com/JackMechem/open-stomp-manager/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/JackMechem/open-stomp-manager/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.1.0...v0.2.0
