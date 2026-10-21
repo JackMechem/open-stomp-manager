@@ -1,0 +1,46 @@
+# Changelog
+
+All notable changes to Dual Stomp Manager. The format follows
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [0.2.0] - 2026-10-21
+
+### Added
+- **Editor**: control the pedal from the app.
+  - Select presets; **Save** and **Save as…** (rename and/or store in another slot) using the official
+    app's exact message sequence.
+  - Pick effect models, switch blocks on/off, turn knobs (drag, scroll wheel, Shift for fine
+    steps), set preset volume.
+  - Looper transport (rec/play/dub, stop, undo/redo, clear), levels, sync and mode; drum
+    play/stop, pattern and level.
+  - System settings: input trim, global EQ, wireless, loopback.
+- Opening a block in the app shows its page on the pedal, like the official app.
+- `stomp-proto`: preset and settings encoders (`Preset::to_raw`, `Settings::to_raw`) and the
+  `midi::host` command builders, tested byte-for-byte against the capture.
+- **Cross-platform releases**: CI on Linux, macOS and Windows; tag-triggered release builds
+  (Linux tarball, universal macOS `.app`, Windows `.exe`); app icons for every platform.
+- Version display in the app (and the window title), `--version`, and this changelog.
+
+### Fixed
+- macOS: the pedal is detected when plugged in after the app starts (CoreMIDI hotplug
+  notifications need a run loop on the MIDI thread).
+- Windows: `--help` / `--version` print to the terminal in release builds.
+
+### Protocol findings
+- Host → pedal CCs `0x40` (drum pattern) and `0x42`/`0x43` (loop levels) confirmed on hardware.
+- The first byte of the `0x12` preset-name write is the active preset.
+
+## [0.1.0] - 2026-10-21
+
+### Added
+- `stomp-proto`: protocol library (8-in-7 packing, SysEx framing, catalogue, preset/settings
+  records, state tracker), tested against the capture logs.
+- `stomp-manager`: live monitor GUI with auto-connect, read-only sync, active preset, signal
+  chain, parameters, tuner/looper/drum, coalescing activity log and capture replay.
+
+[Unreleased]: https://github.com/mechemjack/dual-stomp-manager-re/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/mechemjack/dual-stomp-manager-re/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/mechemjack/dual-stomp-manager-re/releases/tag/v0.1.0

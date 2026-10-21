@@ -152,7 +152,7 @@ Struct layouts for `0x0B`/`0x0C` (preset), `0x14` (settings), `0x09`, `0x58`, `0
 ### Rename + save-as (app "save" dialog, changing name and number)
 
 ```
-→ 70 12 01  44  34 4F 6F 7A 21 00…00      set name "4Ooz!" (first byte 0x44 = 68: probably the source slot)
+→ 70 12 01  44  34 4F 6F 7A 21 00…00      set name "4Ooz!" (first byte 0x44 = the active preset, P69)
 ← 70 12 03  00*8
 → 70 0B 01  <126 B packed preset, index 0x15>   write full preset to index 21 (P22)
 ← 70 0B 03  15 00 00 00 00 00 00 00 00 44 01 00 00 00

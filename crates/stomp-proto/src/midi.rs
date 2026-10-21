@@ -149,6 +149,75 @@ pub mod req {
     }
 }
 
+/// Host → pedal commands (docs/02 live control, docs/03 writes). Live changes are channel-2
+/// CCs/PCs; the pedal does not echo them, so apply them to the local model too.
+pub mod host {
+    use super::*;
+    use crate::catalog::Module;
+    use crate::records::{Preset, Settings, name_bytes};
+
+    pub fn cc(cc: u8, val: u8) -> Vec<u8> {
+        vec![0xB0 | HOST_CH, cc & 0x7F, val & 0x7F]
+    }
+
+    /// Select preset `index` (0-based, P01 = 0).
+    pub fn program(index: u8) -> Vec<u8> {
+        vec![0xC0 | HOST_CH, index & 0x7F]
+    }
+
+    /// Model + on/off of an effect module.
+    pub fn head(m: Module, model: u8, on: bool) -> Option<Vec<u8>> {
+        Some(cc(m.head_cc()?, (if on { 0 } else { 0x40 }) | (model & 0x3F)))
+    }
+
+    /// A module parameter by slot (app display order).
+    pub fn param(m: Module, slot: usize, val: u8) -> Option<Vec<u8>> {
+        let (first, n) = m.param_ccs()?;
+        (slot < n as usize).then(|| cc(first + slot as u8, val))
+    }
+
+    pub fn volume(v: u8) -> Vec<u8> {
+        cc(0x3A, v.min(100))
+    }
+
+    /// Make the pedal display jump to a module's page.
+    pub fn page(m: Module) -> Vec<u8> {
+        cc(0x3B, m as u8)
+    }
+
+    pub const LOOP_REC_PLAY_DUB: u8 = 0x01;
+    pub const LOOP_STOP: u8 = 0x02;
+    pub const LOOP_CLEAR: u8 = 0x04;
+    pub const LOOP_UNDO_REDO: u8 = 0x08;
+
+    pub fn looper_button(b: u8) -> Vec<u8> {
+        cc(0x44, b)
+    }
+
+    /// Set the edit buffer's name. The official app sends the slot being edited first
+    /// (the active preset, even when saving to another slot).
+    pub fn preset_name(source_slot: u8, name: &str) -> Vec<u8> {
+        let mut p = Vec::with_capacity(17);
+        p.push(source_slot & 0x7F);
+        p.extend(name_bytes(name).iter().map(|b| b & 0x7F));
+        frame(Cmd::PresetName, Dir::Write, &p)
+    }
+
+    /// Store a whole preset record in slot `preset.index`.
+    pub fn preset_write(preset: &Preset) -> Vec<u8> {
+        frame(Cmd::Preset, Dir::Write, &preset.to_packed())
+    }
+
+    /// The official app's save sequence: name, record, then select the saved slot.
+    pub fn save_preset(source_slot: u8, preset: &Preset) -> Vec<Vec<u8>> {
+        vec![preset_name(source_slot, &preset.name), preset_write(preset), program(preset.index)]
+    }
+
+    pub fn settings_write(s: &Settings) -> Vec<u8> {
+        frame(Cmd::System, Dir::Write, &s.to_packed())
+    }
+}
+
 /// One parsed MIDI message.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Msg {
@@ -269,6 +338,22 @@ mod tests {
         let m = a.push(&[0x7A, 0x00, 0xF7, 0xB0, 0x01, 0x08, 0xC0]);
         assert_eq!(m, vec![vec![0xF0, 0, 0x21, 0x7A, 0, 0xF7], vec![0xB0, 1, 8]]);
         assert_eq!(a.push(&[0x05]), vec![vec![0xC0, 5]]);
+    }
+
+    #[test]
+    fn host_commands() {
+        use crate::catalog::Module;
+        assert_eq!(host::head(Module::Amp, 8, false), Some(vec![0xB1, 0x01, 0x48]));
+        assert_eq!(host::param(Module::OdFx, 1, 66), Some(vec![0xB1, 0x0D, 66]));
+        assert_eq!(host::param(Module::Gate, 2, 1), None);
+        assert_eq!(host::head(Module::Loop, 0, true), None);
+        assert_eq!(host::program(84), vec![0xC1, 0x54]);
+        assert_eq!(host::page(Module::Gate), vec![0xB1, 0x3B, 0x06]);
+        // captured rename (source slot P69 = 0x44, docs/03)
+        assert_eq!(
+            hex(&host::preset_name(0x44, "4Ooz!")),
+            "F0 00 21 7A 70 12 01 44 34 4F 6F 7A 21 00 00 00 00 00 00 00 00 00 00 00 F7"
+        );
     }
 
     #[test]

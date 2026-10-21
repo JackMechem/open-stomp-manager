@@ -206,7 +206,9 @@ Raw 50 = slider centre (presumably 0 dB; the dB scaling is *unverified*).
 | `0x49` | both | Looper LOOP SYNC | 0 Off, 1 On |
 | `0x4A` | pedal→host | Looper LOOP MODE | 0 NR, 1 AR |
 
-Host→pedal for `0x40`, `0x42`, `0x43`, `0x4A` was not captured, but it's almost certainly the same CC on ch 2.
+Host→pedal `0x40` (drum pattern) and `0x42`/`0x43` (loop levels) were confirmed on Linux by sending the ch-2 CC
+and reading `0x19`/`0x18` back: the values change, and the pedal sends no ch-1 report or drum notify in reply.
+Host→pedal `0x4A` is still unverified (`0x18` has no field for the loop mode).
 
 ### Drum patterns (`CC 0x40`)
 

@@ -5,8 +5,9 @@ use std::path::PathBuf;
 
 use egui::{Align, Align2, Color32, CornerRadius, Layout, RichText, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
 use egui_phosphor::regular as icon;
-use stomp_proto::catalog::{ParamKind, drum_pattern_name};
-use stomp_proto::records::DEFAULT_CHAIN;
+use stomp_proto::catalog::{DRUM_STYLES, ParamKind, drum_pattern_name};
+use stomp_proto::midi::host;
+use stomp_proto::records::{DEFAULT_CHAIN, Settings};
 use stomp_proto::state::preset_label;
 use stomp_proto::{Category, DeviceState, Module, Origin};
 
@@ -21,6 +22,12 @@ const FLASH_SECS: f64 = 0.9;
 pub struct Options {
     pub replay: Option<PathBuf>,
     pub speed: f32,
+}
+
+/// The "save preset" dialog.
+struct SaveDialog {
+    slot: u8,
+    name: String,
 }
 
 pub struct StompApp {
@@ -48,6 +55,7 @@ pub struct StompApp {
     replay_path: String,
     replay_speed: f32,
     view_cache: (u64, Filter, Vec<usize>),
+    save_dialog: Option<SaveDialog>,
 }
 
 impl StompApp {
@@ -88,7 +96,57 @@ impl StompApp {
             replay_path,
             replay_speed: opts.speed,
             view_cache: (u64::MAX, Filter::default(), vec![]),
+            save_dialog: None,
         }
+    }
+
+    // ───────────────────────────── sending ─────────────────────────────
+
+    /// The app may send to the pedal: connected and not in listen-only mode.
+    fn editable(&self) -> bool {
+        matches!(self.status, Status::Connected { .. }) && !self.listen_only
+    }
+
+    /// Effect edits also need the live preset, since a head CC carries model and on/off together.
+    fn can_edit_sound(&self) -> bool {
+        self.editable() && self.state.live_known
+    }
+
+    /// Send a live CC/PC. The engine echoes it back as a host message, which updates the model.
+    fn send(&self, bytes: Vec<u8>) {
+        self.dev.send(Command::Send(bytes));
+    }
+
+    fn set_head(&self, m: Module, model: u8, on: bool) {
+        if let Some(b) = host::head(m, model, on) {
+            self.send(b);
+        }
+    }
+
+    fn set_settings(&self, f: impl FnOnce(&mut Settings)) {
+        if let Some(s) = &self.state.settings {
+            let mut s = s.clone();
+            f(&mut s);
+            self.dev.send(Command::Write(vec![host::settings_write(&s)]));
+        }
+    }
+
+    /// Store the live sound in `slot` under `name`, then select it (the official app's sequence).
+    fn save_preset(&self, slot: u8, name: &str) {
+        let (Some(cur), true) = (self.state.current, self.state.live_known) else { return };
+        let mut p = self.state.live.clone();
+        p.index = slot;
+        p.name = name.trim().to_owned();
+        self.dev.send(Command::Write(host::save_preset(cur, &p)));
+    }
+
+    fn open_save_dialog(&mut self, slot: u8) {
+        let name = if self.state.live.name.is_empty() {
+            self.state.preset_name(slot).unwrap_or("").to_owned()
+        } else {
+            self.state.live.name.clone()
+        };
+        self.save_dialog = Some(SaveDialog { slot, name });
     }
 
     fn poll(&mut self, now: f64) {
@@ -198,8 +256,18 @@ impl StompApp {
             ui.add_space(4.0);
             ui.vertical(|ui| {
                 ui.add_space(2.0);
-                ui.label(RichText::new("Dual Stomp").font(font_b(16.0)).color(TEXT));
-                ui.label(RichText::new("MANAGER · MONITOR").font(font_sb(9.5)).color(TEXT_FAINT).extra_letter_spacing(1.5));
+                ui.horizontal(|ui| {
+                    ui.spacing_mut().item_spacing.x = 6.0;
+                    ui.label(RichText::new("Dual Stomp").font(font_b(16.0)).color(TEXT));
+                    chip(ui, &format!("v{}", crate::VERSION), TEXT_DIM, CARD_HI).on_hover_text(format!(
+                        "Dual Stomp Manager {}\n{} · {}",
+                        crate::version_long(),
+                        std::env::consts::OS,
+                        std::env::consts::ARCH
+                    ));
+                });
+                let mode = if self.editable() { "MANAGER · EDITOR" } else { "MANAGER · MONITOR" };
+                ui.label(RichText::new(mode).font(font_sb(9.5)).color(TEXT_FAINT).extra_letter_spacing(1.5));
             });
             ui.add_space(18.0);
             self.status_pill(ui, now);
@@ -321,8 +389,8 @@ impl StompApp {
         if ui
             .toggle_value(&mut listen, format!("{}  Listen only", icon::EAR))
             .on_hover_text(
-                "When off, the app reads presets and state from the pedal (read-only SysEx requests, \
-                 the same ones the official app sends on connect). When on, it never sends anything.",
+                "When off, the app syncs presets and state from the pedal and you can edit it from here. \
+                 When on, it never sends anything to the pedal.",
             )
             .changed()
         {
@@ -350,10 +418,15 @@ impl StompApp {
         ui.add_space(6.0);
         let current = self.state.current;
         let scroll_now = current.is_some() && current != self.scrolled_to;
+        let editable = self.editable();
+        let can_save = self.can_edit_sound() && current.is_some();
+        let mut select = None;
+        let mut save_here = None;
         egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
             for i in 0..99u8 {
                 let active = current == Some(i);
-                let (rect, resp) = ui.allocate_exact_size(vec2(ui.available_width(), 30.0), Sense::hover());
+                let sense = if editable { Sense::click() } else { Sense::hover() };
+                let (rect, resp) = ui.allocate_exact_size(vec2(ui.available_width(), 30.0), sense);
                 let p = ui.painter();
                 let fl = if active { Self::flash(self.preset_flash, now) } else { 0.0 };
                 if active {
@@ -387,10 +460,41 @@ impl StompApp {
                 if active && scroll_now {
                     ui.scroll_to_rect(rect, Some(Align::Center));
                 }
+                if editable {
+                    let resp = resp.on_hover_cursor(egui::CursorIcon::PointingHand);
+                    if resp.clicked() && !active {
+                        select = Some(i);
+                    }
+                    resp.context_menu(|ui| {
+                        if ui.button(format!("{}  Select {}", icon::PLAY, preset_label(i))).clicked() {
+                            select = Some(i);
+                        }
+                        let save = ui.add_enabled(
+                            can_save,
+                            egui::Button::new(format!("{}  Save current sound here…", icon::FLOPPY_DISK)),
+                        );
+                        if save.clicked() {
+                            save_here = Some(i);
+                        }
+                    });
+                }
             }
         });
         if scroll_now {
             self.scrolled_to = current;
+        }
+        if let Some(i) = select {
+            if self.state.modified() {
+                self.log.push_note(
+                    chrono::Local::now(),
+                    RowKind::Info,
+                    format!("Unsaved edits to {} were discarded", preset_label(current.unwrap_or(0))),
+                );
+            }
+            self.send(host::program(i));
+        }
+        if let Some(i) = save_here {
+            self.open_save_dialog(i);
         }
     }
 
@@ -474,12 +578,32 @@ impl StompApp {
                             let on = Module::EFFECTS.iter().filter(|m| self.state.live.modules[m.index()].on).count();
                             chip(ui, &format!("{on}/8 BLOCKS ON"), TEXT_DIM, CARD_HI);
                         });
+                        if self.can_edit_sound() {
+                            ui.add_space(6.0);
+                            ui.horizontal_wrapped(|ui| self.save_buttons(ui, cur));
+                        }
                     });
                     ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                         self.volume_meter(ui);
                     });
                 });
             });
+    }
+
+    fn save_buttons(&mut self, ui: &mut Ui, cur: u8) {
+        let modified = self.state.modified();
+        let save = egui::Button::new(
+            RichText::new(format!("{}  Save", icon::FLOPPY_DISK)).color(if modified { BG } else { TEXT }),
+        )
+        .fill(if modified { ACCENT } else { CARD_HI });
+        if ui.add(save).on_hover_text(format!("Store the live sound in {}", preset_label(cur))).clicked() {
+            let name = self.state.live.name.clone();
+            self.save_preset(cur, &name);
+        }
+        let save_as = egui::Button::new(format!("{}  Save as…", icon::PENCIL_SIMPLE));
+        if ui.add(save_as).on_hover_text("Rename and/or store in another slot").clicked() {
+            self.open_save_dialog(cur);
+        }
     }
 
     fn hero_empty(&mut self, ui: &mut Ui) {
@@ -510,7 +634,16 @@ impl StompApp {
 
     fn volume_meter(&self, ui: &mut Ui) {
         let v = self.state.live_known.then_some(self.state.live.volume);
-        let (r, _) = ui.allocate_exact_size(vec2(64.0, 92.0), Sense::hover());
+        let editable = self.can_edit_sound();
+        let sense = if editable { Sense::click_and_drag() } else { Sense::hover() };
+        let (r, resp) = ui.allocate_exact_size(vec2(64.0, 92.0), sense);
+        if editable {
+            if let Some(n) = drag_input(ui, &resp, self.state.live.volume, 100) {
+                self.send(host::volume(n));
+            }
+            resp.on_hover_text("Preset volume: drag or scroll (Shift = fine)")
+                .on_hover_cursor(egui::CursorIcon::ResizeVertical);
+        }
         let p = ui.painter();
         let c = pos2(r.center().x, r.top() + 36.0);
         let frac = v.map(|v| v as f32 / 100.0).unwrap_or(0.0);
@@ -564,6 +697,8 @@ impl StompApp {
         let order = self.chain_order();
         let shown = self.shown_module();
         let mut clicked = None;
+        let mut toggle = None;
+        let can_toggle = self.can_edit_sound();
         card(ui, icon::FLOW_ARROW, "SIGNAL CHAIN", |ui| {
             // fit all blocks on one row if possible, otherwise wrap onto several rows
             let n = order.len();
@@ -616,7 +751,13 @@ impl StompApp {
                 if resp.hovered() {
                     p.rect_filled(rect, CornerRadius::same(12), with_alpha(Color32::WHITE, 0.03));
                 }
-                led(p, rect.left_top() + vec2(14.0, 14.0), 4.0, on, col);
+                let led_c = rect.left_top() + vec2(14.0, 14.0);
+                let led_hit = egui::Rect::from_center_size(led_c, vec2(26.0, 26.0));
+                let power = can_toggle && m.is_effect() && resp.hover_pos().is_some_and(|p| led_hit.contains(p));
+                if power {
+                    p.circle_stroke(led_c, 8.0, Stroke::new(1.5, mix(TEXT_DIM, col, 0.5)));
+                }
+                led(p, led_c, 4.0, on, col);
                 p.text(
                     rect.right_top() + vec2(-10.0, 13.0),
                     Align2::RIGHT_CENTER,
@@ -655,17 +796,33 @@ impl StompApp {
                         Stroke::NONE,
                     ));
                 }
-                let resp = resp.on_hover_cursor(egui::CursorIcon::PointingHand).on_hover_text(format!(
-                    "{} · {model}\nClick to pin this block in the detail view",
-                    m.name()
-                ));
+                let hint = if can_toggle && m.is_effect() {
+                    "Click to edit this block · click the LED to switch it on/off"
+                } else {
+                    "Click to pin this block in the detail view"
+                };
+                let resp = resp
+                    .on_hover_cursor(egui::CursorIcon::PointingHand)
+                    .on_hover_text(format!("{} · {model}\n{hint}", m.name()));
                 if resp.clicked() {
-                    clicked = Some(*m);
+                    if power {
+                        toggle = Some(*m);
+                    } else {
+                        clicked = Some(*m);
+                    }
                 }
             }
         });
+        if let Some(m) = toggle {
+            let st = self.state.live.modules[m.index()];
+            self.set_head(m, st.model, !st.on);
+        }
         if let Some(m) = clicked {
             self.pinned = if self.pinned == Some(m) { None } else { Some(m) };
+            // like the official app, opening a block shows its page on the pedal
+            if self.pinned.is_some() && self.editable() {
+                self.send(host::page(m));
+            }
         }
     }
 
@@ -701,19 +858,46 @@ impl StompApp {
 
     fn effect_body(&self, ui: &mut Ui, m: Module, col: Color32, now: f64) {
         let st = self.state.live.modules[m.index()];
+        let editable = self.can_edit_sound();
         ui.horizontal(|ui| {
             ui.label(RichText::new(format!("#{:02}", st.model + 1)).font(mono_b(13.0)).color(col));
-            ui.label(RichText::new(self.state.model_name(m, st.model)).font(font_b(22.0)).color(TEXT));
+            let name = self.state.model_name(m, st.model);
+            if editable && m.models().len() > 1 {
+                egui::ComboBox::from_id_salt(("model", m as u8))
+                    .selected_text(RichText::new(name).font(font_b(18.0)).color(TEXT))
+                    .height(420.0)
+                    .width(240.0)
+                    .show_ui(ui, |ui| {
+                        for i in 0..m.models().len() as u8 {
+                            let label = format!("{:02}  {}", i + 1, self.state.model_name(m, i));
+                            if ui.selectable_label(i == st.model, label).clicked() && i != st.model {
+                                self.set_head(m, i, st.on);
+                            }
+                        }
+                    });
+            } else {
+                ui.label(RichText::new(name).font(font_b(22.0)).color(TEXT));
+            }
             ui.add_space(8.0);
-            if st.on {
+            if editable {
+                let (txt, fg, bg) = if st.on { ("ON", BG, col) } else { ("BYPASSED", TEXT_DIM, CARD_HI) };
+                let b = egui::Button::new(RichText::new(format!("{}  {txt}", icon::POWER)).font(font_b(11.0)).color(fg))
+                    .fill(bg)
+                    .corner_radius(CornerRadius::same(6));
+                if ui.add(b).on_hover_text("Switch this block on/off").clicked() {
+                    self.set_head(m, st.model, !st.on);
+                }
+            } else if st.on {
                 chip(ui, "ON", BG, col);
             } else {
                 chip(ui, "BYPASSED", TEXT_DIM, CARD_HI);
             }
-            ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                let models = m.models().len();
-                ui.label(RichText::new(format!("{} models", models)).font(font(11.5)).color(TEXT_FAINT));
-            });
+            if !editable {
+                ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                    let models = m.models().len();
+                    ui.label(RichText::new(format!("{} models", models)).font(font(11.5)).color(TEXT_FAINT));
+                });
+            }
         });
         ui.add_space(6.0);
         let params = m.params(st.model);
@@ -729,11 +913,43 @@ impl StompApp {
                 let fl = self.param_flash.get(&(m, slot)).map_or(0.0, |t| Self::flash(*t, now));
                 let known = self.state.live_known || fl > 0.0 || v != 0;
                 let txt = if known { pd.format(v) } else { "—".into() };
+                let mut next = None;
                 match pd.kind {
-                    ParamKind::Enum(_) => choice(ui, pd.name, &txt, col, fl),
-                    ParamKind::Knob => knob(ui, pd.name, &txt, v as f32 / 100.0, false, col, fl),
-                    ParamKind::Bipolar => knob(ui, pd.name, &txt, v as f32 / 100.0, true, col, fl),
-                };
+                    ParamKind::Enum(opts) => {
+                        let resp = choice(ui, pd.name, &txt, col, fl, editable);
+                        if editable {
+                            let n = opts.len().max(1) as u8;
+                            if resp.clicked() {
+                                next = Some((v + 1) % n);
+                            }
+                            resp.on_hover_text("Click for the next option, right-click for the list").context_menu(
+                                |ui| {
+                                    for (i, o) in opts.iter().enumerate() {
+                                        if ui.selectable_label(i == v as usize, *o).clicked() {
+                                            next = Some(i as u8);
+                                        }
+                                    }
+                                },
+                            );
+                        }
+                    }
+                    ParamKind::Knob | ParamKind::Bipolar => {
+                        let bipolar = pd.kind == ParamKind::Bipolar;
+                        let resp = knob(ui, pd.name, &txt, v as f32 / 100.0, bipolar, col, fl, editable);
+                        if editable {
+                            next = drag_input(ui, &resp, v, 100);
+                            let resp = resp.on_hover_text("Drag or scroll · Shift = fine · double-click = centre");
+                            if resp.double_clicked() {
+                                next = Some(50);
+                            }
+                        }
+                    }
+                }
+                if let Some(n) = next.filter(|n| *n != v)
+                    && let Some(b) = host::param(m, slot, n)
+                {
+                    self.send(b);
+                }
             }
         });
     }
@@ -795,22 +1011,60 @@ impl StompApp {
                 ui.label(RichText::new(layers).font(font(11.5)).color(TEXT_FAINT));
             });
         });
+        let editable = self.editable();
+        if editable {
+            ui.add_space(4.0);
+            ui.horizontal(|ui| {
+                let (main, main_tip) = match l.state {
+                    0 | 4 => (format!("{}  REC", icon::RECORD), "Start recording"),
+                    1 => (format!("{}  PLAY", icon::PLAY), "Close the loop and play"),
+                    2 => (format!("{}  DUB", icon::RECORD), "Overdub"),
+                    _ => (format!("{}  PLAY", icon::PLAY), "Stop overdubbing"),
+                };
+                let buttons = [
+                    (main, main_tip, host::LOOP_REC_PLAY_DUB),
+                    (icon::STOP.to_string(), "Stop", host::LOOP_STOP),
+                    (icon::ARROW_COUNTER_CLOCKWISE.to_string(), "Undo / redo the last overdub", host::LOOP_UNDO_REDO),
+                    (icon::TRASH.to_string(), "Clear the loop", host::LOOP_CLEAR),
+                ];
+                for (txt, tip, b) in buttons {
+                    if ui.add(egui::Button::new(txt).min_size(vec2(34.0, 26.0))).on_hover_text(tip).clicked() {
+                        self.send(host::looper_button(b));
+                    }
+                }
+            });
+        }
         ui.add_space(4.0);
-        level_row(ui, "REC LEVEL", l.rec_level, module_color(Module::Loop));
-        level_row(ui, "PLAYBACK", l.play_level, module_color(Module::Loop));
+        let lc = module_color(Module::Loop);
+        let num = |v: u8| v.to_string();
+        if let Some(n) = level_slider(ui, "REC LEVEL", l.rec_level, 100, &num, lc, editable) {
+            self.send(host::cc(0x42, n));
+        }
+        if let Some(n) = level_slider(ui, "PLAYBACK", l.play_level, 100, &num, lc, editable) {
+            self.send(host::cc(0x43, n));
+        }
         ui.horizontal(|ui| {
             let sync = match l.sync {
                 Some(true) => "SYNC ON",
                 Some(false) => "SYNC OFF",
                 None => "SYNC —",
             };
-            chip(ui, sync, TEXT_DIM, CARD_HI);
             let mode = match l.mode {
                 Some(0) => "MODE NR",
                 Some(_) => "MODE AR",
                 None => "MODE —",
             };
-            chip(ui, mode, TEXT_DIM, CARD_HI);
+            if editable {
+                if ui.button(sync).on_hover_text("Loop sync on/off").clicked() {
+                    self.send(host::cc(0x49, !l.sync.unwrap_or(false) as u8));
+                }
+                if ui.button(mode).on_hover_text("Loop mode NR / AR").clicked() {
+                    self.send(host::cc(0x4A, (l.mode.unwrap_or(0) == 0) as u8));
+                }
+            } else {
+                chip(ui, sync, TEXT_DIM, CARD_HI);
+                chip(ui, mode, TEXT_DIM, CARD_HI);
+            }
         });
     }
 
@@ -841,8 +1095,38 @@ impl StompApp {
                 ui.label(RichText::new(bpm).font(mono_b(30.0)).color(TEXT));
             });
         });
+        let editable = self.editable();
+        if editable {
+            ui.add_space(4.0);
+            ui.horizontal(|ui| {
+                let (txt, tip) = if d.playing {
+                    (format!("{}  STOP", icon::STOP), "Stop the drums")
+                } else {
+                    (format!("{}  PLAY", icon::PLAY), "Start the drums")
+                };
+                if ui.add(egui::Button::new(txt).min_size(vec2(70.0, 26.0))).on_hover_text(tip).clicked() {
+                    self.send(host::cc(0x3F, !d.playing as u8));
+                }
+                let pat = d.pattern.unwrap_or(0);
+                ui.menu_button(format!("{}  Pattern", icon::LIST), |ui| {
+                    for (si, style) in DRUM_STYLES.iter().enumerate() {
+                        ui.menu_button(*style, |ui| {
+                            for k in 0..10u8 {
+                                let v = si as u8 * 10 + k;
+                                if ui.selectable_label(v == pat, drum_pattern_name(v)).clicked() {
+                                    self.send(host::cc(0x40, v));
+                                    ui.close();
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+        }
         ui.add_space(4.0);
-        level_row(ui, "LEVEL", d.level, col);
+        if let Some(n) = level_slider(ui, "LEVEL", d.level, 100, &|v| v.to_string(), col, editable) {
+            self.send(host::cc(0x41, n));
+        }
     }
 
     fn device_card(&self, ui: &mut Ui) {
@@ -865,6 +1149,9 @@ impl StompApp {
     }
 
     fn device_info(&self, ui: &mut Ui) {
+        if self.editable() && self.state.settings.is_some() {
+            return self.settings_editor(ui);
+        }
         let s = &self.state;
         let kv = |ui: &mut Ui, k: &str, v: Option<String>| {
             ui.horizontal(|ui| {
@@ -883,15 +1170,54 @@ impl StompApp {
         kv(ui, "LOOPBACK", set.map(|x| onoff(x.loopback)));
     }
 
+    /// Product info plus the editable system settings (read-modify-write of the whole block).
+    fn settings_editor(&self, ui: &mut Ui) {
+        let s = &self.state;
+        let Some(set) = &s.settings else { return };
+        let kv = |ui: &mut Ui, k: &str, v: Option<String>| {
+            ui.horizontal(|ui| {
+                ui.add_sized([86.0, 18.0], egui::Label::new(RichText::new(k).font(font_sb(11.0)).color(TEXT_DIM)));
+                let v = v.unwrap_or_else(|| "—".into());
+                ui.label(RichText::new(elide(ui, &v, mono(12.5), ui.available_width())).font(mono(12.5)).color(TEXT));
+            });
+        };
+        kv(ui, "PRODUCT", s.product.clone());
+        kv(ui, "FIRMWARE", s.firmware.clone());
+        let db = |v: u8| format!("{:+} dB", v as i16 - 10);
+        if let Some(n) = level_slider(ui, "INPUT TRIM", Some(set.input_trim), 20, &db, ACCENT, true) {
+            self.set_settings(|s| s.input_trim = n);
+        }
+        ui.horizontal(|ui| {
+            ui.add_sized([86.0, 18.0], egui::Label::new(RichText::new("OPTIONS").font(font_sb(11.0)).color(TEXT_DIM)));
+            let (mut w, mut l) = (set.wireless, set.loopback);
+            if ui.toggle_value(&mut w, "Wireless").changed() {
+                self.set_settings(|s| s.wireless = w);
+            }
+            if ui.toggle_value(&mut l, "LoopBack").on_hover_text("USB audio loopback").changed() {
+                self.set_settings(|s| s.loopback = l);
+            }
+        });
+    }
+
     fn global_eq(&self, ui: &mut Ui) {
         let set = self.state.settings.as_ref();
+        let editable = self.editable() && set.is_some();
         ui.label(RichText::new("GLOBAL EQ").font(font_sb(11.0)).color(TEXT_DIM));
         let eq = module_color(Module::Eq);
-        level_row(ui, "BASS", set.map(|x| x.eq_bass), eq);
-        level_row(ui, "MID", set.map(|x| x.eq_mid), eq);
-        level_row(ui, "TREBLE", set.map(|x| x.eq_treble), eq);
+        let centred = |v: u8| format!("{:+}", v as i16 - 50);
+        if let Some(n) = level_slider(ui, "BASS", set.map(|x| x.eq_bass), 100, &centred, eq, editable) {
+            self.set_settings(|s| s.eq_bass = n);
+        }
+        if let Some(n) = level_slider(ui, "MID", set.map(|x| x.eq_mid), 100, &centred, eq, editable) {
+            self.set_settings(|s| s.eq_mid = n);
+        }
+        if let Some(n) = level_slider(ui, "TREBLE", set.map(|x| x.eq_treble), 100, &centred, eq, editable) {
+            self.set_settings(|s| s.eq_treble = n);
+        }
         ui.label(
-            RichText::new("Changes made on the pedal itself are not reported over USB.").font(font(11.0)).color(TEXT_FAINT),
+            RichText::new("Global EQ changed on the pedal itself is not reported over USB, so this may be stale.")
+                .font(font(11.0))
+                .color(TEXT_FAINT),
         );
     }
 
@@ -917,6 +1243,67 @@ impl StompApp {
                 ui.end_row();
             }
         });
+    }
+
+    fn save_window(&mut self, ctx: &egui::Context) {
+        let Some(dlg) = &mut self.save_dialog else { return };
+        let mut open = true;
+        let (mut save, mut cancel) = (false, false);
+        let cur = self.state.current;
+        egui::Window::new(format!("{}  Save preset", icon::FLOPPY_DISK))
+            .collapsible(false)
+            .resizable(false)
+            .anchor(Align2::CENTER_CENTER, vec2(0.0, 0.0))
+            .open(&mut open)
+            .show(ctx, |ui| {
+                ui.set_width(340.0);
+                egui::Grid::new("save_grid").num_columns(2).spacing([12.0, 10.0]).show(ui, |ui| {
+                    ui.label("Name");
+                    let r = ui.add(egui::TextEdit::singleline(&mut dlg.name).char_limit(16).desired_width(220.0));
+                    if r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
+                        save = true;
+                    }
+                    ui.end_row();
+                    ui.label("Slot");
+                    egui::ComboBox::from_id_salt("save_slot")
+                        .selected_text(preset_label(dlg.slot))
+                        .height(360.0)
+                        .show_ui(ui, |ui| {
+                            for i in 0..99u8 {
+                                let name = self.state.preset_name(i).unwrap_or("—");
+                                ui.selectable_value(&mut dlg.slot, i, format!("{}  {name}", preset_label(i)));
+                            }
+                        });
+                    ui.end_row();
+                });
+                if !dlg.name.is_ascii() {
+                    ui.label(RichText::new("Only ASCII characters can be stored; others become “?”.").color(BAD));
+                }
+                if Some(dlg.slot) != cur {
+                    let old = self.state.preset_name(dlg.slot).unwrap_or("?");
+                    ui.label(
+                        RichText::new(format!("{}  This overwrites {} “{old}”.", icon::WARNING, preset_label(dlg.slot)))
+                            .color(ACCENT),
+                    );
+                }
+                ui.add_space(6.0);
+                ui.horizontal(|ui| {
+                    if ui.button("Cancel").clicked() {
+                        cancel = true;
+                    }
+                    let b = egui::Button::new(RichText::new(format!("{}  Save", icon::FLOPPY_DISK)).color(BG)).fill(ACCENT);
+                    if ui.add(b).clicked() {
+                        save = true;
+                    }
+                });
+            });
+        if save {
+            let (slot, name) = (dlg.slot, dlg.name.clone());
+            self.save_preset(slot, &name);
+        }
+        if save || cancel || !open {
+            self.save_dialog = None;
+        }
     }
 
     // ───────────────────────────── activity log ─────────────────────────────
@@ -1150,6 +1537,10 @@ impl eframe::App for StompApp {
         egui::CentralPanel::default()
             .frame(egui::Frame::new().fill(BG).inner_margin(egui::Margin::same(18)))
             .show(ui, |ui| self.main_view(ui, now));
+        if !self.can_edit_sound() {
+            self.save_dialog = None;
+        }
+        self.save_window(ui.ctx());
 
         if self.animating(now) {
             ui.ctx().request_repaint();

@@ -1,0 +1,4 @@
+# keep shell scripts runnable when checked out on Windows
+*.sh text eol=lf
+# capture logs are test vectors
+captures/logs/*.log text eol=lf

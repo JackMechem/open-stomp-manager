@@ -1,9 +1,9 @@
 //! Stomp Manager RE: an open editor for the SORAN Dual Stomp.
 //!
-//! For now a live monitor: it shows the active preset, signal chain, looper, drum and tuner,
-//! and logs everything that happens on the pedal.
+//! A live monitor and editor: it shows and edits the active preset, signal chain, looper, drum
+//! and system settings, saves presets, and logs everything that happens on the pedal.
 //!
-//! Usage: `stomp-manager [--replay <capture.log>] [--speed <x>]`
+//! Usage: `stomp-manager [--replay <capture.log>] [--speed <x>] [--version]`
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
@@ -14,6 +14,16 @@ mod theme;
 mod widgets;
 
 use std::path::PathBuf;
+
+/// The release version (workspace `Cargo.toml`, the single source of truth).
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+/// Short git commit of the build, empty when built outside a git checkout.
+pub const GIT_HASH: &str = env!("STOMP_GIT_HASH");
+
+/// `0.2.0 (1a2b3c4d)`, or just the version without git info.
+pub fn version_long() -> String {
+    if GIT_HASH.is_empty() { VERSION.to_owned() } else { format!("{VERSION} ({GIT_HASH})") }
+}
 
 fn icon() -> egui::IconData {
     // amber rounded square with two rings (the two footswitches)
@@ -40,7 +50,22 @@ fn icon() -> egui::IconData {
     egui::IconData { rgba, width: n, height: n }
 }
 
+/// Release builds on Windows use the GUI subsystem (no console window), so terminal output from
+/// `--help` / `--version` would vanish. Attach to the console of the shell that launched us.
+#[cfg(windows)]
+fn attach_console() {
+    use windows_sys::Win32::System::Console::{ATTACH_PARENT_PROCESS, AttachConsole};
+    // SAFETY: no preconditions; fails harmlessly when there is no parent console.
+    unsafe {
+        AttachConsole(ATTACH_PARENT_PROCESS);
+    }
+}
+
 fn main() -> eframe::Result {
+    #[cfg(windows)]
+    if std::env::args().len() > 1 {
+        attach_console();
+    }
     let mut opts = app::Options { replay: None, speed: 4.0 };
     let mut args = std::env::args().skip(1);
     while let Some(a) = args.next() {
@@ -48,7 +73,12 @@ fn main() -> eframe::Result {
             "--replay" => opts.replay = args.next().map(PathBuf::from),
             "--speed" => opts.speed = args.next().and_then(|s| s.parse().ok()).unwrap_or(opts.speed),
             "-h" | "--help" => {
-                println!("usage: stomp-manager [--replay <capture.log>] [--speed <x>]");
+                println!("Dual Stomp Manager {}", version_long());
+                println!("usage: stomp-manager [--replay <capture.log>] [--speed <x>] [--version]");
+                return Ok(());
+            }
+            "-V" | "--version" => {
+                println!("stomp-manager {}", version_long());
                 return Ok(());
             }
             other => eprintln!("ignoring unknown argument {other:?}"),
@@ -57,7 +87,7 @@ fn main() -> eframe::Result {
 
     let native = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_title("Dual Stomp Manager")
+            .with_title(format!("Dual Stomp Manager {VERSION}"))
             .with_app_id("stomp-manager")
             .with_inner_size([1560.0, 960.0])
             .with_min_inner_size([1100.0, 680.0])

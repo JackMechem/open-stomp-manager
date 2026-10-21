@@ -1,7 +1,7 @@
 //! Data records carried in SysEx (docs/04).
 
 use crate::catalog::Module;
-use crate::pack::unpack;
+use crate::pack::{pack, unpack};
 
 pub const PRESET_LEN: usize = 110;
 pub const PRESET_COUNT: usize = 99;
@@ -91,6 +91,33 @@ impl Preset {
         Some(p)
     }
 
+    /// The 110-byte record: the original raw bytes with every decoded field written back.
+    /// Param-count bytes are only recomputed for modules whose model changed.
+    pub fn to_raw(&self) -> [u8; PRESET_LEN] {
+        let mut raw = self.raw;
+        raw[0] = self.index;
+        for m in Module::EFFECTS {
+            let i = m.index();
+            let st = &self.modules[i];
+            if raw[12 + i] & 0x3F != st.model {
+                raw[PARAM_LAYOUT[i].0] = param_count(m, st.model);
+            }
+            raw[12 + i] = st.head();
+            let (_, first) = PARAM_LAYOUT[i];
+            let n = m.param_ccs().map(|x| x.1 as usize).unwrap_or(0);
+            raw[first..first + n].copy_from_slice(&st.params[..n]);
+        }
+        raw[78] = self.volume;
+        raw[83..90].copy_from_slice(&self.chain);
+        raw[94..110].copy_from_slice(&name_bytes(&self.name));
+        raw
+    }
+
+    /// Packed SysEx body for a `0x0B` write.
+    pub fn to_packed(&self) -> Vec<u8> {
+        pack(&self.to_raw())
+    }
+
     pub fn module(&self, m: Module) -> Option<&ModuleState> {
         self.modules.get(m.index())
     }
@@ -112,6 +139,26 @@ impl Preset {
                         .all(|p| a.params[p.slot as usize] == b.params[p.slot as usize])
             })
     }
+}
+
+pub const SETTINGS_LEN: usize = 17;
+
+/// Value of a module's param-count byte for a model (the number of params the model uses).
+/// CAB always carries all five: user IRs only hide MIC/POSITION in the UI.
+pub fn param_count(m: Module, model: u8) -> u8 {
+    match m {
+        Module::Cab => 5,
+        _ => m.params(model).len() as u8,
+    }
+}
+
+/// A preset name as the 16-byte zero-padded ASCII field (non-ASCII becomes `?`).
+pub fn name_bytes(name: &str) -> [u8; 16] {
+    let mut b = [0u8; 16];
+    for (d, c) in b.iter_mut().zip(name.chars()) {
+        *d = if (' '..='~').contains(&c) { c as u8 } else { b'?' };
+    }
+    b
 }
 
 /// Global system settings (SysEx `0x14`), 17 bytes.
@@ -142,6 +189,25 @@ impl Settings {
             loopback: raw[10] != 0,
             raw,
         })
+    }
+
+    /// The record with the decoded fields written back over the original bytes.
+    pub fn to_raw(&self) -> Vec<u8> {
+        let mut raw = self.raw.clone();
+        if raw.len() < SETTINGS_LEN {
+            raw.resize(SETTINGS_LEN, 0);
+        }
+        raw[1] = self.input_trim.min(20);
+        raw[4] = self.eq_bass.min(100);
+        raw[5] = self.eq_mid.min(100);
+        raw[6] = self.eq_treble.min(100);
+        raw[9] = self.wireless as u8;
+        raw[10] = self.loopback as u8;
+        raw
+    }
+
+    pub fn to_packed(&self) -> Vec<u8> {
+        pack(&self.to_raw())
     }
 
     pub fn input_trim_db(&self) -> i16 {
@@ -209,5 +275,31 @@ mod tests {
         assert_eq!(s.input_trim_db(), 0);
         assert_eq!(s.eq_mid, 50);
         assert!(s.wireless && s.loopback);
+        assert_eq!(s.to_raw(), raw);
+        let mut s2 = s.clone();
+        s2.input_trim = 13;
+        s2.loopback = false;
+        let r = Settings::from_packed(&s2.to_packed()).unwrap();
+        assert_eq!((r.input_trim, r.loopback, r.raw[12]), (13, false, 0xB4));
+    }
+
+    #[test]
+    fn preset_encode_patches_fields() {
+        let mut raw = [0u8; PRESET_LEN];
+        raw[8] = 0x62;
+        raw[12] = 0x05; // OD/FX DS1 (3 params)
+        raw[25] = 3;
+        raw[83..90].copy_from_slice(&DEFAULT_CHAIN);
+        let mut p = Preset::from_raw(&raw).unwrap();
+        assert_eq!(p.to_raw(), raw);
+        p.index = 9;
+        p.modules[0].model = 3; // Boost RC (4 params)
+        p.modules[0].on = false;
+        p.modules[0].params[3] = 77;
+        p.name = "Lead ünicode name too long".into();
+        let r = p.to_raw();
+        assert_eq!((r[0], r[8], r[12], r[25], r[29]), (9, 0x62, 0x43, 4, 77));
+        assert_eq!(&r[94..110], b"Lead ?nicode nam");
+        assert_eq!(Preset::from_packed(&p.to_packed()).unwrap().to_raw(), r);
     }
 }

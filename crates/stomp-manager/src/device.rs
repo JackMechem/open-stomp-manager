@@ -1,8 +1,9 @@
-//! Background engine: owns the MIDI connection (or a capture replay), performs the read-only
-//! sync handshake and forwards every message to the UI.
+//! Background engine: owns the MIDI connection (or a capture replay), performs the sync
+//! handshake, sends edits and forwards every message to the UI.
 //!
-//! The pedal handles one SysEx request at a time, so requests are queued and each waits for its
-//! reply (1 s timeout) before the next is sent, like the official app (docs/03).
+//! The pedal handles one SysEx request at a time, so requests and writes are queued and each
+//! waits for its reply or ack (1 s timeout) before the next is sent, like the official app
+//! (docs/03). Live CCs/PCs bypass the queue.
 
 use std::collections::VecDeque;
 use std::path::PathBuf;
@@ -32,8 +33,12 @@ pub enum Command {
     Connect(String),
     Disconnect,
     Resync,
-    /// Whether to read presets/state from the pedal (read-only SysEx). Off = pure listening.
+    /// Whether the app may send anything (sync reads and edits). Off = pure listening.
     SetSync(bool),
+    /// Send a live message (CC/PC) right away.
+    Send(Vec<u8>),
+    /// Queue messages to send in order; SysEx writes wait for the pedal's ack.
+    Write(Vec<Vec<u8>>),
     Replay { path: PathBuf, speed: f32 },
     StopReplay,
 }
@@ -85,7 +90,10 @@ pub fn spawn(ctx: egui::Context) -> Handle {
 
 struct Request {
     bytes: Vec<u8>,
-    expect: Expect,
+    /// `None`: nothing comes back (CC/PC), done once sent.
+    expect: Option<Expect>,
+    /// Part of the startup sync (counts towards its progress).
+    sync: bool,
 }
 
 #[derive(Clone, Copy)]
@@ -94,6 +102,8 @@ enum Expect {
     Short(u8),
     /// NEP reply (`dir` 2) to this cmd.
     Reply(u8),
+    /// NEP write ack (`dir` 3) for this cmd.
+    Ack(u8),
 }
 
 impl Expect {
@@ -101,17 +111,19 @@ impl Expect {
         match (self, msg) {
             (Expect::Short(k), Msg::Short { kind, payload }) => *kind == k && !payload.is_empty(),
             (Expect::Reply(c), Msg::Nep { cmd, dir, .. }) => *cmd == c && *dir == 2,
+            (Expect::Ack(c), Msg::Nep { cmd, dir, .. }) => *cmd == c && *dir == 3,
             _ => false,
         }
     }
 
-    fn of(bytes: &[u8]) -> Expect {
-        match Msg::parse(bytes) {
+    fn of(bytes: &[u8]) -> Option<Expect> {
+        Some(match Msg::parse(bytes) {
             Msg::Short { kind: 0x00, .. } => Expect::Short(0x10),
             Msg::Short { kind, .. } => Expect::Short(kind),
+            Msg::Nep { cmd, dir: 1, .. } => Expect::Ack(cmd),
             Msg::Nep { cmd, .. } => Expect::Reply(cmd),
-            _ => Expect::Reply(0xFF),
-        }
+            _ => return None,
+        })
     }
 }
 
@@ -186,6 +198,8 @@ impl Engine {
                 Err(RecvTimeoutError::Disconnected) => break,
             }
             self.pump();
+            #[cfg(target_os = "macos")]
+            run_loop_tick();
             if self.last_scan.is_none_or(|t| t.elapsed() > SCAN_INTERVAL) {
                 self.scan();
             }
@@ -215,6 +229,18 @@ impl Engine {
                     self.queue.clear();
                     self.in_flight = None;
                     self.emit(Update::Sync { done: 0, total: 0 });
+                }
+            }
+            Command::Send(bytes) => {
+                if self.writable() {
+                    self.transmit(&bytes);
+                }
+            }
+            Command::Write(msgs) => {
+                if self.writable() {
+                    for bytes in msgs {
+                        self.enqueue_write(bytes);
+                    }
                 }
             }
             Command::Replay { path, speed } => {
@@ -334,8 +360,40 @@ impl Engine {
     fn enqueue(&mut self, bytes: Vec<u8>) {
         if self.sync && !self.queue.iter().any(|r| r.bytes == bytes) {
             let expect = Expect::of(&bytes);
-            self.queue.push_back(Request { bytes, expect });
+            self.queue.push_back(Request { bytes, expect, sync: self.sync_total > 0 });
         }
+    }
+
+    /// Edits are allowed when connected with an output and not in listen-only mode.
+    fn writable(&self) -> bool {
+        let ok = self.sync && self.conn.as_ref().is_some_and(|c| c.output.is_some());
+        if !ok {
+            self.info("Not sent: the app is in listen-only mode or has no MIDI output to the pedal", true);
+        }
+        ok
+    }
+
+    fn enqueue_write(&mut self, bytes: Vec<u8>) {
+        let expect = Expect::of(&bytes);
+        // settings are rewritten whole on every change: only the latest queued one matters
+        if let Some(Expect::Ack(0x14)) = expect
+            && let Some(r) = self.queue.iter_mut().find(|r| matches!(r.expect, Some(Expect::Ack(0x14))))
+        {
+            r.bytes = bytes;
+            return;
+        }
+        self.queue.push_back(Request { bytes, expect, sync: false });
+    }
+
+    /// Send one message now and show it in the log. The pedal never echoes host messages.
+    fn transmit(&mut self, bytes: &[u8]) -> bool {
+        let Some(out) = self.conn.as_mut().and_then(|c| c.output.as_mut()) else { return false };
+        if let Err(e) = out.send(bytes) {
+            self.info(format!("Send failed: {e}"), true);
+            return false;
+        }
+        self.emit(Update::Message { at: Local::now(), origin: Origin::Host, bytes: bytes.to_vec() });
+        true
     }
 
     /// Send the next queued request when nothing is in flight; expire timed-out requests.
@@ -344,24 +402,26 @@ impl Engine {
             && t.elapsed() > REPLY_TIMEOUT
         {
             let what = stomp_proto::midi::hex(&r.bytes[..r.bytes.len().min(8)]);
+            let sync = r.sync;
             self.in_flight = None;
             self.info(format!("No reply from pedal to {what} …"), true);
-            self.progress();
+            if sync {
+                self.progress();
+            }
         }
-        if self.in_flight.is_some() {
-            return;
+        while self.in_flight.is_none() {
+            let Some(r) = self.queue.pop_front() else { return };
+            if self.conn.as_ref().is_none_or(|c| c.output.is_none()) {
+                self.queue.clear();
+                return;
+            }
+            if !self.transmit(&r.bytes) {
+                return;
+            }
+            if r.expect.is_some() {
+                self.in_flight = Some((r, Instant::now()));
+            }
         }
-        let Some(r) = self.queue.pop_front() else { return };
-        let Some(out) = self.conn.as_mut().and_then(|c| c.output.as_mut()) else {
-            self.queue.clear();
-            return;
-        };
-        if let Err(e) = out.send(&r.bytes) {
-            self.info(format!("Send failed: {e}"), true);
-            return;
-        }
-        self.emit(Update::Message { at: Local::now(), origin: Origin::Host, bytes: r.bytes.clone() });
-        self.in_flight = Some((r, Instant::now()));
     }
 
     fn progress(&mut self) {
@@ -383,10 +443,13 @@ impl Engine {
         for bytes in self.asm.push(data) {
             let msg = Msg::parse(&bytes);
             if let Some((r, _)) = &self.in_flight
-                && r.expect.matches(&msg)
+                && r.expect.is_some_and(|e| e.matches(&msg))
             {
+                let sync = r.sync;
                 self.in_flight = None;
-                self.progress();
+                if sync {
+                    self.progress();
+                }
             }
             self.react(&msg);
             self.emit(Update::Message { at, origin: Origin::Pedal, bytes });
@@ -430,6 +493,18 @@ impl Engine {
         if let Some(r) = self.replay.take() {
             r.stop.store(true, Ordering::Relaxed);
         }
+    }
+}
+
+/// CoreMIDI updates a client's view of the devices (hotplug) through notifications delivered on
+/// the run loop of the thread that created the client. The engine thread has no run loop of its
+/// own, so give it one turn per tick without blocking.
+#[cfg(target_os = "macos")]
+fn run_loop_tick() {
+    use core_foundation_sys::runloop::{CFRunLoopRunInMode, kCFRunLoopDefaultMode};
+    // SAFETY: plain CoreFoundation call on the current thread; returns immediately (0 s timeout).
+    unsafe {
+        CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.0, 1);
     }
 }
 

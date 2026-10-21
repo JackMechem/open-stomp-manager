@@ -1,0 +1,90 @@
+name: Release
+
+# Push a tag `vX.Y.Z` matching the workspace version to build and publish binaries.
+on:
+  push:
+    tags: ["v*"]
+
+env:
+  CARGO_TERM_COLOR: always
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x86_64
+            os: ubuntu-22.04 # older glibc = runs on more distros
+          - name: macos-universal
+            os: macos-latest
+          - name: windows-x86_64
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check tag matches Cargo.toml
+        shell: bash
+        run: packaging/check-version.sh "${GITHUB_REF_NAME#v}"
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ runner.os == 'macOS' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      - name: Install ALSA headers
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Package (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cargo build --release -p stomp-manager
+          d=stomp-manager-${GITHUB_REF_NAME}-${{ matrix.name }}
+          mkdir -p $d
+          cp target/release/stomp-manager packaging/stomp-manager.desktop README.md CHANGELOG.md $d/
+          cp packaging/icons/icon.png $d/stomp-manager.png
+          tar czf $d.tar.gz $d
+          echo "ASSET=$d.tar.gz" >> $GITHUB_ENV
+      - name: Package (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          packaging/macos/bundle.sh
+          d=stomp-manager-${GITHUB_REF_NAME}-${{ matrix.name }}
+          ditto -c -k --keepParent "target/macos/Dual Stomp Manager.app" $d.zip
+          echo "ASSET=$d.zip" >> $GITHUB_ENV
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          cargo build --release -p stomp-manager
+          d=stomp-manager-${GITHUB_REF_NAME}-${{ matrix.name }}
+          mkdir -p $d
+          cp target/release/stomp-manager.exe README.md CHANGELOG.md $d/
+          7z a $d.zip $d
+          echo "ASSET=$d.zip" >> $GITHUB_ENV
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: ${{ env.ASSET }}
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Release notes from CHANGELOG.md
+        run: |
+          v=${GITHUB_REF_NAME#v}
+          awk -v v="$v" '/^## \[/{p = index($0, "[" v "]") > 0; next} p' CHANGELOG.md > notes.md
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          body_path: notes.md

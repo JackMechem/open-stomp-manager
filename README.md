@@ -1,8 +1,10 @@
 # Stomp Manager RE: SORAN Dual Stomp Lite protocol
 
+**Dual Stomp Manager** · Version **0.2.0** · Linux · macOS · Windows · [changelog](CHANGELOG.md)
+
 Reverse-engineered USB-MIDI protocol for the **SORAN Dual Stomp Lite** guitar multi-effects pedal (USB `3962:2000`,
 "JME STOMPBOX"). The vendor's editor, *Stomp Manager*, only runs on macOS/Windows. This repo documents everything
-needed to write an open editor for **Linux**; the reference implementation will be in Rust.
+needed to write an open editor, and includes one: a cross-platform Rust app for **Linux, macOS and Windows**.
 
 > Probably also applies to the Dual Stomp and Tiny Stomp (same firmware family, same app). Only the Dual Stomp Lite on
 > firmware **V1.1.1** with Stomp Manager **1.0.2** has been tested.
@@ -37,7 +39,7 @@ needed to write an open editor for **Linux**; the reference implementation will 
 | System settings (input trim, global EQ, wireless, loopback) | ✅ (some bytes unknown) |
 | User AMP (NAM) / user IR upload transport | ✅ chunk protocol decoded |
 | NAM → device-format conversion, IR pre-processing | ❌ open (app-side DSP, see [docs/05](docs/05-uploads-nam-ir.md)) |
-| Rust app (`crates/`) | 🚧 live monitor works: active preset, chain, looper/drum/tuner, activity log. Editing next |
+| Rust app (`crates/`) | 🚧 live editor works: preset select/save/rename, models, on/off, knobs, looper/drum, system settings, activity log. IR/NAM upload next |
 
 ## Documentation
 
@@ -64,11 +66,17 @@ amidi -p hw:2,0,0 -d                                # turn knobs on the pedal an
 ## The app (Rust, cross-platform)
 
 `crates/stomp-proto` is the pure protocol library (no I/O, tested against `captures/logs/`).
-`crates/stomp-manager` is the egui desktop app. For now it is a **live monitor**: it connects
-automatically when the pedal is plugged in, reads the presets and state (the same read-only
-SysEx requests the official app sends on connect; tick *Listen only* to send nothing at all) and
-shows the active preset, signal chain, module parameters, tuner, looper and drum machine, with a
-filterable activity log of everything you do on the pedal.
+`crates/stomp-manager` is the egui desktop app. It connects automatically when the pedal is
+plugged in, reads the presets and state (the same SysEx requests the official app sends on
+connect) and shows the active preset, signal chain, module parameters, tuner, looper and drum
+machine, with a filterable activity log of everything that happens on the pedal.
+
+It is also an **editor**: click a preset to select it; pick models, switch blocks on/off (the LED
+on each chain block, or the power button in the detail view) and turn knobs (drag, scroll wheel,
+Shift for fine steps); run the looper and drum machine; change input trim, global EQ, wireless and
+loopback. Edits change the pedal's live sound only, like turning its knobs, until you press
+**Save** (or **Save as…** to rename and/or store in another slot, also on a preset's right-click
+menu). Tick *Listen only* to send nothing at all.
 
 ```sh
 nix run                       # build and run
@@ -80,15 +88,45 @@ cargo run -p stomp-proto --example decode -- captures/logs/01-main-session.log  
 ```
 
 Without Nix you need Rust ≥ 1.88 and, on Linux, the ALSA headers (`libasound2-dev` /
-`alsa-lib-devel`). macOS and Windows need nothing extra.
+`alsa-lib-devel`). macOS and Windows need nothing extra. `stomp-manager --version` prints the
+version and git commit; the app shows it next to its name.
+
+### Platforms
+
+| | MIDI backend | Download (from [Releases](https://github.com/mechemjack/dual-stomp-manager-re/releases)) | Build it yourself |
+|---|---|---|---|
+| Linux (x86_64) | ALSA | `…-linux-x86_64.tar.gz`: binary, `.desktop` file, icon | `cargo build --release -p stomp-manager`, or `nix build` |
+| macOS 11+ (Apple Silicon + Intel) | CoreMIDI | `…-macos-universal.zip`: `Dual Stomp Manager.app` | `packaging/macos/bundle.sh` (`--native` for this Mac only) |
+| Windows 10+ (x86_64) | WinMM | `…-windows-x86_64.zip`: `stomp-manager.exe` | `cargo build --release -p stomp-manager` |
+
+The pedal is class compliant, so no driver is needed anywhere. Notes:
+
+* **macOS:** the app is ad-hoc signed, not notarized. The first time, right-click it and choose *Open* (or run
+  `xattr -dr com.apple.quarantine "Dual Stomp Manager.app"`).
+* **Windows:** MIDI ports can only be opened by one program at a time, so quit the official Stomp Manager first.
+* CI builds and tests every push on all three (`.github/workflows/ci.yml`).
+
+### Versioning and releases
+
+The version lives in one place, `version` under `[workspace.package]` in `Cargo.toml`, and follows
+[SemVer](https://semver.org) (0.x: anything may change). To release:
+
+1. Bump `Cargo.toml`, add a `## [x.y.z]` section to [CHANGELOG.md](CHANGELOG.md), update the version line at the top
+   of this README, and run `cargo build` so `Cargo.lock` follows. `packaging/check-version.sh` checks all of this
+   (CI runs it too).
+2. Commit, then `git tag vx.y.z && git push --tags`. The release workflow builds the Linux, macOS and Windows
+   packages and publishes them with the changelog section as release notes.
 
 ## Repository layout
 
 ```
 docs/                 the documentation above
 crates/stomp-proto/   protocol library: packing, SysEx framing, catalogue, records, state tracker
-crates/stomp-manager/ egui desktop app (monitor now, editor later)
+crates/stomp-manager/ egui desktop app (live monitor + editor)
+packaging/            icons (+ generator), Linux .desktop, macOS bundle script, version check
+.github/workflows/    CI (Linux/macOS/Windows) and tag-triggered release builds
 flake.nix             Nix package + dev shell
+CHANGELOG.md          release history
 tools/sniffer/        macOS CoreMIDI interposer + helpers used to capture the official app
 tools/decode/         Python decoders: live.py (human-readable live decode), analyze.py, unpack.py,
                       preset_layout.py, nam_extract.py; ocr.swift (screenshot OCR)

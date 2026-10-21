@@ -59,6 +59,7 @@
             wrapProgram $out/bin/stomp-manager \
               --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath runtimeLibs}
             install -Dm644 ${./packaging/stomp-manager.desktop} $out/share/applications/stomp-manager.desktop
+            install -Dm644 ${./packaging/icons/icon.png} $out/share/pixmaps/stomp-manager.png
           '';
 
           meta = {

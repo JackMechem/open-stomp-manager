@@ -2,7 +2,7 @@
 
 ## Goal
 
-A native **Linux** editor (Rust) for the SORAN Dual Stomp Lite with the features of the official *Stomp Manager*:
+A native editor (Rust) for **Linux, macOS and Windows** for the SORAN Dual Stomp Lite with the features of the official *Stomp Manager*:
 live editing, preset management, settings, looper/drum/tuner, and eventually NAM/IR import.
 
 ## Approach taken
@@ -38,13 +38,16 @@ live editing, preset management, settings, looper/drum/tuner, and eventually NAM
 - [x] Capture + decode all pedal-side controls
 - [x] Capture + decode app-side live control, rename/save, settings, uploads (transport)
 - [x] Documentation + tooling
-- [ ] Fill open questions that matter for v1 ([docs/09](docs/09-open-questions.md) #4–#6): one more short capture
-      session, or confirm directly with `amidi` on Linux
+- [ ] Fill open questions that matter for v1 ([docs/09](docs/09-open-questions.md) #4–#6): #5 mostly confirmed
+      on Linux (host `0x40`/`0x42`/`0x43`); `0x4A`, tuner control, #4 and #6 still open
 - [x] `stomp-proto` crate (pure encode/decode + tests against `captures/logs`)
 - [x] GUI live monitor (`stomp-manager`, egui): auto-connect, read-only sync, active preset, chain,
       params, tuner/looper/drum, coalescing activity log, capture replay
+- [x] Cross-platform (Linux/macOS/Windows): CI on all three, tag-triggered release packages, icons, versioning
+      (single source: workspace `Cargo.toml`, see CHANGELOG.md)
 - [ ] `stompctl` CLI (info, monitor, preset get/set/backup)
-- [ ] GUI editor: send CC/PC edits, preset save/rename, settings page
+- [x] GUI editor: send CC/PC edits, preset save/rename, settings page (save sequence verified byte-for-byte
+      against the capture; live CCs verified on hardware; preset/settings *writes* not yet run on hardware)
 - [ ] IR upload (needs the transform: capture a short cab IR)
 - [ ] NAM upload (needs `imagelib` conversion reversed)
 

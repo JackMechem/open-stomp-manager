@@ -86,6 +86,78 @@ mod tests {
         assert!(s.input_trim <= 20);
     }
 
+    /// Every preset / settings record on the wire re-encodes to the same bytes, and the
+    /// param-count bytes agree with the catalogue.
+    #[test]
+    fn records_round_trip() {
+        use crate::midi::{Msg, host};
+        use crate::records::{Preset, Settings, param_count};
+        let (mut presets, mut settings) = (0, 0);
+        for e in main_session() {
+            let Entry::Message { bytes, .. } = e else { continue };
+            let Msg::Nep { cmd, dir, payload } = Msg::parse(&bytes) else { continue };
+            if dir != 1 && dir != 2 {
+                continue;
+            }
+            match cmd {
+                0x0B | 0x0C => {
+                    let p = Preset::from_packed(&payload).unwrap();
+                    assert_eq!(p.to_packed(), payload, "preset {}", p.name);
+                    for m in Module::EFFECTS {
+                        let count = p.raw[[25, 32, 41, 61, 66, 73, 20, 48][m.index()]];
+                        let model = p.modules[m.index()].model;
+                        assert_eq!(count, param_count(m, model), "{} {} model {model}", p.name, m.name());
+                    }
+                    if dir == 1 {
+                        assert_eq!(host::preset_write(&p), bytes);
+                    }
+                    presets += 1;
+                }
+                0x14 => {
+                    let s = Settings::from_packed(&payload).unwrap();
+                    assert_eq!(s.to_packed(), payload);
+                    if dir == 1 {
+                        assert_eq!(host::settings_write(&s), bytes);
+                    }
+                    settings += 1;
+                }
+                _ => {}
+            }
+        }
+        assert!(presets >= 100 && settings > 100, "{presets} presets, {settings} settings");
+    }
+
+    /// Rebuild the captured "save as" (P69 renamed "4Ooz!" and stored to P22) from state alone.
+    #[test]
+    fn save_as_matches_capture() {
+        use crate::midi::host;
+        let entries = main_session();
+        let save_at = entries
+            .iter()
+            .position(|e| matches!(e, Entry::Message { origin: Origin::Host, bytes, .. } if bytes.get(5) == Some(&0x12)))
+            .unwrap();
+        let mut st = DeviceState::default();
+        for e in &entries[..save_at] {
+            if let Entry::Message { origin, bytes, .. } = e {
+                st.apply(bytes, *origin);
+            }
+        }
+        assert_eq!(st.current, Some(0x44));
+        let mut p = st.live.clone();
+        p.index = 0x15;
+        p.name = "4Ooz!".into();
+        let ours = host::save_preset(st.current.unwrap(), &p);
+        let theirs: Vec<Vec<u8>> = entries[save_at..]
+            .iter()
+            .filter_map(|e| match e {
+                Entry::Message { origin: Origin::Host, bytes, .. } => Some(bytes.clone()),
+                _ => None,
+            })
+            .take(3)
+            .collect();
+        assert_eq!(ours, theirs);
+    }
+
     #[test]
     fn preset_switch_applies_cached_preset() {
         let mut st = DeviceState::default();

@@ -76,10 +76,69 @@ pub fn led(painter: &egui::Painter, c: Pos2, r: f32, on: bool, color: Color32) {
 const KNOB_START: f32 = 0.75 * PI; // 7:30 o'clock
 const KNOB_SWEEP: f32 = 1.5 * PI;
 
-/// A read-only rotary knob display. `flash` (0..1) highlights a recent change.
-pub fn knob(ui: &mut Ui, label: &str, value: &str, frac: f32, bipolar: bool, color: Color32, flash: f32) -> Response {
+fn sense(editable: bool) -> Sense {
+    if editable { Sense::click_and_drag() } else { Sense::hover() }
+}
+
+/// One wheel notch this frame as ±1 (up = +1). Consumes the scroll so an enclosing
+/// scroll area doesn't move as well.
+fn wheel_step(ui: &Ui) -> Option<i16> {
+    let dy: f32 = ui.input(|i| {
+        i.raw
+            .events
+            .iter()
+            .filter_map(|e| match e {
+                egui::Event::MouseWheel { delta, .. } => Some(delta.y),
+                _ => None,
+            })
+            .sum()
+    });
+    ui.ctx().input_mut(|i| i.smooth_scroll_delta = Vec2::ZERO);
+    (dy != 0.0).then_some(if dy > 0.0 { 1 } else { -1 })
+}
+
+/// Turn drags (up/right = more) and scroll-wheel notches on `resp` into a new value in
+/// `0..=max`. Returns `Some` only when the value changes.
+pub fn drag_input(ui: &Ui, resp: &Response, value: u8, max: u8) -> Option<u8> {
+    let id = resp.id.with("drag-acc");
+    let mut next = None;
+    if resp.drag_started() {
+        ui.data_mut(|d| d.insert_temp(id, value as f32));
+    }
+    if resp.dragged() {
+        let fine = ui.input(|i| i.modifiers.shift);
+        let speed = if fine { 0.08 } else { 0.4 } * (max as f32 / 100.0).max(0.2);
+        let d = resp.drag_delta();
+        let acc = ui.data(|d| d.get_temp::<f32>(id)).unwrap_or(value as f32) + (d.x - d.y) * speed;
+        let acc = acc.clamp(0.0, max as f32);
+        ui.data_mut(|dm| dm.insert_temp(id, acc));
+        next = Some(acc.round() as u8);
+    }
+    if resp.hovered()
+        && let Some(step) = wheel_step(ui)
+    {
+        next = Some((value as i16 + step).clamp(0, max as i16) as u8);
+    }
+    next.filter(|n| *n != value)
+}
+
+/// A rotary knob. `flash` (0..1) highlights a recent change. When `editable`, the response
+/// senses drags (feed it to [`drag_input`]).
+#[allow(clippy::too_many_arguments)]
+pub fn knob(
+    ui: &mut Ui,
+    label: &str,
+    value: &str,
+    frac: f32,
+    bipolar: bool,
+    color: Color32,
+    flash: f32,
+    editable: bool,
+) -> Response {
     let size = vec2(78.0, 96.0);
-    let (rect, resp) = ui.allocate_exact_size(size, Sense::hover());
+    let (rect, resp) = ui.allocate_exact_size(size, sense(editable));
+    let active = resp.hovered() || resp.dragged();
+    let flash = if editable && active { flash.max(0.35) } else { flash };
     let p = ui.painter_at(rect.expand(12.0));
     let c = pos2(rect.center().x, rect.top() + 36.0);
     let r = 27.0;
@@ -104,6 +163,13 @@ pub fn knob(ui: &mut Ui, label: &str, value: &str, frac: f32, bipolar: bool, col
     p.line_segment([c + dir * (r - 16.0), c + dir * (r - 8.0)], Stroke::new(2.5, TEXT));
     // value
     p.text(c, Align2::CENTER_CENTER, value, mono_b(if value.len() > 4 { 10.0 } else { 13.0 }), TEXT);
+    if editable {
+        if resp.dragged() {
+            ui.ctx().set_cursor_icon(egui::CursorIcon::Grabbing);
+        } else if resp.hovered() {
+            ui.ctx().set_cursor_icon(egui::CursorIcon::ResizeVertical);
+        }
+    }
     // label
     p.text(
         pos2(rect.center().x, rect.bottom() - 12.0),
@@ -115,10 +181,11 @@ pub fn knob(ui: &mut Ui, label: &str, value: &str, frac: f32, bipolar: bool, col
     resp
 }
 
-/// A choice parameter shown as a pill, same footprint as a knob.
-pub fn choice(ui: &mut Ui, label: &str, value: &str, color: Color32, flash: f32) -> Response {
+/// A choice parameter shown as a pill, same footprint as a knob. Clickable when `editable`.
+pub fn choice(ui: &mut Ui, label: &str, value: &str, color: Color32, flash: f32, editable: bool) -> Response {
     let size = vec2(78.0, 96.0);
-    let (rect, resp) = ui.allocate_exact_size(size, Sense::hover());
+    let (rect, resp) = ui.allocate_exact_size(size, if editable { Sense::click() } else { Sense::hover() });
+    let flash = if editable && resp.hovered() { flash.max(0.35) } else { flash };
     let p = ui.painter_at(rect.expand(8.0));
     let pill = Rect::from_center_size(pos2(rect.center().x, rect.top() + 36.0), vec2(72.0, 30.0));
     p.rect(
@@ -130,31 +197,64 @@ pub fn choice(ui: &mut Ui, label: &str, value: &str, color: Color32, flash: f32)
     );
     p.text(pill.center(), Align2::CENTER_CENTER, value, font_b(12.0), TEXT);
     p.text(pos2(rect.center().x, rect.bottom() - 12.0), Align2::CENTER_CENTER, label, font_sb(10.5), TEXT_DIM);
-    resp
+    if editable { resp.on_hover_cursor(egui::CursorIcon::PointingHand) } else { resp }
 }
 
-/// Horizontal level bar.
-pub fn bar(ui: &mut Ui, frac: Option<f32>, color: Color32, width: f32) -> Response {
-    let (rect, resp) = ui.allocate_exact_size(vec2(width, 6.0), Sense::hover());
+/// Horizontal level bar. When `editable`, a taller hit area senses clicks and drags.
+pub fn bar(ui: &mut Ui, frac: Option<f32>, color: Color32, width: f32, editable: bool) -> Response {
+    let (hit, resp) = ui.allocate_exact_size(vec2(width, if editable { 16.0 } else { 6.0 }), sense(editable));
+    let rect = Rect::from_center_size(hit.center(), vec2(width, 6.0));
     let p = ui.painter();
     p.rect_filled(rect, CornerRadius::same(3), CARD_HI);
     if let Some(f) = frac {
         let mut fill = rect;
         fill.set_width((rect.width() * f.clamp(0.0, 1.0)).max(6.0));
         p.rect_filled(fill, CornerRadius::same(3), color);
+        if editable && (resp.hovered() || resp.dragged()) {
+            p.circle_filled(pos2(fill.right() - 3.0, rect.center().y), 6.0, mix(color, Color32::WHITE, 0.3));
+        }
     }
-    resp
+    if editable { resp.on_hover_cursor(egui::CursorIcon::PointingHand) } else { resp }
 }
 
-/// Labelled level bar row: `LABEL ▓▓▓▓░░ 64`.
-pub fn level_row(ui: &mut Ui, label: &str, v: Option<u8>, color: Color32) {
+/// Labelled level bar row (`LABEL ▓▓▓▓░░ 64`) in `0..=max`; when `editable`, click/drag on the bar or scroll to set.
+/// Returns the new value when the user changes it.
+pub fn level_slider(
+    ui: &mut Ui,
+    label: &str,
+    v: Option<u8>,
+    max: u8,
+    fmt: &dyn Fn(u8) -> String,
+    color: Color32,
+    editable: bool,
+) -> Option<u8> {
+    let editable = editable && v.is_some();
     ui.horizontal(|ui| {
         ui.add_sized([86.0, 16.0], egui::Label::new(egui::RichText::new(label).font(font_sb(11.0)).color(TEXT_DIM)));
-        let w = (ui.available_width() - 40.0).max(40.0);
-        bar(ui, v.map(|v| v as f32 / 100.0), color, w);
-        let txt = v.map(|v| v.to_string()).unwrap_or_else(|| "—".into());
+        let w = (ui.available_width() - 52.0).max(40.0);
+        let resp = bar(ui, v.map(|v| v as f32 / max as f32), color, w, editable);
+        let txt = v.map(fmt).unwrap_or_else(|| "—".into());
         ui.label(egui::RichText::new(txt).font(mono(12.0)).color(TEXT));
-    });
+        let v = v?;
+        if !editable {
+            return None;
+        }
+        if (resp.clicked() || resp.dragged())
+            && let Some(pos) = resp.interact_pointer_pos()
+        {
+            let f = ((pos.x - resp.rect.left()) / resp.rect.width()).clamp(0.0, 1.0);
+            let n = (f * max as f32).round() as u8;
+            return (n != v).then_some(n);
+        }
+        if resp.hovered()
+            && let Some(step) = wheel_step(ui)
+        {
+            let n = (v as i16 + step).clamp(0, max as i16) as u8;
+            return (n != v).then_some(n);
+        }
+        None
+    })
+    .inner
 }
 
 /// A small rounded tag.
