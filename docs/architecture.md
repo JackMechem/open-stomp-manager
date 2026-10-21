@@ -15,7 +15,7 @@ The app is the UI on top.
 | `app.rs` | `StompApp`: all panels (top bar, preset list, header, chain, detail, tuner/looper/drum, device/settings, log panel, save dialog), sending edits, polling the engine, flash animations, the screenshot hook |
 | `logbook.rs` | The activity log model: rows, merging knob sweeps, filtering, text export (unit-tested) |
 | `widgets.rs` | Custom-painted widgets: cards, knobs, level sliders, LEDs, chips, arcs, filter chips, drag/scroll input |
-| `theme.rs` | Colours, fonts (Inter, JetBrains Mono, Phosphor icons) and the egui style; colour per module and log category |
+| `theme.rs` | Colours, fonts (Inter with tabular digits, Phosphor icons) and the egui style; colour per module and log category |
 | `build.rs` | Git commit for the version; Windows icon and version resource |
 
 ## Data flow
@@ -50,7 +50,7 @@ The app is the UI on top.
 
 The pedal doesn't echo what the host sends. The engine reports every message it sends back as an
 `Update::Message` with `Origin::Host`, and `poll()` applies those exactly like pedal messages. So a knob turned in the
-app updates `DeviceState` through the same path as a knob turned on the pedal, the log shows it as a HOST row, and
+app updates `DeviceState` through the same path as a knob turned on the pedal, the log shows it as a Host row, and
 there is one source of truth. Anything sent while listen-only or disconnected is refused by the engine and never
 appears.
 

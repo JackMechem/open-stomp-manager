@@ -47,6 +47,64 @@ pub fn category_color(c: Category) -> Color32 {
     }
 }
 
+/// Display name of a module (the library's names are the pedal's all-caps labels).
+pub fn module_title(m: Module) -> &'static str {
+    match m {
+        Module::Gate => "Gate",
+        Module::OdFx => "OD/FX",
+        Module::Amp => "Amp",
+        Module::Cab => "Cab",
+        Module::Eq => "EQ",
+        Module::Mod => "Mod",
+        Module::Delay => "Delay",
+        Module::Reverb => "Reverb",
+        Module::Loop => "Looper",
+        Module::Drum => "Drum",
+    }
+}
+
+/// Display name of an event category.
+pub fn category_title(c: Category) -> &'static str {
+    match c {
+        Category::Effect(m) => module_title(m),
+        Category::Preset => "Preset",
+        Category::Volume => "Volume",
+        Category::Navigation => "Page",
+        Category::Looper => "Looper",
+        Category::Drum => "Drum",
+        Category::Tuner => "Tuner",
+        Category::Settings => "Settings",
+        Category::Device => "Device",
+        Category::Protocol => "SysEx",
+        Category::Unknown => "Unknown",
+    }
+}
+
+/// Sentence case for an all-caps label from the catalogue (`"LOW CUT"` → `"Low cut"`), keeping abbreviations.
+/// Labels that already have lowercase letters (`"1.2kHz"`) are returned unchanged.
+pub fn label_case(s: &str) -> String {
+    const KEEP: [&str; 9] = ["EQ", "BPM", "NAM", "IR", "FX", "OD", "NR", "AR", "ID"];
+    if s.chars().any(|c| c.is_lowercase()) {
+        return s.to_owned();
+    }
+    let mut out = String::with_capacity(s.len());
+    for (i, word) in s.split(' ').enumerate() {
+        if i > 0 {
+            out.push(' ');
+        }
+        if KEEP.contains(&word) {
+            out.push_str(word);
+        } else if i == 0 {
+            let mut cs = word.chars();
+            out.extend(cs.next());
+            out.push_str(&cs.as_str().to_lowercase());
+        } else {
+            out.push_str(&word.to_lowercase());
+        }
+    }
+    out
+}
+
 pub fn module_icon(m: Module) -> &'static str {
     use egui_phosphor::regular as i;
     match m {
@@ -71,10 +129,6 @@ pub fn semibold() -> FontFamily {
     FontFamily::Name("semibold".into())
 }
 
-pub fn mono_bold() -> FontFamily {
-    FontFamily::Name("mono-bold".into())
-}
-
 pub fn font(size: f32) -> FontId {
     FontId::proportional(size)
 }
@@ -85,14 +139,6 @@ pub fn font_b(size: f32) -> FontId {
 
 pub fn font_sb(size: f32) -> FontId {
     FontId::new(size, semibold())
-}
-
-pub fn mono(size: f32) -> FontId {
-    FontId::monospace(size)
-}
-
-pub fn mono_b(size: f32) -> FontId {
-    FontId::new(size, mono_bold())
 }
 
 pub fn with_alpha(c: Color32, a: f32) -> Color32 {
@@ -116,8 +162,6 @@ fn fonts() -> FontDefinitions {
     fonts.font_data.insert("inter".into(), font!("Inter-Regular.ttf"));
     fonts.font_data.insert("inter-semibold".into(), font!("Inter-SemiBold.ttf"));
     fonts.font_data.insert("inter-bold".into(), font!("Inter-Bold.ttf"));
-    fonts.font_data.insert("jbm".into(), font!("JetBrainsMono-Regular.ttf"));
-    fonts.font_data.insert("jbm-bold".into(), font!("JetBrainsMono-Bold.ttf"));
 
     let fallbacks: Vec<String> = fonts.families[&FontFamily::Proportional].clone();
     let fam = |first: &str| {
@@ -128,8 +172,9 @@ fn fonts() -> FontDefinitions {
     fonts.families.insert(FontFamily::Proportional, fam("inter"));
     fonts.families.insert(bold(), fam("inter-bold"));
     fonts.families.insert(semibold(), fam("inter-semibold"));
-    fonts.families.insert(FontFamily::Monospace, fam("jbm"));
-    fonts.families.insert(mono_bold(), fam("jbm-bold"));
+    // no monospace anywhere: egui's own monospace text uses Inter too. The bundled Inter has tabular
+    // (equal-width) digits frozen in, so changing numbers don't jitter.
+    fonts.families.insert(FontFamily::Monospace, fam("inter"));
 
     // icons, available in every family
     let icons = egui_phosphor::Variant::Regular.font_bytes();
@@ -149,20 +194,21 @@ pub fn install(ctx: &egui::Context) {
             (TextStyle::Body, font(14.0)),
             (TextStyle::Button, font(13.5)),
             (TextStyle::Small, font(11.5)),
-            (TextStyle::Monospace, mono(12.5)),
+            (TextStyle::Monospace, font(13.0)),
         ]
         .into();
         let s = &mut style.spacing;
         s.item_spacing = egui::vec2(8.0, 6.0);
         s.button_padding = egui::vec2(10.0, 5.0);
         s.interact_size.y = 26.0;
-        s.menu_margin = egui::Margin::same(10);
+        s.menu_margin = egui::Margin::same(6);
 
         let v = &mut style.visuals;
         v.dark_mode = true;
         v.panel_fill = PANEL;
         v.window_fill = CARD;
-        v.window_stroke = Stroke::new(1.0, STROKE);
+        // borders only where something should stand out (focus, selection, the active preset)
+        v.window_stroke = Stroke::NONE;
         v.window_corner_radius = CornerRadius::same(12);
         v.menu_corner_radius = CornerRadius::same(10);
         v.extreme_bg_color = BG;
@@ -184,12 +230,12 @@ pub fn install(ctx: &egui::Context) {
         w.noninteractive.corner_radius = r;
         w.inactive.bg_fill = CARD_HI;
         w.inactive.weak_bg_fill = CARD_HI;
-        w.inactive.bg_stroke = Stroke::new(1.0, STROKE);
+        w.inactive.bg_stroke = Stroke::NONE;
         w.inactive.fg_stroke = Stroke::new(1.0, TEXT);
         w.inactive.corner_radius = r;
         w.hovered.bg_fill = mix(CARD_HI, TEXT, 0.08);
         w.hovered.weak_bg_fill = mix(CARD_HI, TEXT, 0.08);
-        w.hovered.bg_stroke = Stroke::new(1.0, mix(STROKE, TEXT, 0.25));
+        w.hovered.bg_stroke = Stroke::NONE;
         w.hovered.fg_stroke = Stroke::new(1.0, TEXT);
         w.hovered.corner_radius = r;
         w.hovered.expansion = 0.0;

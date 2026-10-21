@@ -7,7 +7,20 @@ to 0.2.0). The format follows
 
 ## [Unreleased]
 
+### Added
+- Preset search above the preset list: filter by name or slot (`lead`, `5`, `P05`); Ctrl+F (⌘F) focuses it, Enter
+  selects the first match, Esc clears it.
+- The open-stomp library version is shown in the version chip's tooltip, the menu, `--version` and `--help`.
+
 ### Changed
+- The top bar is down to the app name, the status pill and one menu button. The menu holds the port picker,
+  connect/disconnect, re-sync, listen only, replay and the activity log toggle.
+- Calmer look: sentence-case headings and labels instead of all caps, and borders only on what should stand out
+  (the active preset, the selected block, focused fields). The menu has proper padding.
+- No monospace text: everything is set in Inter, with tabular digits built into the bundled font so changing
+  numbers stay put. JetBrains Mono is no longer bundled.
+- The activity log is hidden by default; open it from the menu or with Ctrl+L (⌘L on macOS), close it from its
+  header.
 - Builds against open-stomp-lib v0.2.0 (CI, releases and the Nix flake). The flake now locks
   the library input instead of fetching the library's latest `main`.
 

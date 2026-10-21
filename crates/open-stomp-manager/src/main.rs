@@ -18,6 +18,8 @@ use std::path::PathBuf;
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 /// Short git commit of the build, empty when built outside a git checkout.
 pub const GIT_HASH: &str = env!("STOMP_GIT_HASH");
+/// Version of the open-stomp library the app was built against (from `Cargo.lock`).
+pub const LIB_VERSION: &str = env!("STOMP_LIB_VERSION");
 
 /// `0.2.0 (1a2b3c4d)`, or just the version without git info.
 pub fn version_long() -> String {
@@ -72,12 +74,13 @@ fn main() -> eframe::Result {
             "--replay" => opts.replay = args.next().map(PathBuf::from),
             "--speed" => opts.speed = args.next().and_then(|s| s.parse().ok()).unwrap_or(opts.speed),
             "-h" | "--help" => {
-                println!("Open Stomp Manager {}", version_long());
+                println!("Open Stomp Manager {} · open-stomp {LIB_VERSION}", version_long());
                 println!("usage: open-stomp-manager [--replay <capture.log>] [--speed <x>] [--version]");
                 return Ok(());
             }
             "-V" | "--version" => {
                 println!("open-stomp-manager {}", version_long());
+                println!("open-stomp {LIB_VERSION}");
                 return Ok(());
             }
             other => eprintln!("ignoring unknown argument {other:?}"),

@@ -56,6 +56,20 @@ cargo test --workspace                 # the app's own tests (activity log)
 packaging/check-version.sh             # version consistency
 ```
 
+## Live preview (styling)
+
+```sh
+tools/dev/watch.sh                 # rebuild + relaunch on every change, replaying a capture
+STOMP_DEV=log tools/dev/watch.sh   # ... with the activity log open
+tools/dev/shot.sh menu menu        # render a state to target/shots/menu.png and quit
+```
+
+`watch.sh` watches this crate and the sibling `open-stomp-lib` and restarts the app on each save (needs Nix; it
+pulls in `watchexec`). `STOMP_DEV` takes a comma list: `log` opens the activity log, `menu` opens the header menu.
+In debug builds **F12** opens egui's style editor and inspector, for trying spacing and visuals live before
+moving them into `theme.rs`. `shot.sh` builds on the `STOMP_SCREENSHOT` hook (see
+[architecture](architecture.md)).
+
 ## Platforms
 
 | | MIDI backend | Release download | Build it yourself |

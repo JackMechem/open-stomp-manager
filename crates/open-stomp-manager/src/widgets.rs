@@ -2,11 +2,11 @@
 
 use std::f32::consts::PI;
 
-use egui::{Align2, Color32, CornerRadius, Pos2, Rect, Response, Sense, Shape, Stroke, StrokeKind, Ui, Vec2, pos2, vec2};
+use egui::{Align2, Color32, CornerRadius, Pos2, Rect, Response, Sense, Shape, Stroke, Ui, Vec2, pos2, vec2};
 
 use crate::theme::*;
 
-/// A rounded card with an icon + caps title header.
+/// A rounded card with an icon + title header.
 pub fn card<R>(ui: &mut Ui, icon: &str, title: &str, add: impl FnOnce(&mut Ui) -> R) -> R {
     card_with(ui, icon, title, |_| {}, add)
 }
@@ -21,14 +21,13 @@ pub fn card_with<R>(
 ) -> R {
     egui::Frame::new()
         .fill(CARD)
-        .stroke(Stroke::new(1.0, STROKE))
         .corner_radius(CornerRadius::same(14))
         .inner_margin(egui::Margin::symmetric(16, 14))
         .show(ui, |ui| {
             ui.set_width(ui.available_width());
             ui.horizontal(|ui| {
                 ui.label(egui::RichText::new(icon).font(font(14.0)).color(TEXT_FAINT));
-                ui.label(egui::RichText::new(title).font(font_sb(11.5)).color(TEXT_DIM).extra_letter_spacing(1.2));
+                ui.label(egui::RichText::new(title).font(font_sb(13.0)).color(TEXT_DIM));
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), header_right);
             });
             ui.add_space(6.0);
@@ -162,7 +161,7 @@ pub fn knob(
     let dir = Vec2::angled(a_val);
     p.line_segment([c + dir * (r - 16.0), c + dir * (r - 8.0)], Stroke::new(2.5, TEXT));
     // value
-    p.text(c, Align2::CENTER_CENTER, value, mono_b(if value.len() > 4 { 10.0 } else { 13.0 }), TEXT);
+    p.text(c, Align2::CENTER_CENTER, value, font_sb(if value.len() > 4 { 10.0 } else { 13.0 }), TEXT);
     if editable {
         if resp.dragged() {
             ui.ctx().set_cursor_icon(egui::CursorIcon::Grabbing);
@@ -188,13 +187,7 @@ pub fn choice(ui: &mut Ui, label: &str, value: &str, color: Color32, flash: f32,
     let flash = if editable && resp.hovered() { flash.max(0.35) } else { flash };
     let p = ui.painter_at(rect.expand(8.0));
     let pill = Rect::from_center_size(pos2(rect.center().x, rect.top() + 36.0), vec2(72.0, 30.0));
-    p.rect(
-        pill,
-        CornerRadius::same(15),
-        mix(CARD_HI, color, 0.12 + 0.25 * flash),
-        Stroke::new(1.0, mix(STROKE, color, 0.5)),
-        StrokeKind::Inside,
-    );
+    p.rect_filled(pill, CornerRadius::same(15), mix(CARD_HI, color, 0.18 + 0.25 * flash));
     p.text(pill.center(), Align2::CENTER_CENTER, value, font_b(12.0), TEXT);
     p.text(pos2(rect.center().x, rect.bottom() - 12.0), Align2::CENTER_CENTER, label, font_sb(10.5), TEXT_DIM);
     if editable { resp.on_hover_cursor(egui::CursorIcon::PointingHand) } else { resp }
@@ -234,7 +227,7 @@ pub fn level_slider(
         let w = (ui.available_width() - 52.0).max(40.0);
         let resp = bar(ui, v.map(|v| v as f32 / max as f32), color, w, editable);
         let txt = v.map(fmt).unwrap_or_else(|| "—".into());
-        ui.label(egui::RichText::new(txt).font(mono(12.0)).color(TEXT));
+        ui.label(egui::RichText::new(txt).font(font(12.0)).color(TEXT));
         let v = v?;
         if !editable {
             return None;
@@ -278,15 +271,8 @@ pub fn filter_chip(ui: &mut Ui, on: &mut bool, text: &str, color: Color32) -> Re
     }
     let hovered = resp.hovered();
     let bg = if *on { mix(CARD_HI, color, 0.16) } else { CARD };
-    let stroke = if *on { mix(STROKE, color, 0.55) } else { STROKE };
     let p = ui.painter();
-    p.rect(
-        rect,
-        CornerRadius::same(13),
-        if hovered { mix(bg, TEXT, 0.05) } else { bg },
-        Stroke::new(1.0, stroke),
-        StrokeKind::Inside,
-    );
+    p.rect_filled(rect, CornerRadius::same(13), if hovered { mix(bg, TEXT, 0.05) } else { bg });
     let dot = pos2(rect.left() + 12.0, rect.center().y);
     p.circle_filled(dot, 3.5, if *on { color } else { TEXT_FAINT });
     p.galley(pos2(rect.left() + 21.0, rect.center().y - galley.size().y / 2.0), galley, TEXT);

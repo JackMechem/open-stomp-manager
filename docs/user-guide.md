@@ -29,19 +29,22 @@ On connect the app reads everything the official app reads: firmware and product
 NAM/IR slot names, all 99 presets and the live edit buffer. The status pill shows a progress bar (`syncing 42/127`);
 it takes well under a second.
 
-The top bar, right to left:
+The menu button (☰) at the right of the top bar holds the controls:
 
-| Control | What it does |
+| Item | What it does |
 |---|---|
-| **Replay capture** / **Stop replay** | Play back a recorded session instead of a pedal ([below](#replaying-a-capture)) |
+| Port | All MIDI input ports; the pedal's are marked with a guitar. Picking one connects to it |
 | **Disconnect** / **Connect** | Close the connection (also stops auto-connect until you connect again), or connect to the chosen port |
-| ⟳ | Re-read presets and state from the pedal |
-| Port menu | All MIDI input ports; the pedal's are marked with a guitar. Picking one connects to it |
+| **Re-sync from pedal** | Re-read presets and state from the pedal |
 | **Listen only** | Never send anything to the pedal ([below](#listen-only)) |
+| **Replay capture…** / **Stop replay** | Play back a recorded session instead of a pedal ([below](#replaying-a-capture)) |
+| **Show / Hide activity log** | Show or hide the activity log panel (also Ctrl+L, ⌘L on macOS) |
+
+The bottom of the menu shows the app and open-stomp library versions.
 
 The status pill on the left says *Searching for pedal…*, *Connected · JME STOMPBOX V1.1.1* or *Replaying …*. Its
-**IN** and **OUT** lights blink for every message received from and sent to the pedal. Under the app name,
-*MANAGER · EDITOR* means you can edit; *MANAGER · MONITOR* means you can only watch (not connected, replaying, or
+**In** and **Out** lights blink for every message received from and sent to the pedal. Under the app name,
+*Editor* means you can edit; *Monitor only* means you can only watch (not connected, replaying, or
 listen only).
 
 > **Windows:** a MIDI port can be open in only one program at a time. Quit the official Stomp Manager first.
@@ -51,7 +54,8 @@ listen only).
 * **Left:** the preset list, P01–P99.
 * **Middle:** the active preset (number, name, volume), the signal chain, the detail of one block, then the tuner,
   looper and drum cards, then device info and system settings.
-* **Right:** the activity log of everything that happens on the pedal.
+* **Right** (hidden until you open it from the menu or press Ctrl+L): the activity log of everything that happens
+  on the pedal.
 
 Anything that changes, on the pedal or from the app, glows briefly where it is shown: the preset header, the block in
 the chain, the knob, the log row. Below about 900 px of width the tuner, looper and drum cards stack.
@@ -64,25 +68,27 @@ amber dot next to it means its live sound has **unsaved edits**.
 * **Click** a preset to select it on the pedal. Unsaved edits to the previous preset are discarded (the log says so),
   exactly as on the pedal itself.
 * **Right-click** a preset for *Select* and *Save current sound here…*.
+* **Search** above the list (Ctrl+F, ⌘F on macOS) filters by name or slot (`lead`, `5`, `P05`). Enter selects the
+  first match, Esc clears the search.
 
 The header shows the big preset number, the name, and chips:
 
 | Chip | Meaning |
 |---|---|
-| `● EDITED` | The live sound differs from what is stored in this slot |
-| `SAVED` | The live sound is what is stored |
-| `PEDAL SHOWS AMP` | The page the pedal's display is on |
-| `3/8 BLOCKS ON` | How many effect blocks are switched on |
+| `● Edited` | The live sound differs from what is stored in this slot |
+| `Saved` | The live sound is what is stored |
+| `Pedal shows Amp` | The page the pedal's display is on |
+| `3/8 blocks on` | How many effect blocks are switched on |
 
-The **VOLUME** dial on the right is the preset volume: drag it vertically or scroll over it (Shift = fine steps).
+The **Volume** dial on the right is the preset volume: drag it vertically or scroll over it (Shift = fine steps).
 
 If the app connected while the pedal had unsaved edits, it cannot tell which slot is active (the pedal has no way to
 report it) and the header says *Waiting for the pedal…* until the next preset change.
 
 ## Signal chain
 
-All blocks in the active preset's chain order: GATE, then the seven effect blocks in the preset's order, then LOOP and
-DRUM. Each shows the model and ON/OFF; switched-on blocks are coloured.
+All blocks in the active preset's chain order: Gate, then the seven effect blocks in the preset's order, then Looper
+and Drum. Each shows the model and On/Off; switched-on blocks are coloured.
 
 * **Click a block** to open it in the detail view below. This also makes the pedal's display jump to that block's
   page, as the official app does.
@@ -134,7 +140,7 @@ Buttons:
 
 | Button | Action |
 |---|---|
-| REC / PLAY / DUB | The pedal's main looper switch: start recording, close the loop and play, overdub, stop overdubbing |
+| Rec / Play / Dub | The pedal's main looper switch: start recording, close the loop and play, overdub, stop overdubbing |
 | ■ | Stop |
 | ↺ | Undo / redo the last overdub |
 | 🗑 | Clear the loop |
@@ -158,9 +164,9 @@ not understand are kept.
 
 ## Activity log
 
-Every message to or from the pedal, as a readable line: time, **PEDAL** (from the pedal) or **HOST** (sent by this
+Every message to or from the pedal, as a readable line: time, **Pedal** (from the pedal) or **Host** (sent by this
 app, or by the official app in a replay), category, what changed and the new value, e.g.
-`PEDAL  AMP  Mar J800 · GAIN  51 → 64 ×4`.
+`Pedal  Amp  Mar J800 · GAIN  51 → 64 ×4`.
 
 * **Knob sweeps merge**: consecutive changes to the same control within 2.5 s become one row showing *from → to* and
   how many messages it took.
@@ -168,7 +174,8 @@ app, or by the official app in a replay), category, what changed and the new val
   plumbing, hidden by default), **Redundant** (values the pedal repeats after a preset change that were already
   known, hidden by default), and the direction (*From pedal*, *From host*).
 * **Search** filters by text, e.g. `gain`, `looper`, `P05`.
-* Header buttons: follow new events (auto-scroll), show the raw MIDI bytes, copy the visible log as text, clear it.
+* Header buttons: follow new events (auto-scroll), show the raw MIDI bytes, copy the visible log as text, clear it,
+  hide the panel.
 * Hover a row for its raw bytes.
 
 The log keeps the latest 50,000 rows.
