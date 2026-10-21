@@ -1,0 +1,158 @@
+diff --git a/blutter/src/DartApp.cpp b/blutter/src/DartApp.cpp
+index 25ad347..4f81c53 100644
+--- a/blutter/src/DartApp.cpp
++++ b/blutter/src/DartApp.cpp
+@@ -155,19 +155,24 @@ void DartApp::LoadInfo()
+ {
+ 	auto ig = dart::Isolate::Current()->group();
+ 
++	fprintf(stderr,"DBG before %s\n","loadFromClassTable(ig);");
+ 	loadFromClassTable(ig);
+ 
+ 	auto store = ig->object_store();
+ 
+ 	// load pre-defined stub
++	fprintf(stderr,"DBG before %s\n","loadStubs(store);");
+ 	loadStubs(store);
+ 
+ 	// getting hidden functions from InstructionsTable are not compatible against old Dart version
+ 	// find all Code object in heap is a work around for getting all functions
++	fprintf(stderr,"DBG before %s\n","findFunctionInHeap();");
+ 	findFunctionInHeap();
+ 
++	fprintf(stderr,"DBG before %s\n","loadFromObjectPool();");
+ 	loadFromObjectPool();
+ 
++	fprintf(stderr,"DBG before %s\n","finalizeFunctionsInfo();");
+ 	finalizeFunctionsInfo();
+ 
+ 	//auto fieldTable = isolate->field_table(); //contains only sentinel, null, false, 0
+@@ -582,8 +587,9 @@ void DartApp::finalizeFunctionsInfo()
+ 	for (auto& [_, dartFn] : functions) {
+ 		func = dartFn->ptr;
+ 		const auto sigPtr = func.signature();
+-		if (!sigPtr.IsHeapObject())
++		if (!sigPtr.IsHeapObject() || (uintptr_t)(intptr_t)sigPtr < 0x100000)
+ 			continue;
++		if ((uintptr_t)(intptr_t)sigPtr < (uintptr_t)lib_base) continue;
+ 		const auto& sig = dart::FunctionType::Handle(sigPtr);
+ 		if (!sig.IsNull()) {
+ 			dartFn->Signature().returnType = TypeDb()->FindOrAdd(sig.result_type());
+diff --git a/blutter/src/Disassembler_arm64.h b/blutter/src/Disassembler_arm64.h
+index 6b78a9d..32a255f 100644
+--- a/blutter/src/Disassembler_arm64.h
++++ b/blutter/src/Disassembler_arm64.h
+@@ -81,9 +81,7 @@ constexpr arm64_reg CSREG_DART_WB_VALUE = ToCapstoneReg(dart::kWriteBarrierValue
+ constexpr arm64_reg CSREG_DART_WB_SLOT = ToCapstoneReg(dart::kWriteBarrierSlotReg);
+ constexpr arm64_reg CSREG_DART_THR = ToCapstoneReg(dart::THR);
+ constexpr arm64_reg CSREG_DART_PP = ToCapstoneReg(dart::PP);
+-#if defined(DART_COMPRESSED_POINTERS)
+ constexpr arm64_reg CSREG_DART_HEAP = ToCapstoneReg(dart::HEAP_BITS);
+-#endif
+ constexpr arm64_reg CSREG_DART_TMP = ToCapstoneReg(dart::TMP);
+ constexpr arm64_reg CSREG_DART_TMP2 = ToCapstoneReg(dart::TMP2);
+ // Note: kTagReg is normally in wrapper function. can ignore it.
+diff --git a/blutter/src/ElfHelper.cpp b/blutter/src/ElfHelper.cpp
+index 030c0a2..eb8d710 100644
+--- a/blutter/src/ElfHelper.cpp
++++ b/blutter/src/ElfHelper.cpp
+@@ -152,24 +152,34 @@ LibAppInfo ElfHelper::MapLibAppSo(const char* path)
+ 	void* lib = load_map_file(path);
+ 	// quick and dirty parsing ELF to get symbol addresses
+ 	uint8_t* elf = (uint8_t*)(lib);
+-#if defined(DART_TARGET_OS_MACOS)
+-	// Note: only new dart version getting snapshots from load command
+-	// <=2.17, use EXPORT name
+-	// <= v2.18,  load from sub SEGMENT_64, named "__CUSTOM" and section named "__dart_app_snap"
+-	// >= 2.19, LC_NOTE command is used
+-	auto header = (dart::mach_o::mach_header_64*)lib;
+-	switch (header->magic) {
+-	case dart::mach_o::MH_MAGIC:
+-	case dart::mach_o::MH_CIGAM:
+-		throw std::invalid_argument("Mach-O: Support only 64 bits");
+-	case dart::mach_o::MH_CIGAM_64:
+-		throw std::invalid_argument("Mach-O: Expected a host endian header");
+-	case dart::mach_o::MH_MAGIC_64:
+-		return size >= sizeof(mach_o::mach_header_64);
+-	default:
+-		throw std::invalid_argument("Mach-O: Invalid magic header");
++	if (*(uint32_t*)elf == 0xfeedfacf) {
++		// Mach-O 64 (thin). Parse LC_SYMTAB (cmd 2). Assumes __TEXT fileoff == vmaddr (true for Flutter App.framework).
++		uint32_t ncmds = *(uint32_t*)(elf + 16);
++		const uint8_t* lc = elf + 32;
++		LibAppInfo info{};
++		info.lib = elf;
++		for (uint32_t i = 0; i < ncmds; i++) {
++			uint32_t cmd = *(uint32_t*)lc, cmdsize = *(uint32_t*)(lc + 4);
++			if (cmd == 2) {
++				uint32_t symoff = *(uint32_t*)(lc + 8), nsyms = *(uint32_t*)(lc + 12), stroff = *(uint32_t*)(lc + 16);
++				for (uint32_t j = 0; j < nsyms; j++) {
++					const uint8_t* nl = elf + symoff + j * 16;
++					const char* name = (const char*)elf + stroff + *(uint32_t*)nl;
++					uint64_t val = *(uint64_t*)(nl + 8);
++					auto eq = [&](const char* k) { return strcmp(name, k) == 0 || (name[0] == '_' && strcmp(name + 1, k) == 0) || (k[0] == '_' && strcmp(name, k + 1) == 0); };
++					if (eq(kVmSnapshotDataAsmSymbol)) info.vm_snapshot_data = elf + val;
++					else if (eq(kVmSnapshotInstructionsAsmSymbol)) info.vm_snapshot_instructions = elf + val;
++					else if (eq(kIsolateSnapshotDataAsmSymbol)) info.isolate_snapshot_data = elf + val;
++					else if (eq(kIsolateSnapshotInstructionsAsmSymbol)) info.isolate_snapshot_instructions = elf + val;
++				}
++			}
++			lc += cmdsize;
++		}
++		if (!info.vm_snapshot_data || !info.vm_snapshot_instructions || !info.isolate_snapshot_data || !info.isolate_snapshot_instructions)
++			throw std::invalid_argument("Mach-O: cannot find snapshot symbols");
++		return info;
+ 	}
+-#else
++#if 1
+ 	const auto* hdr = (ElfHeader*)elf;
+ 	const auto* ident = (ElfIdent*)hdr->ident;
+ 	if (memcmp(ident->ei_magic, "\x7f" "ELF", 4) != 0)
+diff --git a/blutter/src/main.cpp b/blutter/src/main.cpp
+index 6aa46fd..890cc1c 100644
+--- a/blutter/src/main.cpp
++++ b/blutter/src/main.cpp
+@@ -30,7 +30,7 @@ int main(int argc, char** argv)
+ 		std::cout << std::format("libapp is loaded at {:#x}\n", app.base());
+ 		std::cout << std::format("Dart heap at {:#x}\n", app.heap_base());
+ 
+-		app.EnterScope();
++		fprintf(stderr,"DBG enter\n");app.EnterScope();fprintf(stderr,"DBG entered\n");
+ 		app.LoadInfo();
+ 		app.ExitScope();
+ 
+diff --git a/dartvm_fetch_build.py b/dartvm_fetch_build.py
+index cc9967c..c0db39d 100644
+--- a/dartvm_fetch_build.py
++++ b/dartvm_fetch_build.py
+@@ -41,7 +41,7 @@ class DartLibInfo:
+         if has_compressed_ptrs is None:
+             # use same as flutter default configuration
+             # TODO: old Dart version has no pointer compression
+-            self.has_compressed_ptrs = os_name != 'ios'
++            self.has_compressed_ptrs = os_name not in ('ios','macos')
+         else:
+             self.has_compressed_ptrs = has_compressed_ptrs
+         self.lib_name = f'dartvm{version}_{os_name}_{arch}'
+diff --git a/scripts/CMakeLists.txt b/scripts/CMakeLists.txt
+index e755ad8..24110cd 100644
+--- a/scripts/CMakeLists.txt
++++ b/scripts/CMakeLists.txt
+@@ -26,7 +26,7 @@ string(SUBSTRING ${PROJECT_NAME} 6 -1 DART_VERSION)
+ if (NOT DEFINED TARGET_OS)
+ 	set(TARGET_OS "android")
+ endif()
+-if (NOT "${TARGET_OS}" MATCHES "^(android|ios)$")
++if (NOT "${TARGET_OS}" MATCHES "^(android|ios|macos)$")
+ 	message(FATAL_ERROR "Only android or ios platform")
+ endif()
+ 
+@@ -59,6 +59,8 @@ if (${TARGET_OS} STREQUAL "android")
+ 	set(target_os "DART_TARGET_OS_ANDROID")
+ 	# Note: DART_COMPRESSED_POINTERS should be from the binary
+ 	#set(dart_pointers "DART_COMPRESSED_POINTERS")
++elseif (${TARGET_OS} STREQUAL "macos")
++	set(target_os "DART_TARGET_OS_MACOS")
+ else()
+ 	set(target_os "DART_TARGET_OS_MACOS_IOS")
+ endif()

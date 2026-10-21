@@ -1,0 +1,1181 @@
+[
+ {
+  "id": "1001",
+  "name": "NBA150PBluetoothStruct",
+  "params": [
+   {
+    "type": "Uint8",
+    "name": "volume"
+   },
+   {
+    "type": "Uint8",
+    "name": "hz_31"
+   },
+   {
+    "type": "Uint8",
+    "name": "hz_62"
+   },
+   {
+    "type": "Uint8",
+    "name": "hz_125"
+   },
+   {
+    "type": "Uint8",
+    "name": "hz_250"
+   },
+   {
+    "type": "Uint8",
+    "name": "hz_500"
+   },
+   {
+    "type": "Uint8",
+    "name": "hz_1K"
+   },
+   {
+    "type": "Uint8",
+    "name": "hz_2K"
+   },
+   {
+    "type": "Uint8",
+    "name": "hz_4K"
+   },
+   {
+    "type": "Uint8",
+    "name": "hz_8K"
+   },
+   {
+    "type": "Uint8",
+    "name": "hz_16K"
+   },
+   {
+    "type": "Uint8",
+    "name": "gain"
+   },
+   {
+    "type": "Uint8",
+    "name": "phase"
+   },
+   {
+    "type": "Uint8",
+    "name": "mute"
+   }
+  ]
+ },
+ {
+  "id": "1002",
+  "name": "NBA150PCurstateStruct",
+  "params": [
+   {
+    "type": "Uint8",
+    "name": "preset"
+   },
+   {
+    "type": "Uint8",
+    "name": "auxeq"
+   },
+   {
+    "type": "Uint8",
+    "name": "micNGEnable"
+   },
+   {
+    "type": "Uint8",
+    "name": "micNGSens"
+   },
+   {
+    "type": "Uint8",
+    "name": "micNGDecay"
+   },
+   {
+    "type": "Uint8",
+    "name": "spkeq"
+   }
+  ]
+ },
+ {
+  "id": "1003",
+  "name": "NBA150PDrumStruct",
+  "params": [
+   {
+    "type": "Uint8",
+    "name": "drum_command"
+   },
+   {
+    "type": "Uint8",
+    "name": "drumtype"
+   },
+   {
+    "type": "Uint8",
+    "name": "drum_vol"
+   },
+   {
+    "type": "Uint8",
+    "name": "drumeqL"
+   },
+   {
+    "type": "Uint8",
+    "name": "drumeqM"
+   },
+   {
+    "type": "Uint8",
+    "name": "drumeqH"
+   },
+   {
+    "type": "MidiUint14",
+    "name": "tmpo"
+   }
+  ]
+ },
+ {
+  "id": "1004",
+  "name": "NBA150PLoopStruct",
+  "params": [
+   {
+    "type": "Uint8",
+    "name": "level"
+   },
+   {
+    "type": "Uint8",
+    "name": "state"
+   },
+   {
+    "type": "Uint8",
+    "name": "nrar"
+   }
+  ]
+ },
+ {
+  "id": "1005",
+  "name": "NBA150PSysSetStruct",
+  "params": [
+   {
+    "type": "Uint8",
+    "name": "micmute"
+   },
+   {
+    "type": "Uint8",
+    "name": "outmodeeq1"
+   },
+   {
+    "type": "Uint8",
+    "name": "outmodeeq2"
+   },
+   {
+    "type": "Uint8",
+    "name": "outmodeeq3"
+   },
+   {
+    "type": "Uint8",
+    "name": "display1"
+   },
+   {
+    "type": "Uint8",
+    "name": "display2"
+   },
+   {
+    "type": "Uint8",
+    "name": "display3"
+   },
+   {
+    "type": "Uint8",
+    "name": "expset1"
+   },
+   {
+    "type": "Uint8",
+    "name": "expset2"
+   },
+   {
+    "type": "Uint8",
+    "name": "expset3"
+   },
+   {
+    "type": "Uint8",
+    "name": "expset4"
+   },
+   {
+    "type": "Uint8",
+    "name": "preeq1"
+   },
+   {
+    "type": "Uint8",
+    "name": "preeq2"
+   },
+   {
+    "type": "Uint8",
+    "name": "preeq3"
+   },
+   {
+    "type": "Uint8",
+    "name": "preeq4"
+   },
+   {
+    "type": "Uint8",
+    "name": "usbrount1"
+   },
+   {
+    "type": "Uint8",
+    "name": "usbrount2"
+   },
+   {
+    "type": "Uint8",
+    "name": "usbrount3"
+   },
+   {
+    "type": "Uint8",
+    "name": "usbrount4"
+   },
+   {
+    "type": "Uint8",
+    "name": "presetrange"
+   },
+   {
+    "type": "Uint8",
+    "name": "micvolume"
+   },
+   {
+    "type": "Uint8",
+    "name": "midiChan"
+   }
+  ]
+ },
+ {
+  "id": "1006",
+  "name": "NBA150PSpeakerStruct",
+  "params": [
+   {
+    "type": "Uint8",
+    "name": "volume"
+   },
+   {
+    "type": "Uint8",
+    "name": "hz_31"
+   },
+   {
+    "type": "Uint8",
+    "name": "hz_62"
+   },
+   {
+    "type": "Uint8",
+    "name": "hz_125"
+   },
+   {
+    "type": "Uint8",
+    "name": "hz_250"
+   },
+   {
+    "type": "Uint8",
+    "name": "hz_500"
+   },
+   {
+    "type": "Uint8",
+    "name": "hz_1K"
+   },
+   {
+    "type": "Uint8",
+    "name": "hz_2K"
+   },
+   {
+    "type": "Uint8",
+    "name": "hz_4K"
+   },
+   {
+    "type": "Uint8",
+    "name": "hz_8K"
+   },
+   {
+    "type": "Uint8",
+    "name": "hz_16K"
+   },
+   {
+    "type": "Uint8",
+    "name": "gain"
+   }
+  ]
+ },
+ {
+  "id": "1007",
+  "name": "NBA150PTunerIDStruct",
+  "params": [
+   {
+    "type": "Uint8",
+    "name": "status"
+   },
+   {
+    "type": "Uint8",
+    "name": "mode"
+   },
+   {
+    "type": "Uint8",
+    "name": "pitch"
+   },
+   {
+    "type": "Uint8",
+    "name": "mute"
+   }
+  ]
+ },
+ {
+  "id": "1008",
+  "name": "NBA150PPresetStruct",
+  "params": [
+   {
+    "type": "struct",
+    "name": "head",
+    "id": "1013",
+    "size": 11
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 3,
+    "name": "wah"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 5,
+    "name": "cmp"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 7,
+    "name": "efx"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 9,
+    "name": "amp"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 13,
+    "name": "eq"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 5,
+    "name": "ng"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 7,
+    "name": "mod"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 9,
+    "name": "dly"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 5,
+    "name": "rvb"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 7,
+    "name": "cab"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 3,
+    "name": "sr"
+   },
+   {
+    "type": "Uint8",
+    "name": "master"
+   },
+   {
+    "type": "Uint8",
+    "name": "delayTimeFlag"
+   },
+   {
+    "type": "Uint8",
+    "name": "bpmH"
+   },
+   {
+    "type": "Uint8",
+    "name": "bpmL"
+   },
+   {
+    "type": "Uint8",
+    "name": "bitCtrl"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 11,
+    "name": "link"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 16,
+    "name": "userName"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 3,
+    "name": "swsel"
+   },
+   {
+    "type": "Uint8",
+    "name": "pdsel1"
+   },
+   {
+    "type": "Uint8",
+    "name": "pdsel2"
+   },
+   {
+    "type": "Uint8",
+    "name": "version"
+   },
+   {
+    "type": "Uint16",
+    "name": "scene1"
+   },
+   {
+    "type": "Uint16",
+    "name": "scene2"
+   },
+   {
+    "type": "Uint16",
+    "name": "scene3"
+   }
+  ]
+ },
+ {
+  "id": "1009",
+  "name": "NBA150PIrNameStruct",
+  "params": [
+   {
+    "type": "Uint8",
+    "name": "index"
+   },
+   {
+    "type": "MidiUint28",
+    "name": "crc"
+   },
+   {
+    "type": "Array",
+    "unit": "Char",
+    "size": 32,
+    "name": "name"
+   }
+  ]
+ },
+ {
+  "id": "1010",
+  "name": "NBA150PLinkStruct",
+  "params": [
+   {
+    "type": "Uint8",
+    "name": "index"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 9,
+    "name": "data"
+   }
+  ]
+ },
+ {
+  "id": "1011",
+  "name": "SMidiParaCC",
+  "params": [
+   {
+    "type": "struct",
+    "name": "head",
+    "id": "1014"
+   },
+   {
+    "type": "Array",
+    "name": "tuner1",
+    "unit": "Uint8",
+    "size": 2
+   },
+   {
+    "type": "Array",
+    "name": "cmp",
+    "unit": "Uint8",
+    "size": 4
+   },
+   {
+    "type": "Array",
+    "name": "efx",
+    "unit": "Uint8",
+    "size": 6
+   },
+   {
+    "type": "Array",
+    "name": "amp",
+    "unit": "Uint8",
+    "size": 8
+   },
+   {
+    "type": "Array",
+    "name": "eq",
+    "unit": "Uint8",
+    "size": 12
+   },
+   {
+    "type": "Array",
+    "name": "ng",
+    "unit": "Uint8",
+    "size": 4
+   },
+   {
+    "type": "Array",
+    "name": "mod",
+    "unit": "Uint8",
+    "size": 6
+   },
+   {
+    "type": "Array",
+    "name": "dly",
+    "unit": "Uint8",
+    "size": 8
+   },
+   {
+    "type": "Array",
+    "name": "rvb",
+    "unit": "Uint8",
+    "size": 4
+   },
+   {
+    "type": "Array",
+    "name": "cab",
+    "unit": "Uint8",
+    "size": 6
+   },
+   {
+    "type": "Array",
+    "name": "tuner2",
+    "unit": "Uint8",
+    "size": 2
+   },
+   {
+    "type": "Uint8",
+    "name": "master"
+   },
+   {
+    "type": "Uint8",
+    "name": "mselect"
+   },
+   {
+    "type": "Uint8",
+    "name": "pedal"
+   },
+   {
+    "type": "Uint8",
+    "name": "scene"
+   },
+   {
+    "type": "Uint8",
+    "name": "drumenable"
+   },
+   {
+    "type": "Uint8",
+    "name": "drumtype"
+   },
+   {
+    "type": "Uint8",
+    "name": "drumlevel"
+   },
+   {
+    "type": "Uint8",
+    "name": "looplevel"
+   },
+   {
+    "type": "Uint8",
+    "name": "loopstate"
+   },
+   {
+    "type": "Uint8",
+    "name": "auxeq"
+   },
+   {
+    "type": "Uint8",
+    "name": "presetrange"
+   },
+   {
+    "type": "Uint8",
+    "name": "micvolume"
+   },
+   {
+    "type": "Uint8",
+    "name": "micmute"
+   },
+   {
+    "type": "Array",
+    "name": "usbrount",
+    "unit": "Uint8",
+    "size": 4
+   },
+   {
+    "type": "Uint8",
+    "name": "aux_mute"
+   },
+   {
+    "type": "Uint8",
+    "name": "aux_phase"
+   },
+   {
+    "type": "Array",
+    "name": "aux_band",
+    "unit": "Uint8",
+    "size": 12
+   },
+   {
+    "type": "Array",
+    "name": "drumeq",
+    "unit": "Uint8",
+    "size": 3
+   },
+   {
+    "type": "Uint8",
+    "name": "looparnr"
+   },
+   {
+    "type": "Array",
+    "name": "micnr",
+    "unit": "Uint8",
+    "size": 3
+   },
+   {
+    "type": "Uint8",
+    "name": "spkeq"
+   },
+   {
+    "type": "Array",
+    "name": "spk_band",
+    "unit": "Uint8",
+    "size": 12
+   }
+  ]
+ },
+ {
+  "id": "1012",
+  "name": "EffectHead",
+  "params": [
+   {
+    "type": "Uint8",
+    "name": "index",
+    "bits": 6
+   },
+   {
+    "type": "Uint8",
+    "name": "switch",
+    "bits": 1
+   }
+  ]
+ },
+ {
+  "id": "1013",
+  "name": "NBA150PHeaders",
+  "params": [
+   {
+    "type": "struct",
+    "name": "wah",
+    "id": "1012"
+   },
+   {
+    "type": "struct",
+    "name": "cmp",
+    "id": "1012"
+   },
+   {
+    "type": "struct",
+    "name": "efx",
+    "id": "1012"
+   },
+   {
+    "type": "struct",
+    "name": "amp",
+    "id": "1012"
+   },
+   {
+    "type": "struct",
+    "name": "eq",
+    "id": "1012"
+   },
+   {
+    "type": "struct",
+    "name": "ng",
+    "id": "1012"
+   },
+   {
+    "type": "struct",
+    "name": "mod",
+    "id": "1012"
+   },
+   {
+    "type": "struct",
+    "name": "dly",
+    "id": "1012"
+   },
+   {
+    "type": "struct",
+    "name": "rvb",
+    "id": "1012"
+   },
+   {
+    "type": "struct",
+    "name": "cab",
+    "id": "1012"
+   },
+   {
+    "type": "struct",
+    "name": "sr",
+    "id": "1012"
+   }
+  ]
+ },
+ {
+  "id": "1014",
+  "name": "NBA150P MIDI CC Headers",
+  "params": [
+   {
+    "type": "Uint8",
+    "name": "wah"
+   },
+   {
+    "type": "Uint8",
+    "name": "cmp"
+   },
+   {
+    "type": "Uint8",
+    "name": "efx"
+   },
+   {
+    "type": "Uint8",
+    "name": "amp"
+   },
+   {
+    "type": "Uint8",
+    "name": "eq"
+   },
+   {
+    "type": "Uint8",
+    "name": "ng"
+   },
+   {
+    "type": "Uint8",
+    "name": "mod"
+   },
+   {
+    "type": "Uint8",
+    "name": "dly"
+   },
+   {
+    "type": "Uint8",
+    "name": "rvb"
+   },
+   {
+    "type": "Uint8",
+    "name": "cab"
+   },
+   {
+    "type": "Uint8",
+    "name": "sr"
+   }
+  ]
+ },
+ {
+  "id": "2008",
+  "name": "NBA150PPresetStruct",
+  "params": [
+   {
+    "type": "struct",
+    "name": "head",
+    "id": "1013",
+    "size": 11
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 3,
+    "name": "wah"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 5,
+    "name": "cmp"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 7,
+    "name": "efx"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 9,
+    "name": "amp"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 13,
+    "name": "eq"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 5,
+    "name": "ng"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 7,
+    "name": "mod"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 9,
+    "name": "dly"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 5,
+    "name": "rvb"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 7,
+    "name": "cab"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 3,
+    "name": "sr"
+   },
+   {
+    "type": "Uint8",
+    "name": "master"
+   },
+   {
+    "type": "Uint8",
+    "name": "delayTimeFlag"
+   },
+   {
+    "type": "Uint8",
+    "name": "bpmH"
+   },
+   {
+    "type": "Uint8",
+    "name": "bpmL"
+   },
+   {
+    "type": "Uint8",
+    "name": "bitCtrl"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 11,
+    "name": "link"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 16,
+    "name": "userName"
+   },
+   {
+    "type": "Array",
+    "unit": "Uint8",
+    "size": 3,
+    "name": "swsel"
+   },
+   {
+    "type": "Uint8",
+    "name": "pdsel1"
+   },
+   {
+    "type": "Uint8",
+    "name": "pdsel2"
+   },
+   {
+    "type": "Uint8",
+    "name": "version"
+   },
+   {
+    "type": "Uint16",
+    "name": "scene1"
+   },
+   {
+    "type": "Uint16",
+    "name": "scene2"
+   },
+   {
+    "type": "Uint16",
+    "name": "scene3"
+   }
+  ]
+ },
+ {
+  "id": "2011",
+  "name": "SMidiParaCC",
+  "params": [
+   {
+    "type": "struct",
+    "name": "head",
+    "id": "2014"
+   },
+   {
+    "type": "Array",
+    "name": "nr1",
+    "unit": "Uint8",
+    "size": 4
+   },
+   {
+    "type": "Array",
+    "name": "nr2",
+    "unit": "Uint8",
+    "size": 4
+   },
+   {
+    "type": "Array",
+    "name": "preefx1",
+    "unit": "Uint8",
+    "size": 6
+   },
+   {
+    "type": "Array",
+    "name": "preefx2",
+    "unit": "Uint8",
+    "size": 6
+   },
+   {
+    "type": "Array",
+    "name": "amp",
+    "unit": "Uint8",
+    "size": 8
+   },
+   {
+    "type": "Array",
+    "name": "cab",
+    "unit": "Uint8",
+    "size": 6
+   },
+   {
+    "type": "Array",
+    "name": "eq1",
+    "unit": "Uint8",
+    "size": 12
+   },
+   {
+    "type": "Array",
+    "name": "eq2",
+    "unit": "Uint8",
+    "size": 12
+   },
+   {
+    "type": "Array",
+    "name": "postefx1",
+    "unit": "Uint8",
+    "size": 8
+   },
+   {
+    "type": "Array",
+    "name": "postefx2",
+    "unit": "Uint8",
+    "size": 8
+   },
+   {
+    "type": "Array",
+    "name": "rvb1",
+    "unit": "Uint8",
+    "size": 4
+   },
+   {
+    "type": "Array",
+    "name": "rvb2",
+    "unit": "Uint8",
+    "size": 4
+   },
+   {
+    "type": "Array",
+    "name": "tuner12",
+    "unit": "Uint8",
+    "size": 2
+   },
+   {
+    "type": "Array",
+    "name": "tuner34",
+    "unit": "Uint8",
+    "size": 2
+   },
+   {
+    "type": "Uint8",
+    "name": "master"
+   },
+   {
+    "type": "Uint8",
+    "name": "mselect"
+   },
+   {
+    "type": "Uint8",
+    "name": "pedal"
+   },
+   {
+    "type": "Uint8",
+    "name": "scene"
+   },
+   {
+    "type": "Uint8",
+    "name": "drumenable"
+   },
+   {
+    "type": "Uint8",
+    "name": "drumtype"
+   },
+   {
+    "type": "Uint8",
+    "name": "drumlevel"
+   },
+   {
+    "type": "Uint8",
+    "name": "looplevel"
+   },
+   {
+    "type": "Uint8",
+    "name": "loopstate"
+   },
+   {
+    "type": "Uint8",
+    "name": "auxeq"
+   },
+   {
+    "type": "Uint8",
+    "name": "presetrange"
+   },
+   {
+    "type": "Uint8",
+    "name": "micvolume"
+   },
+   {
+    "type": "Uint8",
+    "name": "micmute"
+   },
+   {
+    "type": "Array",
+    "name": "usbrount",
+    "unit": "Uint8",
+    "size": 4
+   },
+   {
+    "type": "Uint8",
+    "name": "aux_mute"
+   },
+   {
+    "type": "Uint8",
+    "name": "aux_phase"
+   },
+   {
+    "type": "Array",
+    "name": "aux_band",
+    "unit": "Uint8",
+    "size": 12
+   },
+   {
+    "type": "Array",
+    "name": "drumeq",
+    "unit": "Uint8",
+    "size": 3
+   },
+   {
+    "type": "Uint8",
+    "name": "looparnr"
+   },
+   {
+    "type": "Array",
+    "name": "micnr",
+    "unit": "Uint8",
+    "size": 3
+   },
+   {
+    "type": "Uint8",
+    "name": "spkeq"
+   },
+   {
+    "type": "Array",
+    "name": "spk_band",
+    "unit": "Uint8",
+    "size": 12
+   }
+  ]
+ },
+ {
+  "id": "2014",
+  "name": "NBA150P MIDI CC Headers",
+  "params": [
+   {
+    "type": "Uint8",
+    "name": "nr1"
+   },
+   {
+    "type": "Uint8",
+    "name": "nr2"
+   },
+   {
+    "type": "Uint8",
+    "name": "preefx1"
+   },
+   {
+    "type": "Uint8",
+    "name": "preefx2"
+   },
+   {
+    "type": "Uint8",
+    "name": "amp"
+   },
+   {
+    "type": "Uint8",
+    "name": "cab"
+   },
+   {
+    "type": "Uint8",
+    "name": "eq1"
+   },
+   {
+    "type": "Uint8",
+    "name": "eq2"
+   },
+   {
+    "type": "Uint8",
+    "name": "postefx1"
+   },
+   {
+    "type": "Uint8",
+    "name": "postefx2"
+   },
+   {
+    "type": "Uint8",
+    "name": "rvb1"
+   },
+   {
+    "type": "Uint8",
+    "name": "rvb2"
+   }
+  ]
+ }
+]

@@ -1,0 +1,522 @@
+{
+ "assets/fonts/Carlito-Bold.ttf": [
+  {
+   "asset": "assets/fonts/Carlito-Bold.ttf"
+  }
+ ],
+ "assets/image/appIcon/app_icon.png": [
+  {
+   "asset": "assets/image/appIcon/app_icon.png"
+  }
+ ],
+ "assets/image/appIcon/app_icon_jamelo.png": [
+  {
+   "asset": "assets/image/appIcon/app_icon_jamelo.png"
+  }
+ ],
+ "assets/image/appIcon/app_icon_lekato.png": [
+  {
+   "asset": "assets/image/appIcon/app_icon_lekato.png"
+  }
+ ],
+ "assets/image/appIcon/app_icon_rect.png": [
+  {
+   "asset": "assets/image/appIcon/app_icon_rect.png"
+  }
+ ],
+ "assets/image/appIcon/app_icon_s.png": [
+  {
+   "asset": "assets/image/appIcon/app_icon_s.png"
+  }
+ ],
+ "assets/image/appIcon/app_icon_strich.png": [
+  {
+   "asset": "assets/image/appIcon/app_icon_strich.png"
+  }
+ ],
+ "assets/image/icon/clear.png": [
+  {
+   "asset": "assets/image/icon/clear.png"
+  }
+ ],
+ "assets/image/icon/control_icon_back_1.png": [
+  {
+   "asset": "assets/image/icon/control_icon_back_1.png"
+  }
+ ],
+ "assets/image/icon/dub.png": [
+  {
+   "asset": "assets/image/icon/dub.png"
+  }
+ ],
+ "assets/image/icon/factory_info_icon.png": [
+  {
+   "asset": "assets/image/icon/factory_info_icon.png"
+  }
+ ],
+ "assets/image/icon/icon_back.png": [
+  {
+   "asset": "assets/image/icon/icon_back.png"
+  }
+ ],
+ "assets/image/icon/icon_bypass_off.png": [
+  {
+   "asset": "assets/image/icon/icon_bypass_off.png"
+  }
+ ],
+ "assets/image/icon/icon_bypass_on.png": [
+  {
+   "asset": "assets/image/icon/icon_bypass_on.png"
+  }
+ ],
+ "assets/image/icon/icon_delete.png": [
+  {
+   "asset": "assets/image/icon/icon_delete.png"
+  }
+ ],
+ "assets/image/icon/icon_export.png": [
+  {
+   "asset": "assets/image/icon/icon_export.png"
+  }
+ ],
+ "assets/image/icon/icon_global_eq.png": [
+  {
+   "asset": "assets/image/icon/icon_global_eq.png"
+  }
+ ],
+ "assets/image/icon/icon_import.png": [
+  {
+   "asset": "assets/image/icon/icon_import.png"
+  }
+ ],
+ "assets/image/icon/icon_input_trim.png": [
+  {
+   "asset": "assets/image/icon/icon_input_trim.png"
+  }
+ ],
+ "assets/image/icon/icon_loopback.png": [
+  {
+   "asset": "assets/image/icon/icon_loopback.png"
+  }
+ ],
+ "assets/image/icon/icon_reset.png": [
+  {
+   "asset": "assets/image/icon/icon_reset.png"
+  }
+ ],
+ "assets/image/icon/icon_save.png": [
+  {
+   "asset": "assets/image/icon/icon_save.png"
+  }
+ ],
+ "assets/image/icon/icon_setting.png": [
+  {
+   "asset": "assets/image/icon/icon_setting.png"
+  }
+ ],
+ "assets/image/icon/icon_tuner.png": [
+  {
+   "asset": "assets/image/icon/icon_tuner.png"
+  }
+ ],
+ "assets/image/icon/icon_vol.png": [
+  {
+   "asset": "assets/image/icon/icon_vol.png"
+  }
+ ],
+ "assets/image/icon/icon_warn.png": [
+  {
+   "asset": "assets/image/icon/icon_warn.png"
+  }
+ ],
+ "assets/image/icon/icon_wireless.png": [
+  {
+   "asset": "assets/image/icon/icon_wireless.png"
+  }
+ ],
+ "assets/image/icon/label_icon_edit_1.png": [
+  {
+   "asset": "assets/image/icon/label_icon_edit_1.png"
+  }
+ ],
+ "assets/image/icon/language.png": [
+  {
+   "asset": "assets/image/icon/language.png"
+  }
+ ],
+ "assets/image/icon/model_vernier.png": [
+  {
+   "asset": "assets/image/icon/model_vernier.png"
+  }
+ ],
+ "assets/image/icon/pause.png": [
+  {
+   "asset": "assets/image/icon/pause.png"
+  }
+ ],
+ "assets/image/icon/play.png": [
+  {
+   "asset": "assets/image/icon/play.png"
+  }
+ ],
+ "assets/image/icon/rec.png": [
+  {
+   "asset": "assets/image/icon/rec.png"
+  }
+ ],
+ "assets/image/icon/status_1.png": [
+  {
+   "asset": "assets/image/icon/status_1.png"
+  }
+ ],
+ "assets/image/icon/status_2.png": [
+  {
+   "asset": "assets/image/icon/status_2.png"
+  }
+ ],
+ "assets/image/icon/stop.png": [
+  {
+   "asset": "assets/image/icon/stop.png"
+  }
+ ],
+ "assets/image/loop/CLEAR.png": [
+  {
+   "asset": "assets/image/loop/CLEAR.png"
+  }
+ ],
+ "assets/image/loop/OVDUB.png": [
+  {
+   "asset": "assets/image/loop/OVDUB.png"
+  }
+ ],
+ "assets/image/loop/PAUSE.png": [
+  {
+   "asset": "assets/image/loop/PAUSE.png"
+  }
+ ],
+ "assets/image/loop/PLAY.png": [
+  {
+   "asset": "assets/image/loop/PLAY.png"
+  }
+ ],
+ "assets/image/loop/REC.png": [
+  {
+   "asset": "assets/image/loop/REC.png"
+  }
+ ],
+ "assets/image/loop/STOP.png": [
+  {
+   "asset": "assets/image/loop/STOP.png"
+  }
+ ],
+ "assets/image/loop/clear_1.png": [
+  {
+   "asset": "assets/image/loop/clear_1.png"
+  }
+ ],
+ "assets/image/loop/clear_2.png": [
+  {
+   "asset": "assets/image/loop/clear_2.png"
+  }
+ ],
+ "assets/image/loop/dub_1.png": [
+  {
+   "asset": "assets/image/loop/dub_1.png"
+  }
+ ],
+ "assets/image/loop/dub_2.png": [
+  {
+   "asset": "assets/image/loop/dub_2.png"
+  }
+ ],
+ "assets/image/loop/left_1.png": [
+  {
+   "asset": "assets/image/loop/left_1.png"
+  }
+ ],
+ "assets/image/loop/left_2.png": [
+  {
+   "asset": "assets/image/loop/left_2.png"
+  }
+ ],
+ "assets/image/loop/left_3.png": [
+  {
+   "asset": "assets/image/loop/left_3.png"
+  }
+ ],
+ "assets/image/loop/pause_1.png": [
+  {
+   "asset": "assets/image/loop/pause_1.png"
+  }
+ ],
+ "assets/image/loop/pause_2.png": [
+  {
+   "asset": "assets/image/loop/pause_2.png"
+  }
+ ],
+ "assets/image/loop/play_1.png": [
+  {
+   "asset": "assets/image/loop/play_1.png"
+  }
+ ],
+ "assets/image/loop/play_2.png": [
+  {
+   "asset": "assets/image/loop/play_2.png"
+  }
+ ],
+ "assets/image/loop/rec_1.png": [
+  {
+   "asset": "assets/image/loop/rec_1.png"
+  }
+ ],
+ "assets/image/loop/rec_2.png": [
+  {
+   "asset": "assets/image/loop/rec_2.png"
+  }
+ ],
+ "assets/image/loop/redo_1.png": [
+  {
+   "asset": "assets/image/loop/redo_1.png"
+  }
+ ],
+ "assets/image/loop/redo_2.png": [
+  {
+   "asset": "assets/image/loop/redo_2.png"
+  }
+ ],
+ "assets/image/loop/right_1.png": [
+  {
+   "asset": "assets/image/loop/right_1.png"
+  }
+ ],
+ "assets/image/loop/right_2.png": [
+  {
+   "asset": "assets/image/loop/right_2.png"
+  }
+ ],
+ "assets/image/loop/right_3.png": [
+  {
+   "asset": "assets/image/loop/right_3.png"
+  }
+ ],
+ "assets/image/loop/stop_1.png": [
+  {
+   "asset": "assets/image/loop/stop_1.png"
+  }
+ ],
+ "assets/image/loop/stop_2.png": [
+  {
+   "asset": "assets/image/loop/stop_2.png"
+  }
+ ],
+ "assets/image/loop/undo_1.png": [
+  {
+   "asset": "assets/image/loop/undo_1.png"
+  }
+ ],
+ "assets/image/loop/undo_2.png": [
+  {
+   "asset": "assets/image/loop/undo_2.png"
+  }
+ ],
+ "assets/image/tuner/A.png": [
+  {
+   "asset": "assets/image/tuner/A.png"
+  }
+ ],
+ "assets/image/tuner/B.png": [
+  {
+   "asset": "assets/image/tuner/B.png"
+  }
+ ],
+ "assets/image/tuner/Bb.png": [
+  {
+   "asset": "assets/image/tuner/Bb.png"
+  }
+ ],
+ "assets/image/tuner/C#.png": [
+  {
+   "asset": "assets/image/tuner/C#.png"
+  }
+ ],
+ "assets/image/tuner/C.png": [
+  {
+   "asset": "assets/image/tuner/C.png"
+  }
+ ],
+ "assets/image/tuner/D.png": [
+  {
+   "asset": "assets/image/tuner/D.png"
+  }
+ ],
+ "assets/image/tuner/E.png": [
+  {
+   "asset": "assets/image/tuner/E.png"
+  }
+ ],
+ "assets/image/tuner/Eb.png": [
+  {
+   "asset": "assets/image/tuner/Eb.png"
+  }
+ ],
+ "assets/image/tuner/F#.png": [
+  {
+   "asset": "assets/image/tuner/F#.png"
+  }
+ ],
+ "assets/image/tuner/F.png": [
+  {
+   "asset": "assets/image/tuner/F.png"
+  }
+ ],
+ "assets/image/tuner/G#.png": [
+  {
+   "asset": "assets/image/tuner/G#.png"
+  }
+ ],
+ "assets/image/tuner/G.png": [
+  {
+   "asset": "assets/image/tuner/G.png"
+  }
+ ],
+ "assets/image/tuner/Tuner_Number_L.png": [
+  {
+   "asset": "assets/image/tuner/Tuner_Number_L.png"
+  }
+ ],
+ "assets/image/tuner/flat.png": [
+  {
+   "asset": "assets/image/tuner/flat.png"
+  }
+ ],
+ "assets/image/tuner/flat2.png": [
+  {
+   "asset": "assets/image/tuner/flat2.png"
+  }
+ ],
+ "assets/image/tuner/tuner_left.png": [
+  {
+   "asset": "assets/image/tuner/tuner_left.png"
+  }
+ ],
+ "assets/image/tuner/tuner_number_1.png": [
+  {
+   "asset": "assets/image/tuner/tuner_number_1.png"
+  }
+ ],
+ "assets/image/tuner/tuner_number_2.png": [
+  {
+   "asset": "assets/image/tuner/tuner_number_2.png"
+  }
+ ],
+ "assets/image/tuner/tuner_number_3.png": [
+  {
+   "asset": "assets/image/tuner/tuner_number_3.png"
+  }
+ ],
+ "assets/image/tuner/tuner_number_4.png": [
+  {
+   "asset": "assets/image/tuner/tuner_number_4.png"
+  }
+ ],
+ "assets/image/tuner/tuner_number_5.png": [
+  {
+   "asset": "assets/image/tuner/tuner_number_5.png"
+  }
+ ],
+ "assets/image/tuner/tuner_number_6.png": [
+  {
+   "asset": "assets/image/tuner/tuner_number_6.png"
+  }
+ ],
+ "assets/image/tuner/tuner_number_7.png": [
+  {
+   "asset": "assets/image/tuner/tuner_number_7.png"
+  }
+ ],
+ "assets/image/tuner/tuner_number_8.png": [
+  {
+   "asset": "assets/image/tuner/tuner_number_8.png"
+  }
+ ],
+ "assets/image/tuner/tuner_number_9.png": [
+  {
+   "asset": "assets/image/tuner/tuner_number_9.png"
+  }
+ ],
+ "assets/image/tuner/tuner_number_A.png": [
+  {
+   "asset": "assets/image/tuner/tuner_number_A.png"
+  }
+ ],
+ "assets/image/tuner/tuner_number_B.png": [
+  {
+   "asset": "assets/image/tuner/tuner_number_B.png"
+  }
+ ],
+ "assets/image/tuner/tuner_number_C.png": [
+  {
+   "asset": "assets/image/tuner/tuner_number_C.png"
+  }
+ ],
+ "assets/image/tuner/tuner_number_D.png": [
+  {
+   "asset": "assets/image/tuner/tuner_number_D.png"
+  }
+ ],
+ "assets/image/tuner/tuner_number_E.png": [
+  {
+   "asset": "assets/image/tuner/tuner_number_E.png"
+  }
+ ],
+ "assets/image/tuner/tuner_number_F.png": [
+  {
+   "asset": "assets/image/tuner/tuner_number_F.png"
+  }
+ ],
+ "assets/image/tuner/tuner_number_G.png": [
+  {
+   "asset": "assets/image/tuner/tuner_number_G.png"
+  }
+ ],
+ "assets/image/tuner/tuner_number_flat.png": [
+  {
+   "asset": "assets/image/tuner/tuner_number_flat.png"
+  }
+ ],
+ "assets/image/tuner/tuner_number_sharp.png": [
+  {
+   "asset": "assets/image/tuner/tuner_number_sharp.png"
+  }
+ ],
+ "assets/image/tuner/tuner_right.png": [
+  {
+   "asset": "assets/image/tuner/tuner_right.png"
+  }
+ ],
+ "assets/translations/en.json": [
+  {
+   "asset": "assets/translations/en.json"
+  }
+ ],
+ "assets/translations/lang.bin": [
+  {
+   "asset": "assets/translations/lang.bin"
+  }
+ ],
+ "assets/translations/zh-CN.json": [
+  {
+   "asset": "assets/translations/zh-CN.json"
+  }
+ ],
+ "assets/translations/zh-HK.json": [
+  {
+   "asset": "assets/translations/zh-HK.json"
+  }
+ ],
+ "packages/cupertino_icons/assets/CupertinoIcons.ttf": [
+  {
+   "asset": "packages/cupertino_icons/assets/CupertinoIcons.ttf"
+  }
+ ]
+}

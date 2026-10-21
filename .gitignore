@@ -1,0 +1,26 @@
+# macOS
+.DS_Store
+__pycache__/
+*.pyc
+
+# re-signed copy of the vendor app (proprietary, ~54 MB)
+work/
+
+# build outputs
+tools/sniffer/midimon
+tools/sniffer/*.dylib
+tools/decode/ocr
+
+# static-analysis artefacts derived from proprietary binaries / large
+analysis/extracted/
+analysis/tools_src/
+analysis/.venv/
+analysis/blutter_object_pool.txt
+analysis/pp_filtered.txt
+analysis/pool_strings_ordered.txt
+
+# third-party NAM/IR files and outputs derived from them (not ours to redistribute)
+captures/files/
+# app screenshots (large; vendor UI)
+captures/screens/
+captures/CURRENT

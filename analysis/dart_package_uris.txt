@@ -1,0 +1,8 @@
+package:ffi/src/allocation.dart
+package:flutter/src/dart_plugin_registrant.dart
+package:flutter/src/services/message_codec.dart
+package:flutter/src/services/platform_channel.dart
+package:flutter/src/widgets/_window_macos.dart
+package:flutter/src/widgets/icon_data.dart
+package:objective_c/objective_c.dylib
+package:objective_c/src/runtime_bindings_generated.dart

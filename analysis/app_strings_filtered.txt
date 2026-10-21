@@ -1,0 +1,661 @@
+  <no message available>
+ isUsb:
+ no device connect
+ presetNameCtrl.text  
+_ConditionVariableImpl@15398151
+_Double
+_Double@0150898
+_Double@0150898.fromInteger
+_Editable must be mounted.
+_ExternalUint8ClampedArray
+_ExternalUint8ClampedArray@8027147
+_FfiStructLayout@9050071
+_FfiStructLayoutr
+_getHash@0150898r
+_getHttpConnectionHookClosure@35065589
+_getIsolateScheduleImmediateClosure@1026248
+_getLocaleClosure@35065589
+_getPrintClosure@35065589
+_getScheduleMicrotaskClosure@35065589
+_getStartMainIsolateFunction@1026248
+_getUriBaseClosure@16069316
+_getValue@11057401
+_getWatchSignalInternal@16069316r
+_GrowableList
+_GrowableList.
+_GrowableList._literal
+_GrowableList._withData
+_GrowableList.filled
+_GrowableList.generate
+_GrowableList@0150898
+_GrowableList@0150898._literal@0150898
+_HashVMImmutableBase@3099033
+_ImmutableList
+_ImmutableList@0150898
+_ImmutableList@0150898._Bk@0150898
+_impellerEnabled@35065589
+_namCallbackData error: 
+_name
+_Namespace@16069316
+_NamespaceImpl@16069316
+_NativeDouble@9050071
+_offsetInBytes
+_offsetInBytes@9050071
+_platformIsolatesEnabled@35065589
+_samplerCount@35065589
+_setClampedRange@8027147
+_setEngineId@35065589
+_setScheduleImmediateClosure@5048458
+_setStdioFDs@16069316
+_setupNamespace@16069316
+_TransferableTypedDataImpl
+_TransferableTypedDataImpl@1026248
+_Uint8ClampedArrayView
+_Uint8ClampedArrayView@8027147
+_Uint8ClampedList
+_Uint8ClampedList@8027147
+_updateSemanticsEnabled@35065589r
+_variableLength@9050071
+_yieldStarIterable
+_yieldStarIterable@5048458
+-(USB)
+, isSystemDevice: 
+, msgId:
+, name: 
+, packageName: 
+, tunerMode:
+, tunerMute:
+, tunerPitch:
+, usbDevsList: 
+, withNamePrefix: 
+;fw
+;loopState:
+:dynamic_assert_assignable_stc_check
+:nO%BNfw
+:nO%BNfw?
+?>()", or adding the "WidgetState.any" key to this map.
+' as a function. Since types do not define a method 'call', this is not possible. Did you intend to call the 
+" field of a WidgetStateMapper<
+" is non-nullable.
+". This is likely an issue with the localizations generation tool. Please file an issue on GitHub with a reproducible sample app and the gen-l10n configuration that was used.
+). To avoid that, the Overlay tried to size itself to one of its children, but no suitable non-positioned child that belongs to an OverlayEntry with canSizeOverlay set to true could be found.
+{loopVol:
+/icon_IR_1.png
+/icon_IR_2.png
+/icon_IR_3.png
+/icon_IR_4.png
+/index/exportPreset
+/index/improtPreset
+/L-IR: 
+\>fw
+\>fw?
+`Fw
+`Fw?
++FwY
+3ht.KHFw
+3ht.KHFw?
+9fwf;`
+9fwf;`?
+9WIr
+9WIr?
+AbstractType_getHashCode
+accessibleNavigation
+All presets exported successfully!
+alwaysVisible
+amp
+appName
+AssetBundle
+AssetBundleImageKey
+AssetBundleImageProvider
+assetId
+AssetImage
+AssetManifest.bin
+assets/image/icon/icon_loopback.png
+assets/image/icon/icon_tuner.pngr
+assets/image/loop/clear_1.png
+assets/image/loop/clear_2.png
+assets/image/loop/dub_1.png
+assets/image/loop/dub_2.png
+assets/image/loop/play_1.png
+assets/image/loop/play_2.png
+assets/image/loop/rec_1.png
+assets/image/loop/rec_2.png
+assets/image/loop/redo_1.png
+assets/image/loop/redo_2.png
+assets/image/loop/stop_1.png
+assets/image/loop/stop_2.png
+assets/image/loop/undo_1.png
+assets/image/loop/undo_2.png
+assets/image/tuner/A.png
+assets/image/tuner/B.png
+assets/image/tuner/Bb.png
+assets/image/tuner/C.png
+assets/image/tuner/C#.png
+assets/image/tuner/D.png
+assets/image/tuner/E.png
+assets/image/tuner/Eb.png
+assets/image/tuner/F.png
+assets/image/tuner/F#.png
+assets/image/tuner/G.png
+assets/image/tuner/G#.png
+assets/image/tuner/tuner_left.png
+assets/image/tuner/tuner_number_1.png
+assets/image/tuner/tuner_number_2.png
+assets/image/tuner/tuner_number_3.png
+assets/image/tuner/tuner_number_4.png
+assets/image/tuner/tuner_number_5.png
+assets/image/tuner/tuner_number_6.png
+assets/image/tuner/Tuner_Number_L.png
+assets/image/tuner/tuner_right.png
+aTRwv0Fw
+aTRwv0Fw?
+Attempt to access variable that was not assigned a value.
+AudioTrebleDown
+AudioTrebleUp
+BaseDeviceInfo{data: 
+ble
+BLE
+BleCharacteristic{uuid: 
+BleConnectionState.
+BleDevice: deviceId: 
+BleInputProperty.
+bleMidi
+BlendMode.
+BleOutputProperty.
+BleService{uuid: 
+Bluetooth scanning is unavailable
+bubble
+cab
+Cab (Ir)
+Cannot add to an unmodifiable list
+Cannot be a string, number, boolean, record, null, Pointer, Struct or Union
+Cannot change an unmodifiable set
+Cannot modify an unmodifiable list
+Cannot modify unmodifiable map
+Cannot remove from an unmodifiable list
+clamp
+clearLoadNam
+Clipboard.getData
+Clipboard.setData
+Codec::getNextFrame
+com.nux.imagelib/events
+com.nux.juce.midi/events
+computerName
+ConditionVariable
+connectDevice error 
+connectDevice2 error 
+connectDevice3 error 
+connectDevice3 success 
+connectToDevice
+Consider using "WidgetStateMapper<
+Converting object did not return an encodable object:
+Converting object to an encodable object failed:r
+coverSingleIr error 
+crc
+createConstMapFromMapOfDeeplyImmutables
+curPreset
+curPreset.
+curPreset.link
+Curve2DSample
+Damp
+DateTime_timeZoneOffsetInSecondsr
+DefaultAssetBundle
+deleteIR
+dev.flutter.pigeon.shared_preferences_foundation.LegacyUserDefaultsApi.getAll
+dev.flutter.pigeon.shared_preferences_foundation.LegacyUserDefaultsApi.setBool
+dev.flutter.pigeon.shared_preferences_foundation.LegacyUserDefaultsApi.setDoubler
+dev.flutter.pigeon.shared_preferences_foundation.LegacyUserDefaultsApi.setValue
+dev.flutter.pigeon.universal_ble.UniversalBleCallbackChannel.onAvailabilityChanged
+dev.flutter.pigeon.universal_ble.UniversalBleCallbackChannel.onConnectionChangedr
+dev.flutter.pigeon.universal_ble.UniversalBleCallbackChannel.onPairStateChange
+dev.flutter.pigeon.universal_ble.UniversalBleCallbackChannel.onScanResult
+dev.flutter.pigeon.universal_ble.UniversalBleCallbackChannel.onValueChanged
+dev.flutter.pigeon.universal_ble.UniversalBlePlatformChannel.connect
+dev.flutter.pigeon.universal_ble.UniversalBlePlatformChannel.disconnect
+dev.flutter.pigeon.universal_ble.UniversalBlePlatformChannel.discoverServices
+dev.flutter.pigeon.universal_ble.UniversalBlePlatformChannel.getBluetoothAvailabilityState
+dev.flutter.pigeon.universal_ble.UniversalBlePlatformChannel.getConnectionState
+dev.flutter.pigeon.universal_ble.UniversalBlePlatformChannel.getSystemDevices
+dev.flutter.pigeon.universal_ble.UniversalBlePlatformChannel.requestMtu
+dev.flutter.pigeon.universal_ble.UniversalBlePlatformChannel.setNotifiable
+dev.flutter.pigeon.universal_ble.UniversalBlePlatformChannel.startScan
+dev.flutter.pigeon.universal_ble.UniversalBlePlatformChannel.stopScan
+dev.flutter.pigeon.universal_ble.UniversalBlePlatformChannel.writeValue
+dev.fluttercommunity.plus/device_info
+device
+deviceCanConnected
+deviceChanged
+deviceConnect:
+deviceId
+deviceInitNotFound
+deviceListChanged
+devicePixelRatior
+deviceState?.modelSelect.value 
+disabled
+disconnectDevicer
+Dismissible
+DisposableBuildContext
+Do you want to save the new preset?
+DOBJC_getOsVesion
+DOBJC_newFinalizableBool
+DOBJC_newFinalizableHandle
+double
+Double
+Double_doubleFromInteger
+Double_equal
+Double_equalToInteger
+Double_getIsInfinite
+Double_getIsNaN
+Double_getIsNegative
+Double_greaterThan
+Double_greaterThanFromInteger
+Double_parse
+Double_toString
+Double_toStringAsFixed
+Double-check whether the map was used in a place that documents support for WidgetStateProperty objects. If so, please file a bug report. (The https://pub.dev/ page for a package contains a link to "View/report issues".)
+doubleTap
+Draggable
+DraggableDetailsr
+DragTargetDetails
+drum
+drum_command
+drum_vol
+drum.
+drumenable
+drumeq
+drumeqH
+drumeqL
+drumeqM
+drumlevel
+drumSetIndexChanged
+drumtype
+dyn-module:callable
+dyn-module:extendable
+dyn-module:implicitly-callable
+dynamic
+DynamicLibrary
+editable
+EditableText
+EditableText-
+EditableTextState
+edrum
+EffectDeviceDataType.
+enabled
+enableDeltaModelr
+enableIMEPersonalizedLearning
+enableInlinePrediction
+enableInteractiveSelection
+enableSuggestions
+enableWindowDelegate
+ExactAssetImage
+executable
+executableArguments
+Export Preset
+FactoryResetDialog
+Failed to export all presets!
+Failed to load NAM file: 
+Ffi_dl_getHandler
+FfiTrampolineData
+file:///Users/nux/Desktop/project/flutter/stomp_manager/.dart_tool/flutter_build/dart_plugin_registrant.dart
+fileName
+Finalizable
+Fl+dFw,u
+Fl+dFw,u?
+Flexible
+flutter_dynamic_icon_plus
+FocusableActionDetector
+For example, if source color is black, it is lightened so it doesn't match surfaces in dark mode.
+FractionalOffsetTween
+fw_
+fw?
+Fw?
+fw@
+Fw/
+Fw%
+fwa
+Fwa
+Fwb
+fwD7x_kw
+fwD7x_kw?
+fwn
+fwo
+fwy
+get_fwMultiPackages
+get:_fieldNames
+get:_name@10040228
+get:_offsetInBytes@9050071
+get:_samplerCount@35065589
+get:_variableLength@9050071
+get:_yieldStarIterable@5048458
+get:offsetInBytes
+get:variableLength
+getAll
+getAllDisplays
+getAllIRCrcAndName
+getAllIRCrcAndName error:
+getAllNamInfo error 
+getAlternateIconName
+getApplicationDocumentsDirectoryr
+getBlackBoxGen
+getBluetoothParams
+getBounds
+getCurrentPresetLink
+getCursetV2
+getCursorScreenPoint
+getCurStateV2
+getDeviceInfo
+getDevices
+getDevices error: 
+getDeviceState
+getDirectoryPathr
+getDownloadsDirectory
+getDrum
+getEdrum error: r
+getFwV2
+getKeyboardStater
+getLoop
+getModuleLink
+getNUXVersion ret: 
+getPresetV2
+getPrimaryDisplay
+getSystemSet
+getSystemSetV2
+getTuner
+getVersion
+glfw
+HeadsetHook
+hostName
+However, the platform likely has multi-view mode enabled, which does not create this default "implicit" view.
+Ifw
+ImageFilter.shader requires that the first uniform is a vec2 and at least one sampler uniform is present.
+ImmutableBuffer::dispose
+ImmutableBuffer::initFromAsset
+ImmutableList_from
+Import preset
+index/exportPreset
+index/improtPreset
+init:executable
+init:Irf
+InstructionsTable
+Invalid arguments for 'overflow' method sent to dev.flutter/channel-buffers (arguments must be a two-element list, channel name and flag state)
+Invalid arguments for 'overflow' method sent to dev.flutter/channel-buffers (channel name must be less than 254 characters long)r
+Invalid arguments for 'resize' method sent to dev.flutter/channel-buffers (arguments must be a two-element list, channel name and new capacity)
+Invalid arguments for 'resize' method sent to dev.flutter/channel-buffers (channel name must be less than 254 characters long)
+Invalid arguments for 'resize' method sent to dev.flutter/channel-buffers (channel name must not contain any null bytes)
+Invalid double
+Invalid preset file!
+IR [
+Ir?
+Ira
+Irc
+Ireki nabigazio-menua
+Irf
+IRg
+IRLoadProgressLoading
+irnames
+IRR
+Iterable
+j6EeIr
+jakewFw
+jakewFw?
+jmeAllPreset
+jmePreset
+k{VgW}fw
+k{VgW}fw?
+keepVisibleAtEndr
+keepVisibleAtStart
+KeyEventDeviceType.
+known full paths for route names:
+LibraryPrefix_setLoaded
+linux
+Listenable
+ListenableBuilder
+LiveText.isLiveTextInputAvailable
+loadNamFile
+Locale does not match symbols.NAME
+localeName
+localHostname
+LongPressDraggable
+loop
+looparnr
+looplevel
+loopstate
+loopState 
+micNGEnable
+midi
+midiCCDataChanged
+midiChan
+MIDINotificationMessageID(rawValue: 1)
+MidiUint14
+MidiUint28
+modelName
+MonomorphicSmiableCall
+MultiSelectableSelectionContainerDelegate
+nam
+NAM
+nam.
+Namathisela
+NamData
+name
+Name
+Namespace
+Namespace_Creater
+Namespace_GetDefault
+Namespace_GetPointer
+NamInfo
+NBA150P MIDI CC Headers
+NBA150PBluetoothStruct
+NBA150PCurstateStruct
+NBA150PDrumStruct
+NBA150PHeaders
+NBA150PIrNameStruct
+NBA150PLinkStruct
+NBA150PLoopStruct
+NBA150PPresetStruct
+NBA150PSpeakerStruct
+NBA150PSysSetStruct
+NBA150PTunerIDStruct
+NCabDataTBLE_RES 
+NEPStruct(data: r
+nfw
+nfw?
+no device
+NoSuchMethodError: Cannot assign to final variable '
+Not a capture group name: 
+notPasteable
+nux_locale
+nux_plugins
+nuxInit error: 
+NuxSenderResult(isSuccess: 
+NuxSendItem(name: 
+NUXSystem:
+objc_getClass
+objc_msgSend
+Object_getHash
+onDeviceChanged r
+Overlay was given infinite constraints and cannot be sized by a suitable child.
+PackageInfo(appName: 
+packageName
+Paragraph::getClosestGlyphInfo
+Paragraph::getGlyphInfoAt
+Paragraph::getLineBoundary
+Paragraph::getLineMetricsAt
+Paragraph::getNumberOfLines
+Paragraph::getPositionForOffset
+Paragraph::getRectsForPlaceholders
+Paragraph::getRectsForRange
+Paragraph::getWordBoundary
+pasteable
+Platform_ExecutableArguments
+Platform_ExecutableName
+Platform_LocaleName
+Platform_LocalHostname
+Platform_ResolvedExecutableName
+PlatformConfigurationNativeApi::DefaultRouteNamer
+PlatformConfigurationNativeApi::SetSemanticsTreeEnabled
+PlatformSelectableRegionContextMenu
+Please enter a preset name
+Please restart the device and try again.
+Please select a preset to export.
+plugins.invisiblewrench.com/flutter_midi_command/rx_channel
+plugins.invisiblewrench.com/flutter_midi_command/setup_channel
+plugins.invisiblewrench.com/flutter_midi_commandr
+PointerDeviceKind.
+possible
+preset
+Preset
+Preset imported successfully!
+Preset is loading, please wait!
+preset.
+PresetImportListDialog
+presetrange
+RawReceivePort_setActive
+redirect loop detected 
+RegExp_getGroupCount
+RegExp_getGroupNameMap
+RegExp_getIsUnicode
+ReorderableDelayedDragStartListener
+ReorderableDragStartListener
+ReorderableList
+ReorderableListState
+resetValue
+resolvedExecutable
+ReusableFragmentShader::Create
+ReusableFragmentShader::Dispose
+ReusableFragmentShader::ValidateImageFilter
+Save As IR File
+Save Preset
+saveIRToLocal error 
+scene
+scene1
+scene2
+scene3
+sel_registerNamer
+Select a device to connect.
+SelectableRegionr
+SelectableRegionState
+set:_samplerCount@35065589
+set:_yieldStarIterable@5048458
+setAspectRatio
+setBounds
+setDrum
+setFullScreen
+setIRCrcAndName
+setLoop
+setMinimumSize
+setPosition failed
+setPresetName
+setSelection
+setSkipTaskbar
+setString
+setText
+setTitle
+setTitleBarStyler
+setTuner
+SingleTargetCache
+SMidiParaCC
+Socket_AvailableDatagram
+Socket_Availabler
+stable
+String_getHashCode
+Struct
+SystemChrome.setApplicationSwitcherDescription
+SystemChrome.setSystemUIOverlayStyle
+SyxCherubID not equals
+SyxReqCmdStruct(msgID: 
+Table
+TableBorder
+TableCell
+TableColumnWidthr
+TableRow
+Tampal
+targetPath
+TargetPlatform.
+targetRect
+TextInput.setCaretRect
+TextInput.setClient
+TextInput.setEditableSizeAndTransform
+TextInput.setEditingState
+TextInput.setMarkedTextRect
+TextInput.setStyle
+TextInputClient.scribbleInteractionBegan
+TextInputClient.scribbleInteractionFinished
+The preset file has been damaged.
+The shader is missing a sampler uniform.
+The type parameter is not nullable
+There are several ways to avoid this problem. The simplest is to use a Builder to get a context that is "under" the Scaffold. For an example of this, please see the documentation for Scaffold.of():
+This error is only thrown in debug mode to minimize problems with the production app.
+ThreadLocal_getValue
+ThreadLocal_setValue
+timestamp
+TIr
+toDouble
+TransferableTypedData
+Treble
+TREBLE
+tuner
+tuner.
+tuner1
+tuner12
+tuner2
+tuner34
+TVAntennaCable
+TypedDataBase_setClampedRange
+TypedDataView_offsetInBytes
+U=djFw4r
+U=djFw4r?
+Uint8ClampedList.
+Uint8ClampedListr
+Unable to establish connection on channel: "
+Unable to get all displays.
+Unable to get application documents directory
+Unable to get cursor screen point.
+Unable to get primary display.
+Unable to load asset: "
+Unable to spawn isolate: 
+UniversalBle error :
+Unreachable
+Unrecognized message sent to dev.flutter/channel-buffers (method name too long)
+unstable
+up.fw
+up.fw?
+usb
+USB
+usbMidi
+usbmidi connectDevice error: 
+usbrount
+usbrount1
+usbrount2
+usbrount3
+usbrount4
+userName
+V#^fw
+V#^fw?
+ValueListenableBuilder
+variable
+variableLength
+visible
+visiblePassword
+visiblePosition
+visibleSize
+vm:align-loops
+vm:cachable-idempotent
+vm:external-namer
+vm:invisible
+vm:isolate-unsendable
+WeakProperty_setValue
+while pasting text to EditableText
+WidgetInspector
+WidgetOrderTraversalPolicy
+WidgetSpan
+WidgetState.
+WidgetStateMouseCursor(adaptiveClickable)
+WidgetStateMouseCursor(clickable)
+WidgetStateMouseCursor(textable)r
+WidgetStateProperty objects should only be used in places that document their support.
+Windowing APIs are not enabled.
+XDeviceInfo(type: 
+XDeviceSendResult(type: 
+XDeviceType.
+XIR
+xNUX
