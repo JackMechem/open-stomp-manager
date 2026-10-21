@@ -34,10 +34,27 @@
         "type": "github"
       }
     },
+    "open-stomp-lib": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1792616796,
+        "narHash": "sha256-IG+xE76BE/XyTvbNjC1Hpmp2l64hPat75pLj8r5vkbs=",
+        "owner": "JackMechem",
+        "repo": "open-stomp-lib",
+        "rev": "98c4ff089fa2e8ff979b48e0f07d2f9cc3728aec",
+        "type": "github"
+      },
+      "original": {
+        "owner": "JackMechem",
+        "repo": "open-stomp-lib",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "open-stomp-lib": "open-stomp-lib"
       }
     },
     "systems": {

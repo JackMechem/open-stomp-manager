@@ -7,6 +7,10 @@ to 0.2.0). The format follows
 
 ## [Unreleased]
 
+### Changed
+- Builds against open-stomp-lib v0.2.0 (CI, releases and the Nix flake). The flake now locks
+  the library input instead of fetching the library's latest `main`.
+
 ## [0.4.0] - 2026-10-21
 
 ### Changed
