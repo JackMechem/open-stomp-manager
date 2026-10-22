@@ -9,8 +9,7 @@ to 0.2.0). The format follows
 
 ### Added
 - **Import IR…** (menu, the user slots list, or right-click a user IR slot): pick a WAV impulse response and a slot;
-  it is converted like the official app does (first channel, 48 kHz, first 2048 samples) and uploaded. The level
-  may differ from the official app's by about a dB until its gain rule is pinned down.
+  it is converted exactly like the official app does (open-stomp-lib's recovered IR conversion) and uploaded.
 - `STOMP_DEV=import-ir` opens the Import IR dialog at startup.
 
 ## [0.6.0] - 2026-10-21

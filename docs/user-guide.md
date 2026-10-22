@@ -182,8 +182,8 @@ finished. You need to be connected with Listen only off. The model is selected o
 **Import IR…** (in the menu, under the user slots, or right-click a user IR slot) uploads an impulse response to a
 user IR slot, named after the file (first 16 characters) like the official app does. Any WAV file works: 16/24/32-bit
 or float, any sample rate (resampled to 48 kHz), the first channel of a stereo file. The pedal keeps the first 2048
-samples (42.7 ms), which is plenty for a cab IR. The level may differ from the official app's import by about a dB
-until the app's exact gain rule is known. Select it on the CAB block as **USER IR NN**.
+samples (42.7 ms), which is plenty for a cab IR. The conversion is the official app's, recovered from its code: the
+pedal gets exactly what the official app would send. Select it on the CAB block as **USER IR NN**.
 
 ## Activity log
 
