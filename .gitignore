@@ -29,3 +29,7 @@ captures/CURRENT
 target/
 result
 result-*
+
+# namconv harness build output
+tools/namconv/harness
+tools/namconv/harness.dSYM/

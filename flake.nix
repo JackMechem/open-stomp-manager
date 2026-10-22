@@ -26,7 +26,8 @@
         lib = pkgs.lib;
         inherit (pkgs.stdenv.hostPlatform) isLinux;
 
-        # Libraries winit/glow dlopen at runtime on Linux (X11 or Wayland, OpenGL).
+        # Libraries dlopened at runtime on Linux: X11 or Wayland and OpenGL (winit/glow), and
+        # libdbus for rfd's file dialog (xdg-desktop-portal).
         runtimeLibs = lib.optionals isLinux (
           with pkgs;
           [
@@ -38,6 +39,7 @@
             libxi
             libxrandr
             vulkan-loader
+            dbus
           ]
         );
 

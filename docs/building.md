@@ -65,7 +65,8 @@ tools/dev/shot.sh menu menu        # render a state to target/shots/menu.png and
 ```
 
 `watch.sh` watches this crate and the sibling `open-stomp-lib` and restarts the app on each save (needs Nix; it
-pulls in `watchexec`). `STOMP_DEV` takes a comma list: `log` opens the activity log, `menu` opens the header menu.
+pulls in `watchexec`). `STOMP_DEV` takes a comma list: `log` opens the activity log, `menu` opens the header menu, `import` opens the Import NAM dialog
+(add `STOMP_DEBUG_IMPORT=<file.nam>` to start converting it straight away, without uploading unless connected).
 In debug builds **F12** opens egui's style editor and inspector, for trying spacing and visuals live before
 moving them into `theme.rs`. `shot.sh` builds on the `STOMP_SCREENSHOT` hook (see
 [architecture](architecture.md)).
@@ -80,8 +81,9 @@ moving them into `theme.rs`. `shot.sh` builds on the `STOMP_SCREENSHOT` hook (se
 
 Platform notes:
 
-* **Linux:** the binary dlopens X11 or Wayland and OpenGL at runtime; the Nix package wraps it with the right
-  library path. `packaging/open-stomp-manager.desktop` and `packaging/icons/icon.png` are the desktop entry and icon.
+* **Linux:** the binary dlopens X11 or Wayland, OpenGL and libdbus (the file dialog, through xdg-desktop-portal)
+  at runtime; the Nix package wraps it with the right library path. Without libdbus, or without a portal providing
+  FileChooser, the import dialog's **Choose file…** does nothing. `packaging/open-stomp-manager.desktop` and `packaging/icons/icon.png` are the desktop entry and icon.
 * **macOS:** `packaging/macos/bundle.sh` builds both architectures (`rustup target add aarch64-apple-darwin
   x86_64-apple-darwin`), joins them with `lipo`, fills in `packaging/macos/Info.plist` and ad-hoc signs the bundle in
   `target/macos/`. It is not notarized. CoreMIDI hotplug needs a run loop on the MIDI thread; the library handles

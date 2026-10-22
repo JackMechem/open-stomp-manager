@@ -157,10 +157,25 @@ The device card shows the product and firmware, and the pedal's global settings 
 * **Wireless** and **LoopBack** (USB audio loopback)
 * **Global EQ**: bass, mid, treble (±). The pedal does not report global EQ changes made on the pedal itself over USB,
   so this can be stale until the next sync (⟳).
-* **User slots**: the names of the 10 user AMP (NAM) and 10 user CAB (IR) slots.
+* **User slots**: the names of the 10 user AMP (NAM) and 10 user CAB (IR) slots, and **Import NAM model…**
+  (see below).
 
 Settings are written whole each time you change one, starting from the record the pedal sent, so values the app does
 not understand are kept.
+
+## Importing a NAM model
+
+**Import NAM model…** (in the menu, under the user slots, or right-click a user AMP slot) converts a `.nam` file
+and uploads it to a user AMP slot, named after the file, like the official app does. Choose the file, the slot (it
+warns before replacing one in use) and the conversion:
+
+* **Optimised** (default, about a minute): open-stomp fits the pedal's two filters through a simulation of the pedal
+  until it sounds like the model. On hardware this is much closer to the real model than the official app's
+  conversion (see the open-stomp-lib README).
+* **Official app's algorithm** (a few seconds): the same conversion as the official Stomp Manager.
+
+The conversion runs in the background with a progress bar and can be cancelled; the slot only changes once it has
+finished. You need to be connected with Listen only off. The model is selected on the AMP block as **USER AMP NN**.
 
 ## Activity log
 
