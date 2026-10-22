@@ -2203,6 +2203,7 @@ dependencies = [
  "egui",
  "egui-phosphor",
  "open-stomp",
+ "pollster",
  "rfd",
  "windows-sys 0.61.2",
  "winresource",

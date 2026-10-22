@@ -41,8 +41,24 @@ pub struct ImportDialog {
     path: Option<PathBuf>,
     optimised: bool,
     job: Option<Job>,
+    /// The open file dialog's answer (`None` inside: cancelled). It is awaited on its own thread:
+    /// blocking the UI thread stalls the Wayland connection and the compositor drops the app.
+    picker: Option<mpsc::Receiver<Option<PathBuf>>>,
     /// The outcome of the last import: text and whether it is an error.
     outcome: Option<(String, bool)>,
+}
+
+/// Open the file dialog without blocking the UI thread. The dialog is created here (macOS wants
+/// the main thread for that) and awaited on a worker thread, which wakes the UI when it is done.
+fn pick_file(ctx: &egui::Context) -> mpsc::Receiver<Option<PathBuf>> {
+    let (tx, rx) = mpsc::channel();
+    let dialog = rfd::AsyncFileDialog::new().add_filter("NAM model", &["nam"]).set_title("Import NAM model").pick_file();
+    let ctx = ctx.clone();
+    std::thread::spawn(move || {
+        let _ = tx.send(pollster::block_on(dialog).map(|f| f.path().to_path_buf()));
+        ctx.request_repaint();
+    });
+    rx
 }
 
 /// The slot name the official app would use: the file name without `.nam`.
@@ -70,7 +86,7 @@ fn slot_label(i: u8, names: &[Option<String>; 10]) -> String {
 
 impl ImportDialog {
     pub fn new(slot: u8) -> Self {
-        ImportDialog { slot, path: None, optimised: true, job: None, outcome: None }
+        ImportDialog { slot, path: None, optimised: true, job: None, picker: None, outcome: None }
     }
 
     /// Start converting `path` right away (`STOMP_DEBUG_IMPORT`, for screenshots of the progress view).
@@ -227,11 +243,22 @@ impl ImportDialog {
         egui::Grid::new("nam_import_grid").num_columns(2).spacing([12.0, 10.0]).show(ui, |ui| {
             ui.label("Model");
             ui.horizontal(|ui| {
-                if ui.button(format!("{}  Choose file…", icon::FOLDER_OPEN)).clicked()
-                    && let Some(p) = rfd::FileDialog::new().add_filter("NAM model", &["nam"]).set_title("Import NAM model").pick_file()
-                {
-                    self.path = Some(p);
-                    self.outcome = None;
+                if let Some(rx) = &self.picker {
+                    match rx.try_recv() {
+                        Ok(picked) => {
+                            self.picker = None;
+                            if let Some(p) = picked {
+                                self.path = Some(p);
+                                self.outcome = None;
+                            }
+                        }
+                        Err(mpsc::TryRecvError::Empty) => {}
+                        Err(mpsc::TryRecvError::Disconnected) => self.picker = None,
+                    }
+                }
+                let choose = ui.add_enabled(self.picker.is_none(), egui::Button::new(format!("{}  Choose file…", icon::FOLDER_OPEN)));
+                if choose.clicked() {
+                    self.picker = Some(pick_file(ui.ctx()));
                 }
                 let name = self.path.as_deref().map(|p| p.file_name().unwrap_or_default().to_string_lossy().into_owned());
                 let (txt, col) = match &name {

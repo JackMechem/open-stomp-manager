@@ -13,7 +13,8 @@ to 0.2.0). The format follows
 - **Import NAM model…** (menu, the user slots list, or right-click a user AMP slot): pick a `.nam` file and a slot;
   the model is converted in the background (progress bar, cancel) and uploaded. The default is open-stomp's
   optimised conversion (about a minute, closer to the real model than the official app's on hardware); the official
-  algorithm is the fast alternative. Native file dialogs via `rfd` (XDG portal on Linux, no GTK).
+  algorithm is the fast alternative. Native file dialogs via `rfd` (XDG portal on Linux through a runtime-loaded libdbus, no
+  GTK; the Nix package and dev shell provide libdbus).
 - `STOMP_DEV=import` opens the import dialog at startup (for screenshots).
 
 ### Changed

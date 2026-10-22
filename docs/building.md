@@ -81,8 +81,9 @@ moving them into `theme.rs`. `shot.sh` builds on the `STOMP_SCREENSHOT` hook (se
 
 Platform notes:
 
-* **Linux:** the binary dlopens X11 or Wayland and OpenGL at runtime; the Nix package wraps it with the right
-  library path. `packaging/open-stomp-manager.desktop` and `packaging/icons/icon.png` are the desktop entry and icon.
+* **Linux:** the binary dlopens X11 or Wayland, OpenGL and libdbus (the file dialog, through xdg-desktop-portal)
+  at runtime; the Nix package wraps it with the right library path. Without libdbus, or without a portal providing
+  FileChooser, the import dialog's **Choose file…** does nothing. `packaging/open-stomp-manager.desktop` and `packaging/icons/icon.png` are the desktop entry and icon.
 * **macOS:** `packaging/macos/bundle.sh` builds both architectures (`rustup target add aarch64-apple-darwin
   x86_64-apple-darwin`), joins them with `lipo`, fills in `packaging/macos/Info.plist` and ad-hoc signs the bundle in
   `target/macos/`. It is not notarized. CoreMIDI hotplug needs a run loop on the MIDI thread; the library handles
