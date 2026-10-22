@@ -13,6 +13,7 @@ The app is the UI on top.
 |---|---|
 | `main.rs` | Command line, window options and icon, Windows console attach, version strings |
 | `app.rs` | `StompApp`: all panels (top bar, preset list, header, chain, detail, tuner/looper/drum, device/settings, log panel, save dialog), sending edits, polling the engine, flash animations, the screenshot hook |
+| `nam_import.rs` | The Import NAM dialog: file and slot choice, the conversion on a worker thread (progress, cancel), the result handed back to `app.rs` for upload |
 | `logbook.rs` | The activity log model: rows, merging knob sweeps, filtering, text export (unit-tested) |
 | `widgets.rs` | Custom-painted widgets: cards, knobs, level sliders, LEDs, chips, arcs, filter chips, drag/scroll input |
 | `theme.rs` | Colours, fonts (Inter with tabular digits, Phosphor icons) and the egui style; colour per module and log category |

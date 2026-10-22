@@ -12,3 +12,9 @@ repository = "https://github.com/JackMechem/open-stomp-manager"
 [profile.release]
 lto = "thin"
 codegen-units = 4
+
+# the NAM conversion (open-stomp + rustfft) is far too slow unoptimised; keep debug builds usable
+[profile.dev.package.open-stomp]
+opt-level = 3
+[profile.dev.package.rustfft]
+opt-level = 3

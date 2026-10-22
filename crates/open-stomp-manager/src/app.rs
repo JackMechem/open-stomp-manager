@@ -14,6 +14,7 @@ use open_stomp::{Category, DeviceState, Module, Origin};
 use chrono::{DateTime, Local};
 use open_stomp::device::{Config, Device, Status, Update};
 use crate::logbook::{Filter, LogBook, Row, RowKind};
+use crate::nam_import::ImportDialog;
 use crate::theme::*;
 use crate::widgets::*;
 
@@ -97,6 +98,8 @@ pub struct StompApp {
     replay_speed: f32,
     view_cache: (u64, Filter, Vec<usize>),
     save_dialog: Option<SaveDialog>,
+    /// The "Import NAM model" dialog.
+    nam_import: Option<ImportDialog>,
     /// `STOMP_DEV=menu`: open the menu once at startup (for screenshots while styling).
     dev_open_menu: bool,
     /// F12 in debug builds: egui's style editor and inspector.
@@ -149,6 +152,7 @@ impl StompApp {
             replay_speed: opts.speed,
             view_cache: (u64::MAX, Filter::default(), vec![]),
             save_dialog: None,
+            nam_import: dev_flag("import").then(|| ImportDialog::new(0)),
             dev_open_menu: dev_flag("menu"),
             dev_inspector: false,
         }
@@ -190,6 +194,16 @@ impl StompApp {
         p.index = slot;
         p.name = name.trim().to_owned();
         self.dev.save_preset(cur, &p);
+    }
+
+    /// Open "Import NAM model" for `slot`, or the first empty user AMP slot.
+    fn open_nam_import(&mut self, slot: Option<u8>) {
+        if self.nam_import.as_ref().is_some_and(|d| d.busy()) {
+            return;
+        }
+        let empty = |n: &Option<String>| n.is_some() && crate::nam_import::amp_name(n.as_deref()).is_none();
+        let slot = slot.or_else(|| self.state.user_amps.iter().position(empty).map(|i| i as u8)).unwrap_or(0);
+        self.nam_import = Some(ImportDialog::new(slot));
     }
 
     fn open_save_dialog(&mut self, slot: u8) {
@@ -448,6 +462,17 @@ impl StompApp {
             .clicked()
         {
             self.set_listen_only(!self.listen_only);
+        }
+
+        menu_separator(ui);
+        section(ui, "User slots");
+        if ui
+            .button(format!("{}  Import NAM model…", icon::FILE_ARROW_UP))
+            .on_hover_text("Convert a .nam file and upload it to a user AMP slot")
+            .clicked()
+        {
+            self.open_nam_import(None);
+            ui.close();
         }
 
         menu_separator(ui);
@@ -1262,7 +1287,7 @@ impl StompApp {
         }
     }
 
-    fn device_card(&self, ui: &mut Ui) {
+    fn device_card(&mut self, ui: &mut Ui) {
         card(ui, icon::GEAR, "Device and system settings", |ui| {
             if ui.available_width() > 820.0 {
                 ui.columns(3, |c| {
@@ -1354,8 +1379,9 @@ impl StompApp {
         );
     }
 
-    fn user_slots(&self, ui: &mut Ui) {
+    fn user_slots(&mut self, ui: &mut Ui) {
         let s = &self.state;
+        let mut import: Option<Option<u8>> = None;
         ui.label(RichText::new("User slots").font(font_sb(12.0)).color(TEXT_DIM));
         let name_w = ((ui.available_width() - 40.0) / 2.0).max(60.0);
         egui::Grid::new("user_slots").num_columns(3).spacing([10.0, 3.0]).show(ui, |ui| {
@@ -1370,12 +1396,34 @@ impl StompApp {
             };
             for i in 0..10 {
                 ui.label(RichText::new(format!("{:02}", i + 1)).font(font(11.0)).color(TEXT_FAINT));
-                for (txt, c) in [name(&s.user_amps[i]), name(&s.user_irs[i])] {
-                    ui.label(RichText::new(elide(ui, &txt, font(11.5), name_w)).font(font(11.5)).color(c));
+                for (col, (txt, c)) in [name(&s.user_amps[i]), name(&s.user_irs[i])].into_iter().enumerate() {
+                    let r = ui.add(
+                        egui::Label::new(RichText::new(elide(ui, &txt, font(11.5), name_w)).font(font(11.5)).color(c))
+                            .sense(Sense::click()),
+                    );
+                    if col == 0 {
+                        r.context_menu(|ui| {
+                            if ui.button(format!("{}  Import NAM model here…", icon::FILE_ARROW_UP)).clicked() {
+                                import = Some(Some(i as u8));
+                                ui.close();
+                            }
+                        });
+                    }
                 }
                 ui.end_row();
             }
         });
+        ui.add_space(6.0);
+        if ui
+            .button(format!("{}  Import NAM model…", icon::FILE_ARROW_UP))
+            .on_hover_text("Convert a .nam file and upload it to a user AMP slot (right-click a slot to pick it)")
+            .clicked()
+        {
+            import = Some(None);
+        }
+        if let Some(slot) = import {
+            self.open_nam_import(slot);
+        }
     }
 
     fn save_window(&mut self, ctx: &egui::Context) {
@@ -1436,6 +1484,20 @@ impl StompApp {
         }
         if save || cancel || !open {
             self.save_dialog = None;
+        }
+    }
+
+    fn nam_import_window(&mut self, ctx: &egui::Context) {
+        let editable = self.editable();
+        let Some(dlg) = &mut self.nam_import else { return };
+        let (open, upload) = dlg.show(ctx, &self.state.user_amps, editable);
+        if let Some(u) = upload
+            && let Err(e) = self.dev.import_user_amp(u.slot, &u.name, &u.data, u.factor)
+        {
+            dlg.failed(format!("Upload failed: {e}"));
+        }
+        if !open {
+            self.nam_import = None;
         }
     }
 
@@ -1696,6 +1758,7 @@ impl eframe::App for StompApp {
             self.save_dialog = None;
         }
         self.save_window(ui.ctx());
+        self.nam_import_window(ui.ctx());
 
         if self.animating(now) {
             ui.ctx().request_repaint();
