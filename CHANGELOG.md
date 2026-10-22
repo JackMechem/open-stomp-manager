@@ -7,7 +7,7 @@ to 0.2.0). The format follows
 
 ## [Unreleased]
 
-## [0.7.0] - Unreleased
+## [0.7.0] - 2026-10-22
 
 ### Added
 - Built against open-stomp-lib 0.4.0.
