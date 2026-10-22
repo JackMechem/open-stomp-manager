@@ -8,6 +8,10 @@ to 0.2.0). The format follows
 ## [Unreleased]
 
 ### Added
+- Import NAM model: **Normalise level** (on by default), every model at the same volume like NAM plugins, instead of
+  the often quiet level the model was captured at. A pure volume change.
+
+### Added
 - **Import IR…** (menu, the user slots list, or right-click a user IR slot): pick a WAV impulse response and a slot;
   it is converted with open-stomp's optimised IR conversion (default: fitted to the 384 samples the pedal plays,
   much closer to the real IR on the pedal) or exactly like the official app, and uploaded.

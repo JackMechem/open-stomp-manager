@@ -86,6 +86,8 @@ pub struct ImportDialog {
     slot: u8,
     path: Option<PathBuf>,
     optimised: bool,
+    /// NAM: scale every model to the same output level, like NAM plugins.
+    normalise: bool,
     job: Option<Job>,
     /// The open file dialog's answer (`None` inside: cancelled). It is awaited on its own thread:
     /// blocking the UI thread stalls the Wayland connection and the compositor drops the app.
@@ -137,16 +139,25 @@ fn slot_label(kind: Kind, i: u8, names: &[Option<String>; 10]) -> String {
     format!("{} {:02}  ·  {name}", kind.slot_prefix(), i + 1)
 }
 
-fn convert_file(kind: Kind, path: &std::path::Path, optimised: bool, on_step: &mut dyn FnMut(usize, usize) -> bool) -> Converted {
+fn convert_file(
+    kind: Kind,
+    path: &std::path::Path,
+    optimised: bool,
+    normalise: bool,
+    on_step: &mut dyn FnMut(usize, usize) -> bool,
+) -> Converted {
     match kind {
         Kind::Amp => {
             let mut model = open_stomp::nam::Model::load(path).map_err(|e| e.to_string())?;
             let x = convert::excitation();
-            let c = if optimised {
+            let mut c = if optimised {
                 convert::convert_optimised(&mut model, &x, on_step)
             } else {
                 convert::convert_measured(&mut model, &x, Measure::App)
             };
+            if normalise {
+                convert::normalise_level(&mut c, &mut model);
+            }
             Ok((c.data, c.factor))
         }
         Kind::Ir => {
@@ -159,7 +170,7 @@ fn convert_file(kind: Kind, path: &std::path::Path, optimised: bool, on_step: &m
 
 impl ImportDialog {
     pub fn new(kind: Kind, slot: u8) -> Self {
-        ImportDialog { kind, slot, path: None, optimised: true, job: None, picker: None, outcome: None }
+        ImportDialog { kind, slot, path: None, optimised: true, normalise: true, job: None, picker: None, outcome: None }
     }
 
     pub fn kind(&self) -> Kind {
@@ -182,13 +193,13 @@ impl ImportDialog {
         let done = Arc::new(AtomicUsize::new(0));
         let total = Arc::new(AtomicUsize::new(STEPS));
         let cancel = Arc::new(AtomicBool::new(false));
-        let (kind, optimised) = (self.kind, self.optimised);
+        let (kind, optimised, normalise) = (self.kind, self.optimised, self.normalise);
         let name = slot_name(kind, &path);
         let (d, t, c, ctx2) = (done.clone(), total.clone(), cancel.clone(), ctx.clone());
         std::thread::Builder::new()
             .name("slot-import".into())
             .spawn(move || {
-                let result = convert_file(kind, &path, optimised, &mut |step, steps| {
+                let result = convert_file(kind, &path, optimised, normalise, &mut |step, steps| {
                     d.store(step, Ordering::Relaxed);
                     t.store(steps, Ordering::Relaxed);
                     ctx2.request_repaint();
@@ -366,6 +377,13 @@ impl ImportDialog {
                 }
             });
             ui.end_row();
+
+            if kind == Kind::Amp {
+                ui.label("Level");
+                ui.checkbox(&mut self.normalise, "Normalise, like NAM plugins")
+                    .on_hover_text("Every model plays at the same volume, whatever level it was captured at. Only the volume changes, not the tone.");
+                ui.end_row();
+            }
         });
 
         if kind == Kind::Ir {

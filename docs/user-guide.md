@@ -174,6 +174,10 @@ warns before replacing one in use) and the conversion:
   conversion (see the open-stomp-lib README).
 * **Official app's algorithm** (a few seconds): the same conversion as the official Stomp Manager.
 
+**Normalise** (on by default) plays every model at the same volume, like NAM plugins do, whatever level it was
+captured at. Without it, imports keep the model's own level, as the official app's do, which is often quiet. It only
+changes the volume, not the tone.
+
 The conversion runs in the background with a progress bar and can be cancelled; the slot only changes once it has
 finished. You need to be connected with Listen only off. The model is selected on the AMP block as **USER AMP NN**.
 
