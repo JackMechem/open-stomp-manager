@@ -65,7 +65,7 @@ tools/dev/shot.sh menu menu        # render a state to target/shots/menu.png and
 ```
 
 `watch.sh` watches this crate and the sibling `open-stomp-lib` and restarts the app on each save (needs Nix; it
-pulls in `watchexec`). `STOMP_DEV` takes a comma list: `log` opens the activity log, `menu` opens the header menu, `import` opens the Import NAM dialog
+pulls in `watchexec`). `STOMP_DEV` takes a comma list: `log` opens the activity log, `menu` opens the header menu, `import` opens the Import NAM dialog, `import-ir` the Import IR dialog
 (add `STOMP_DEBUG_IMPORT=<file.nam>` to start converting it straight away, without uploading unless connected).
 In debug builds **F12** opens egui's style editor and inspector, for trying spacing and visuals live before
 moving them into `theme.rs`. `shot.sh` builds on the `STOMP_SCREENSHOT` hook (see

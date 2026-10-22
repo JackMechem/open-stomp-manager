@@ -157,8 +157,8 @@ The device card shows the product and firmware, and the pedal's global settings 
 * **Wireless** and **LoopBack** (USB audio loopback)
 * **Global EQ**: bass, mid, treble (±). The pedal does not report global EQ changes made on the pedal itself over USB,
   so this can be stale until the next sync (⟳).
-* **User slots**: the names of the 10 user AMP (NAM) and 10 user CAB (IR) slots, and **Import NAM model…**
-  (see below).
+* **User slots**: the names of the 10 user AMP (NAM) and 10 user CAB (IR) slots, with **Import NAM model…** and
+  **Import IR…** (see below).
 
 Settings are written whole each time you change one, starting from the record the pedal sent, so values the app does
 not understand are kept.
@@ -174,8 +174,25 @@ warns before replacing one in use) and the conversion:
   conversion (see the open-stomp-lib README).
 * **Official app's algorithm** (a few seconds): the same conversion as the official Stomp Manager.
 
+**Normalise** (on by default) plays every model at the same volume, like NAM plugins do, whatever level it was
+captured at. Without it, imports keep the model's own level, as the official app's do, which is often quiet. It only
+changes the volume, not the tone.
+
 The conversion runs in the background with a progress bar and can be cancelled; the slot only changes once it has
 finished. You need to be connected with Listen only off. The model is selected on the AMP block as **USER AMP NN**.
+
+## Importing an IR
+
+**Import IR…** (in the menu, under the user slots, or right-click a user IR slot) uploads an impulse response to a
+user IR slot, named after the file (first 16 characters) like the official app does. Any WAV file works: 16/24/32-bit
+or float, any sample rate (resampled to 48 kHz), the first channel of a stereo file. Two conversions:
+
+* **Optimised** (default): the pedal only plays the first 384 samples (8 ms) of an IR, so open-stomp fits those 384
+  samples to the whole IR. Much closer on the pedal, especially for IRs with a long tail or a delayed start (which
+  the official conversion leaves 35–45 dB too quiet).
+* **Official app's algorithm**: exactly what the official Stomp Manager sends.
+
+Select it on the CAB block as **USER IR NN**.
 
 ## Activity log
 
