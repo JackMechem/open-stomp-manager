@@ -157,8 +157,8 @@ The device card shows the product and firmware, and the pedal's global settings 
 * **Wireless** and **LoopBack** (USB audio loopback)
 * **Global EQ**: bass, mid, treble (±). The pedal does not report global EQ changes made on the pedal itself over USB,
   so this can be stale until the next sync (⟳).
-* **User slots**: the names of the 10 user AMP (NAM) and 10 user CAB (IR) slots, and **Import NAM model…**
-  (see below).
+* **User slots**: the names of the 10 user AMP (NAM) and 10 user CAB (IR) slots, with **Import NAM model…** and
+  **Import IR…** (see below).
 
 Settings are written whole each time you change one, starting from the record the pedal sent, so values the app does
 not understand are kept.
@@ -176,6 +176,14 @@ warns before replacing one in use) and the conversion:
 
 The conversion runs in the background with a progress bar and can be cancelled; the slot only changes once it has
 finished. You need to be connected with Listen only off. The model is selected on the AMP block as **USER AMP NN**.
+
+## Importing an IR
+
+**Import IR…** (in the menu, under the user slots, or right-click a user IR slot) uploads an impulse response to a
+user IR slot, named after the file (first 16 characters) like the official app does. Any WAV file works: 16/24/32-bit
+or float, any sample rate (resampled to 48 kHz), the first channel of a stereo file. The pedal keeps the first 2048
+samples (42.7 ms), which is plenty for a cab IR. The level may differ from the official app's import by about a dB
+until the app's exact gain rule is known. Select it on the CAB block as **USER IR NN**.
 
 ## Activity log
 

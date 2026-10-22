@@ -9,7 +9,7 @@
 
 mod app;
 mod logbook;
-mod nam_import;
+mod slot_import;
 mod theme;
 mod widgets;
 

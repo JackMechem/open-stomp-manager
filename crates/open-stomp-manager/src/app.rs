@@ -14,7 +14,7 @@ use open_stomp::{Category, DeviceState, Module, Origin};
 use chrono::{DateTime, Local};
 use open_stomp::device::{Config, Device, Status, Update};
 use crate::logbook::{Filter, LogBook, Row, RowKind};
-use crate::nam_import::ImportDialog;
+use crate::slot_import::{ImportDialog, Kind};
 use crate::theme::*;
 use crate::widgets::*;
 
@@ -99,7 +99,7 @@ pub struct StompApp {
     view_cache: (u64, Filter, Vec<usize>),
     save_dialog: Option<SaveDialog>,
     /// The "Import NAM model" dialog.
-    nam_import: Option<ImportDialog>,
+    slot_import: Option<ImportDialog>,
     /// `STOMP_DEV=menu`: open the menu once at startup (for screenshots while styling).
     dev_open_menu: bool,
     /// F12 in debug builds: egui's style editor and inspector.
@@ -125,8 +125,11 @@ impl StompApp {
         // `STOMP_DEV=log,menu` opens those at startup; see docs/building.md (live preview)
         let dev_flags = std::env::var("STOMP_DEV").unwrap_or_default();
         let dev_flag = |f: &str| dev_flags.split(',').any(|x| x.trim() == f);
-        let mut nam_import = dev_flag("import").then(|| ImportDialog::new(0));
-        if let (Some(d), Ok(p)) = (&mut nam_import, std::env::var("STOMP_DEBUG_IMPORT")) {
+        // `import` opens Import NAM, `import-ir` Import IR
+        let mut slot_import = (dev_flag("import").then_some(Kind::Amp))
+            .or(dev_flag("import-ir").then_some(Kind::Ir))
+            .map(|k| ImportDialog::new(k, 0));
+        if let (Some(d), Ok(p)) = (&mut slot_import, std::env::var("STOMP_DEBUG_IMPORT")) {
             d.debug_start(&cc.egui_ctx, p.into());
         }
         StompApp {
@@ -156,7 +159,7 @@ impl StompApp {
             replay_speed: opts.speed,
             view_cache: (u64::MAX, Filter::default(), vec![]),
             save_dialog: None,
-            nam_import,
+            slot_import,
             dev_open_menu: dev_flag("menu"),
             dev_inspector: false,
         }
@@ -200,14 +203,18 @@ impl StompApp {
         self.dev.save_preset(cur, &p);
     }
 
-    /// Open "Import NAM model" for `slot`, or the first empty user AMP slot.
-    fn open_nam_import(&mut self, slot: Option<u8>) {
-        if self.nam_import.as_ref().is_some_and(|d| d.busy()) {
+    /// Open "Import NAM model" / "Import IR" for `slot`, or the first empty slot of that kind.
+    fn open_slot_import(&mut self, kind: Kind, slot: Option<u8>) {
+        if self.slot_import.as_ref().is_some_and(|d| d.busy()) {
             return;
         }
-        let empty = |n: &Option<String>| n.is_some() && crate::nam_import::amp_name(n.as_deref()).is_none();
-        let slot = slot.or_else(|| self.state.user_amps.iter().position(empty).map(|i| i as u8)).unwrap_or(0);
-        self.nam_import = Some(ImportDialog::new(slot));
+        let names = match kind {
+            Kind::Amp => &self.state.user_amps,
+            Kind::Ir => &self.state.user_irs,
+        };
+        let empty = |n: &Option<String>| n.is_some() && crate::slot_import::slot_in_use(n.as_deref()).is_none();
+        let slot = slot.or_else(|| names.iter().position(empty).map(|i| i as u8)).unwrap_or(0);
+        self.slot_import = Some(ImportDialog::new(kind, slot));
     }
 
     fn open_save_dialog(&mut self, slot: u8) {
@@ -475,7 +482,15 @@ impl StompApp {
             .on_hover_text("Convert a .nam file and upload it to a user AMP slot")
             .clicked()
         {
-            self.open_nam_import(None);
+            self.open_slot_import(Kind::Amp, None);
+            ui.close();
+        }
+        if ui
+            .button(format!("{}  Import IR…", icon::FILE_AUDIO))
+            .on_hover_text("Upload an impulse response (WAV) to a user IR slot")
+            .clicked()
+        {
+            self.open_slot_import(Kind::Ir, None);
             ui.close();
         }
 
@@ -1385,7 +1400,7 @@ impl StompApp {
 
     fn user_slots(&mut self, ui: &mut Ui) {
         let s = &self.state;
-        let mut import: Option<Option<u8>> = None;
+        let mut import: Option<(Kind, Option<u8>)> = None;
         ui.label(RichText::new("User slots").font(font_sb(12.0)).color(TEXT_DIM));
         let name_w = ((ui.available_width() - 40.0) / 2.0).max(60.0);
         egui::Grid::new("user_slots").num_columns(3).spacing([10.0, 3.0]).show(ui, |ui| {
@@ -1405,28 +1420,40 @@ impl StompApp {
                         egui::Label::new(RichText::new(elide(ui, &txt, font(11.5), name_w)).font(font(11.5)).color(c))
                             .sense(Sense::click()),
                     );
-                    if col == 0 {
-                        r.context_menu(|ui| {
-                            if ui.button(format!("{}  Import NAM model here…", icon::FILE_ARROW_UP)).clicked() {
-                                import = Some(Some(i as u8));
-                                ui.close();
-                            }
-                        });
-                    }
+                    let (kind, label) = if col == 0 {
+                        (Kind::Amp, format!("{}  Import NAM model here…", icon::FILE_ARROW_UP))
+                    } else {
+                        (Kind::Ir, format!("{}  Import IR here…", icon::FILE_AUDIO))
+                    };
+                    r.context_menu(|ui| {
+                        if ui.button(label).clicked() {
+                            import = Some((kind, Some(i as u8)));
+                            ui.close();
+                        }
+                    });
                 }
                 ui.end_row();
             }
         });
         ui.add_space(6.0);
-        if ui
-            .button(format!("{}  Import NAM model…", icon::FILE_ARROW_UP))
-            .on_hover_text("Convert a .nam file and upload it to a user AMP slot (right-click a slot to pick it)")
-            .clicked()
-        {
-            import = Some(None);
-        }
-        if let Some(slot) = import {
-            self.open_nam_import(slot);
+        ui.horizontal(|ui| {
+            if ui
+                .button(format!("{}  Import NAM model…", icon::FILE_ARROW_UP))
+                .on_hover_text("Convert a .nam file and upload it to a user AMP slot (right-click a slot to pick it)")
+                .clicked()
+            {
+                import = Some((Kind::Amp, None));
+            }
+            if ui
+                .button(format!("{}  Import IR…", icon::FILE_AUDIO))
+                .on_hover_text("Upload an impulse response (WAV) to a user IR slot (right-click a slot to pick it)")
+                .clicked()
+            {
+                import = Some((Kind::Ir, None));
+            }
+        });
+        if let Some((kind, slot)) = import {
+            self.open_slot_import(kind, slot);
         }
     }
 
@@ -1491,17 +1518,25 @@ impl StompApp {
         }
     }
 
-    fn nam_import_window(&mut self, ctx: &egui::Context) {
+    fn slot_import_window(&mut self, ctx: &egui::Context) {
         let editable = self.editable();
-        let Some(dlg) = &mut self.nam_import else { return };
-        let (open, upload) = dlg.show(ctx, &self.state.user_amps, editable);
-        if let Some(u) = upload
-            && let Err(e) = self.dev.import_user_amp(u.slot, &u.name, &u.data, u.factor)
-        {
-            dlg.failed(format!("Upload failed: {e}"));
+        let Some(dlg) = &mut self.slot_import else { return };
+        let names = match dlg.kind() {
+            Kind::Amp => &self.state.user_amps,
+            Kind::Ir => &self.state.user_irs,
+        };
+        let (open, upload) = dlg.show(ctx, names, editable);
+        if let Some(u) = upload {
+            let sent = match u.kind {
+                Kind::Amp => self.dev.import_user_amp(u.slot, &u.name, &u.data, u.factor),
+                Kind::Ir => self.dev.import_user_ir(u.slot, &u.name, &u.data),
+            };
+            if let Err(e) = sent {
+                dlg.failed(format!("Upload failed: {e}"));
+            }
         }
         if !open {
-            self.nam_import = None;
+            self.slot_import = None;
         }
     }
 
@@ -1762,7 +1797,7 @@ impl eframe::App for StompApp {
             self.save_dialog = None;
         }
         self.save_window(ui.ctx());
-        self.nam_import_window(ui.ctx());
+        self.slot_import_window(ui.ctx());
 
         if self.animating(now) {
             ui.ctx().request_repaint();
