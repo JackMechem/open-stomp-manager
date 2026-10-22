@@ -73,6 +73,12 @@ impl ImportDialog {
         ImportDialog { slot, path: None, optimised: true, job: None, outcome: None }
     }
 
+    /// Start converting `path` right away (`STOMP_DEBUG_IMPORT`, for screenshots of the progress view).
+    pub fn debug_start(&mut self, ctx: &egui::Context, path: PathBuf) {
+        self.path = Some(path);
+        self.start(ctx);
+    }
+
     pub fn busy(&self) -> bool {
         self.job.is_some()
     }
@@ -208,7 +214,7 @@ impl ImportDialog {
             Some(f) => egui::ProgressBar::new(f).fill(ACCENT),
             None => egui::ProgressBar::new(0.0).animate(true).fill(ACCENT),
         };
-        ui.add(bar.desired_width(f32::INFINITY));
+        ui.add(bar.desired_width(440.0));
         ui.label(
             RichText::new(format!("{text}  ·  {}:{:02}", secs / 60, secs % 60)).font(font(11.5)).color(TEXT_DIM),
         );

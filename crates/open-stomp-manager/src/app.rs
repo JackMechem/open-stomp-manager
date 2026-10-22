@@ -125,6 +125,10 @@ impl StompApp {
         // `STOMP_DEV=log,menu` opens those at startup; see docs/building.md (live preview)
         let dev_flags = std::env::var("STOMP_DEV").unwrap_or_default();
         let dev_flag = |f: &str| dev_flags.split(',').any(|x| x.trim() == f);
+        let mut nam_import = dev_flag("import").then(|| ImportDialog::new(0));
+        if let (Some(d), Ok(p)) = (&mut nam_import, std::env::var("STOMP_DEBUG_IMPORT")) {
+            d.debug_start(&cc.egui_ctx, p.into());
+        }
         StompApp {
             dev,
             state: DeviceState::default(),
@@ -152,7 +156,7 @@ impl StompApp {
             replay_speed: opts.speed,
             view_cache: (u64::MAX, Filter::default(), vec![]),
             save_dialog: None,
-            nam_import: dev_flag("import").then(|| ImportDialog::new(0)),
+            nam_import,
             dev_open_menu: dev_flag("menu"),
             dev_inspector: false,
         }
