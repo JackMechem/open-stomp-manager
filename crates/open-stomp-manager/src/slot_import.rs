@@ -1,7 +1,7 @@
 //! "Import NAM model…" and "Import IR…": convert a `.nam` or IR audio file on a worker thread and
-//! hand the result back for upload to a user AMP or user IR slot. NAM models default to
-//! open-stomp's optimised conversion (about a minute, closest to the model on hardware), with the
-//! official app's algorithm as the fast alternative; IRs follow the official app's conversion.
+//! hand the result back for upload to a user AMP or user IR slot. Both default to open-stomp's
+//! optimised conversions (closest to the model / IR on hardware), with the official app's
+//! algorithms as the alternative.
 
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -151,7 +151,8 @@ fn convert_file(kind: Kind, path: &std::path::Path, optimised: bool, on_step: &m
         }
         Kind::Ir => {
             let wav = open_stomp::ir::Wav::load(path).map_err(|e| e.to_string())?;
-            Ok((open_stomp::ir::convert(&wav).data, 1.0))
+            let method = if optimised { open_stomp::ir::Method::Optimised } else { open_stomp::ir::Method::App };
+            Ok((open_stomp::ir::convert_with(&wav, method).data, 1.0))
         }
     }
 }
@@ -181,7 +182,7 @@ impl ImportDialog {
         let done = Arc::new(AtomicUsize::new(0));
         let total = Arc::new(AtomicUsize::new(STEPS));
         let cancel = Arc::new(AtomicBool::new(false));
-        let (kind, optimised) = (self.kind, self.optimised && self.kind == Kind::Amp);
+        let (kind, optimised) = (self.kind, self.optimised);
         let name = slot_name(kind, &path);
         let (d, t, c, ctx2) = (done.clone(), total.clone(), cancel.clone(), ctx.clone());
         std::thread::Builder::new()
@@ -239,8 +240,8 @@ impl ImportDialog {
             Ok((data, factor)) => {
                 let how = match (job.kind, job.optimised) {
                     (Kind::Amp, true) => format!(" (optimised, {}:{:02})", secs / 60, secs % 60),
-                    (Kind::Amp, false) => " (official algorithm)".to_owned(),
-                    (Kind::Ir, _) => String::new(),
+                    (Kind::Ir, true) => " (optimised)".to_owned(),
+                    (_, false) => " (official algorithm)".to_owned(),
                 };
                 let target = format!("{} {:02}", job.kind.slot_prefix(), job.slot + 1);
                 self.outcome = Some((format!("Imported “{}” into {target}{how}.", job.name), false));
@@ -305,7 +306,7 @@ impl ImportDialog {
         ui.label(
             RichText::new(format!("{text}  ·  {}:{:02}", secs / 60, secs % 60)).font(font(11.5)).color(TEXT_DIM),
         );
-        if job.optimised {
+        if job.optimised && job.kind == Kind::Amp {
             ui.label(RichText::new("About a minute in total. The app stays usable meanwhile.").font(font(11.5)).color(TEXT_FAINT));
         }
     }
@@ -352,22 +353,23 @@ impl ImportDialog {
             );
             ui.end_row();
 
-            if kind == Kind::Amp {
-                ui.label("Conversion");
-                ui.vertical(|ui| {
+            ui.label("Conversion");
+            ui.vertical(|ui| match kind {
+                Kind::Amp => {
                     ui.radio_value(&mut self.optimised, true, "Optimised: closest to the model (about a minute)");
                     ui.radio_value(&mut self.optimised, false, "Official app's algorithm (a few seconds)");
-                });
-                ui.end_row();
-            }
+                }
+                Kind::Ir => {
+                    ui.radio_value(&mut self.optimised, true, "Optimised: fitted to the 8 ms the pedal plays")
+                        .on_hover_text("The pedal plays only the first 384 samples of an IR; this fits them to the whole IR");
+                    ui.radio_value(&mut self.optimised, false, "Official app's algorithm (the IR's first 42.7 ms)");
+                }
+            });
+            ui.end_row();
         });
 
         if kind == Kind::Ir {
-            ui.label(
-                RichText::new("Any WAV IR (first channel, resampled to 48 kHz); the pedal holds its first 42.7 ms.")
-                    .font(font(11.5))
-                    .color(TEXT_FAINT),
-            );
+            ui.label(RichText::new("Any WAV IR (first channel, resampled to 48 kHz).").font(font(11.5)).color(TEXT_FAINT));
         }
         if let Some(n) = slot_in_use(names[self.slot as usize].as_deref()) {
             let target = format!("{} {:02}", kind.slot_prefix(), self.slot + 1);

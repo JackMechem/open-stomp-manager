@@ -181,9 +181,14 @@ finished. You need to be connected with Listen only off. The model is selected o
 
 **Import IR…** (in the menu, under the user slots, or right-click a user IR slot) uploads an impulse response to a
 user IR slot, named after the file (first 16 characters) like the official app does. Any WAV file works: 16/24/32-bit
-or float, any sample rate (resampled to 48 kHz), the first channel of a stereo file. The pedal keeps the first 2048
-samples (42.7 ms), which is plenty for a cab IR. The conversion is the official app's, recovered from its code: the
-pedal gets exactly what the official app would send. Select it on the CAB block as **USER IR NN**.
+or float, any sample rate (resampled to 48 kHz), the first channel of a stereo file. Two conversions:
+
+* **Optimised** (default): the pedal only plays the first 384 samples (8 ms) of an IR, so open-stomp fits those 384
+  samples to the whole IR. Much closer on the pedal, especially for IRs with a long tail or a delayed start (which
+  the official conversion leaves 35–45 dB too quiet).
+* **Official app's algorithm**: exactly what the official Stomp Manager sends.
+
+Select it on the CAB block as **USER IR NN**.
 
 ## Activity log
 
