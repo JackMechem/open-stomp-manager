@@ -7,7 +7,7 @@ to 0.2.0). The format follows
 
 ## [Unreleased]
 
-## [0.6.0] - Unreleased
+## [0.6.0] - 2026-10-21
 
 ### Added
 - **Import NAM model…** (menu, the user slots list, or right-click a user AMP slot): pick a `.nam` file and a slot;
