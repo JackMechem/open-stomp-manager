@@ -7,6 +7,8 @@ to 0.2.0). The format follows
 
 ## [Unreleased]
 
+## [0.6.0] - Unreleased
+
 ### Added
 - **Import NAM model…** (menu, the user slots list, or right-click a user AMP slot): pick a `.nam` file and a slot;
   the model is converted in the background (progress bar, cancel) and uploaded. The default is open-stomp's
@@ -15,6 +17,7 @@ to 0.2.0). The format follows
 - `STOMP_DEV=import` opens the import dialog at startup (for screenshots).
 
 ### Changed
+- Built against open-stomp-lib 0.3.0 (optimised NAM conversion).
 - Debug builds compile the open-stomp library and `rustfft` optimised, so the NAM conversion stays usable.
 
 ## [0.5.0] - 2026-10-21
@@ -99,7 +102,8 @@ to 0.2.0). The format follows
 - `stomp-manager`: live monitor GUI with auto-connect, read-only sync, active preset, signal
   chain, parameters, tuner/looper/drum, coalescing activity log and capture replay.
 
-[Unreleased]: https://github.com/JackMechem/open-stomp-manager/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/JackMechem/open-stomp-manager/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.2.0...v0.3.0
