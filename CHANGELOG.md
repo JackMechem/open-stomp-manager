@@ -7,11 +7,12 @@ to 0.2.0). The format follows
 
 ## [Unreleased]
 
-### Added
-- Import NAM model: **Normalise level** (on by default), every model at the same volume like NAM plugins, instead of
-  the often quiet level the model was captured at. A pure volume change.
+## [0.7.0] - Unreleased
 
 ### Added
+- Built against open-stomp-lib 0.4.0.
+- Import NAM model: **Normalise level** (on by default), every model at the same volume like NAM plugins, instead of
+  the often quiet level the model was captured at. A pure volume change.
 - **Import IR…** (menu, the user slots list, or right-click a user IR slot): pick a WAV impulse response and a slot;
   it is converted with open-stomp's optimised IR conversion (default: fitted to the 384 samples the pedal plays,
   much closer to the real IR on the pedal) or exactly like the official app, and uploaded.
@@ -113,7 +114,8 @@ to 0.2.0). The format follows
 - `stomp-manager`: live monitor GUI with auto-connect, read-only sync, active preset, signal
   chain, parameters, tuner/looper/drum, coalescing activity log and capture replay.
 
-[Unreleased]: https://github.com/JackMechem/open-stomp-manager/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/JackMechem/open-stomp-manager/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.3.0...v0.4.0

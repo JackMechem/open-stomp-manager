@@ -8,8 +8,8 @@ on:
 env:
   CARGO_TERM_COLOR: always
   # the open-stomp library is a path dependency on a sibling checkout (crates/open-stomp-manager/Cargo.toml)
-  # ir-import until open-stomp-lib's IR support is released; then its tag
-  OPEN_STOMP_LIB_REF: ir-import
+  # nam-level until open-stomp-lib v0.4.0 is tagged; then v0.4.0
+  OPEN_STOMP_LIB_REF: nam-level
 
 jobs:
   test:
