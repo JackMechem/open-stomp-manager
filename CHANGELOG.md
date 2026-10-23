@@ -7,8 +7,15 @@ to 0.2.0). The format follows
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-10-22
+
+### Added
+- **Rename…** on user AMP and IR slots (right-click a slot under User slots): changes only the name, the sound stays
+  (open-stomp-lib 0.5.1's `rename_user_amp` / `rename_user_ir`; the official app can't rename). `STOMP_DEV=rename`
+  opens the dialog at startup.
+
 ### Changed
-- Built against open-stomp-lib 0.5.0. NAM imports (optimised) are much closer to the model in the low end: the fit
+- Built against open-stomp-lib 0.5.1 (0.5.0 brought the NAM low-end fix, 0.5.1 rename). NAM imports (optimised) are much closer to the model in the low end: the fit
   now weights every octave equally instead of leaving the bass almost unweighted. Re-amping a bass DI through the
   pedal, the error against the model and IR drops from 5.2 to 3.3 dB at 40–160 Hz and from 3.5 to 2.1 dB overall,
   together with the optimised IR import, whose fit now covers 30 Hz – 16 kHz.
@@ -120,7 +127,8 @@ to 0.2.0). The format follows
 - `stomp-manager`: live monitor GUI with auto-connect, read-only sync, active preset, signal
   chain, parameters, tuner/looper/drum, coalescing activity log and capture replay.
 
-[Unreleased]: https://github.com/JackMechem/open-stomp-manager/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/JackMechem/open-stomp-manager/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/JackMechem/open-stomp-manager/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.4.0...v0.5.0
