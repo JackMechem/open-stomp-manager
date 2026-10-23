@@ -7,6 +7,12 @@ to 0.2.0). The format follows
 
 ## [Unreleased]
 
+### Changed
+- Built against open-stomp-lib 0.5.0. NAM imports (optimised) are much closer to the model in the low end: the fit
+  now weights every octave equally instead of leaving the bass almost unweighted. Re-amping a bass DI through the
+  pedal, the error against the model and IR drops from 5.2 to 3.3 dB at 40–160 Hz and from 3.5 to 2.1 dB overall,
+  together with the optimised IR import, whose fit now covers 30 Hz – 16 kHz.
+
 ## [0.7.0] - 2026-10-22
 
 ### Added
