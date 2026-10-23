@@ -69,6 +69,13 @@ struct SaveDialog {
     name: String,
 }
 
+/// "Rename…" on a user AMP / IR slot: only the name record is sent, the sound stays.
+struct RenameDialog {
+    kind: Kind,
+    slot: u8,
+    name: String,
+}
+
 pub struct StompApp {
     dev: Device,
     state: DeviceState,
@@ -100,6 +107,7 @@ pub struct StompApp {
     save_dialog: Option<SaveDialog>,
     /// The "Import NAM model" dialog.
     slot_import: Option<ImportDialog>,
+    rename_dialog: Option<RenameDialog>,
     /// `STOMP_DEV=menu`: open the menu once at startup (for screenshots while styling).
     dev_open_menu: bool,
     /// F12 in debug builds: egui's style editor and inspector.
@@ -160,6 +168,8 @@ impl StompApp {
             view_cache: (u64::MAX, Filter::default(), vec![]),
             save_dialog: None,
             slot_import,
+            // `rename` opens the Rename dialog on USER AMP 01
+            rename_dialog: dev_flag("rename").then(|| RenameDialog { kind: Kind::Amp, slot: 0, name: "SVT G10 .5".into() }),
             dev_open_menu: dev_flag("menu"),
             dev_inspector: false,
         }
@@ -1399,8 +1409,10 @@ impl StompApp {
     }
 
     fn user_slots(&mut self, ui: &mut Ui) {
+        let editable = self.editable();
         let s = &self.state;
         let mut import: Option<(Kind, Option<u8>)> = None;
+        let mut rename: Option<(Kind, u8)> = None;
         ui.label(RichText::new("User slots").font(font_sb(12.0)).color(TEXT_DIM));
         let name_w = ((ui.available_width() - 40.0) / 2.0).max(60.0);
         egui::Grid::new("user_slots").num_columns(3).spacing([10.0, 3.0]).show(ui, |ui| {
@@ -1425,9 +1437,18 @@ impl StompApp {
                     } else {
                         (Kind::Ir, format!("{}  Import IR here…", icon::FILE_AUDIO))
                     };
+                    let current = if col == 0 { &s.user_amps[i] } else { &s.user_irs[i] };
+                    let in_use = crate::slot_import::slot_in_use(current.as_deref()).is_some();
                     r.context_menu(|ui| {
                         if ui.button(label).clicked() {
                             import = Some((kind, Some(i as u8)));
+                            ui.close();
+                        }
+                        let b = ui
+                            .add_enabled(editable && in_use, egui::Button::new(format!("{}  Rename…", icon::PENCIL_SIMPLE)))
+                            .on_disabled_hover_text(if in_use { "Connect, with Listen only off" } else { "The slot is empty" });
+                        if b.clicked() {
+                            rename = Some((kind, i as u8));
                             ui.close();
                         }
                     });
@@ -1454,6 +1475,68 @@ impl StompApp {
         });
         if let Some((kind, slot)) = import {
             self.open_slot_import(kind, slot);
+        }
+        if let Some((kind, slot)) = rename {
+            let names = if kind == Kind::Amp { &self.state.user_amps } else { &self.state.user_irs };
+            let name = names[slot as usize].clone().unwrap_or_default();
+            self.rename_dialog = Some(RenameDialog { kind, slot, name });
+        }
+    }
+
+    fn rename_window(&mut self, ctx: &egui::Context) {
+        let editable = self.editable();
+        let Some(dlg) = &mut self.rename_dialog else { return };
+        let mut open = true;
+        let (mut rename, mut cancel) = (false, false);
+        let what = if dlg.kind == Kind::Amp { "USER AMP" } else { "USER IR" };
+        egui::Window::new(format!("{}  Rename {what} {:02}", icon::PENCIL_SIMPLE, dlg.slot + 1))
+            .collapsible(false)
+            .resizable(false)
+            .anchor(Align2::CENTER_CENTER, vec2(0.0, 0.0))
+            .open(&mut open)
+            .show(ctx, |ui| {
+                ui.set_width(340.0);
+                egui::Grid::new("rename_grid").num_columns(2).spacing([12.0, 10.0]).show(ui, |ui| {
+                    ui.label("Name");
+                    let r = ui.add(egui::TextEdit::singleline(&mut dlg.name).char_limit(16).desired_width(220.0));
+                    if r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
+                        rename = true;
+                    }
+                    ui.end_row();
+                });
+                ui.label(
+                    RichText::new("Only the name changes; the slot's sound stays as it is. Up to 16 characters.")
+                        .font(font(11.0))
+                        .color(TEXT_FAINT),
+                );
+                if !dlg.name.is_ascii() {
+                    ui.label(RichText::new("Only ASCII characters can be stored; others become “?”.").color(BAD));
+                }
+                if !editable {
+                    ui.label(RichText::new("Connect to the pedal, with Listen only off, to rename.").color(BAD));
+                }
+                ui.add_space(6.0);
+                ui.horizontal(|ui| {
+                    if ui.button("Cancel").clicked() {
+                        cancel = true;
+                    }
+                    let b = egui::Button::new(RichText::new(format!("{}  Rename", icon::PENCIL_SIMPLE)).color(BG))
+                        .fill(ACCENT);
+                    if ui.add_enabled(editable && !dlg.name.trim().is_empty(), b).clicked() {
+                        rename = true;
+                    }
+                });
+            });
+        let rename = rename && editable && !dlg.name.trim().is_empty();
+        if rename {
+            let name = dlg.name.trim();
+            let _ = match dlg.kind {
+                Kind::Amp => self.dev.rename_user_amp(dlg.slot, name),
+                Kind::Ir => self.dev.rename_user_ir(dlg.slot, name),
+            };
+        }
+        if rename || cancel || !open {
+            self.rename_dialog = None;
         }
     }
 
@@ -1798,6 +1881,7 @@ impl eframe::App for StompApp {
         }
         self.save_window(ui.ctx());
         self.slot_import_window(ui.ctx());
+        self.rename_window(ui.ctx());
 
         if self.animating(now) {
             ui.ctx().request_repaint();

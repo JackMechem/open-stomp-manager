@@ -14,6 +14,7 @@ window. For installing see the [README](../README.md#install); for building from
 * [Saving](#saving)
 * [Tuner, looper and drums](#tuner-looper-and-drums)
 * [Device and system settings](#device-and-system-settings)
+* [Renaming a user slot](#renaming-a-user-slot)
 * [Activity log](#activity-log)
 * [Listen only](#listen-only)
 * [Replaying a capture](#replaying-a-capture)
@@ -193,6 +194,12 @@ or float, any sample rate (resampled to 48 kHz), the first channel of a stereo f
 * **Official app's algorithm**: exactly what the official Stomp Manager sends.
 
 Select it on the CAB block as **USER IR NN**.
+
+## Renaming a user slot
+
+Right-click a user AMP or IR slot under **User slots** and choose **Rename…**. Only the name changes; the slot's
+sound stays exactly as it is. Names can be up to 16 characters, ASCII only. You need to be connected with Listen only
+off. The official app can't do this.
 
 ## Activity log
 
