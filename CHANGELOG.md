@@ -7,7 +7,7 @@ to 0.2.0). The format follows
 
 ## [Unreleased]
 
-## [0.8.0] - Unreleased
+## [0.8.0] - 2026-10-23
 
 ### Added
 - Built against open-stomp-lib 0.6.0 (Bluetooth).
