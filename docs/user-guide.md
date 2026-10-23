@@ -171,7 +171,7 @@ warns before replacing one in use) and the conversion:
 
 * **Optimised** (default, about a minute): open-stomp fits the pedal's two filters through a simulation of the pedal
   until it sounds like the model. On hardware this is much closer to the real model than the official app's
-  conversion (see the open-stomp-lib README).
+  conversion ([results](https://jackmechem.github.io/open-stomp-lib/analysis/results.html)).
 * **Official app's algorithm** (a few seconds): the same conversion as the official Stomp Manager.
 
 **Normalise** (on by default) plays every model at the same volume, like NAM plugins do, whatever level it was
