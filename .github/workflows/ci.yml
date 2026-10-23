@@ -8,8 +8,8 @@ on:
 env:
   CARGO_TERM_COLOR: always
   # the open-stomp library is a path dependency on a sibling checkout (crates/open-stomp-manager/Cargo.toml)
-  # ble until open-stomp-lib v0.6.0 is tagged; then v0.6.0
-  OPEN_STOMP_LIB_REF: ble
+  # main until open-stomp-lib v0.6.0 is tagged; then v0.6.0
+  OPEN_STOMP_LIB_REF: main
 
 jobs:
   test:
