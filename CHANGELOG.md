@@ -7,11 +7,15 @@ to 0.2.0). The format follows
 
 ## [Unreleased]
 
+## [0.8.0] - Unreleased
+
 ### Added
+- Built against open-stomp-lib 0.6.0 (Bluetooth).
 - Wireless: with the pedal's Wireless setting on, the app also finds and connects to it over Bluetooth LE MIDI, with
   no pairing (open-stomp `ble` feature). It is listed in the port menu as "JME STOMPBOX (Bluetooth)" with a Bluetooth
   sign, the header says "· Bluetooth", and everything works as over USB except that the sync takes about 20 s.
-  Auto-connect and the port menu prefer USB. NAM/IR imports over Bluetooth are untested.
+  Auto-connect and the port menu prefer USB. NAM/IR imports work over Bluetooth too (about 10 s per upload), which
+  the official app doesn't offer.
 
 ### Changed
 - macOS: the bundle's Info.plist has a Bluetooth usage description (macOS kills an app that uses Bluetooth without one).
@@ -141,7 +145,8 @@ to 0.2.0). The format follows
 - `stomp-manager`: live monitor GUI with auto-connect, read-only sync, active preset, signal
   chain, parameters, tuner/looper/drum, coalescing activity log and capture replay.
 
-[Unreleased]: https://github.com/JackMechem/open-stomp-manager/compare/v0.7.1...HEAD
+[Unreleased]: https://github.com/JackMechem/open-stomp-manager/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.7.1...v0.8.0
 [0.7.1]: https://github.com/JackMechem/open-stomp-manager/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.5.0...v0.6.0

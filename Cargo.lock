@@ -2363,7 +2363,7 @@ checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
 name = "open-stomp"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "btleplug",
  "core-foundation-sys",
@@ -2377,7 +2377,7 @@ dependencies = [
 
 [[package]]
 name = "open-stomp-manager"
-version = "0.7.1"
+version = "0.8.0"
 dependencies = [
  "chrono",
  "eframe",

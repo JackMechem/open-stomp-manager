@@ -34,8 +34,9 @@ works as over USB: editing, presets, saving, settings, looper, drum and tuner. T
 
 * The startup sync takes about 20 seconds instead of under one, since every reply takes about 0.1 s over Bluetooth.
 * Knob drags are sent at most every 15 ms, and only the latest value of a drag is kept when the link is busy.
-* The official app doesn't import NAM models or IRs over Bluetooth. Ours doesn't stop you, but it is untested; use
-  USB for imports.
+* NAM and IR imports work (the official app doesn't offer them over Bluetooth), but take about 10 seconds to
+  upload instead of under one. The dialog says done when the upload is queued, so leave the pedal connected for
+  those seconds.
 * USB wins: if you plug the cable in while connected over Bluetooth, the app moves to USB.
 * On macOS the app asks for Bluetooth permission the first time. If you refuse (or Bluetooth is off) it carries on
   with USB only.

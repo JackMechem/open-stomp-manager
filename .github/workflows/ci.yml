@@ -8,7 +8,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   # the open-stomp library is a path dependency on a sibling checkout (crates/open-stomp-manager/Cargo.toml)
-  # Bluetooth needs the library's `ble` feature (not released yet): back to the release tag once it is
+  # ble until open-stomp-lib v0.6.0 is tagged; then v0.6.0
   OPEN_STOMP_LIB_REF: ble
 
 jobs:
