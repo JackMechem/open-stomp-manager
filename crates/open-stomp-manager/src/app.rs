@@ -57,6 +57,13 @@ fn menu_separator(ui: &mut Ui) {
 
 /// Seconds a change keeps glowing.
 const FLASH_SECS: f64 = 0.9;
+/// After a preset change from the pedal, messages are held until the pedal has been quiet this
+/// long, then applied together: turning the preset knob several clicks jumps to where it stopped
+/// instead of replaying every preset on the way. Over Bluetooth each click's data trickles in for
+/// a few tenths of a second, so the pedal only goes quiet once the last click has arrived.
+const SETTLE_SECS: f64 = 0.15;
+/// Never hold longer than this, so a long scroll still shows progress.
+const MAX_HOLD_SECS: f64 = 5.0;
 
 pub struct Options {
     pub replay: Option<PathBuf>,
@@ -95,6 +102,11 @@ pub struct StompApp {
     row_flash: HashMap<u64, f64>,
     rx_flash: f64,
     tx_flash: f64,
+    /// Last message from the pedal.
+    pedal_msg_at: f64,
+    /// Messages held after a preset change from the pedal (see [`SETTLE_SECS`]), and since when.
+    held: Vec<(std::time::SystemTime, Origin, Vec<u8>)>,
+    held_since: Option<f64>,
     scrolled_to: Option<u8>,
     preset_search: String,
     autoscroll: bool,
@@ -158,6 +170,9 @@ impl StompApp {
             row_flash: HashMap::new(),
             rx_flash: -10.0,
             tx_flash: -10.0,
+            pedal_msg_at: -10.0,
+            held: Vec::new(),
+            held_since: None,
             scrolled_to: None,
             preset_search: String::new(),
             autoscroll: true,
@@ -253,6 +268,8 @@ impl StompApp {
                 Update::Status(s) => self.status = s,
                 Update::Sync { done, total } => self.sync = (done, total),
                 Update::Reset => {
+                    self.held.clear();
+                    self.held_since = None;
                     self.state = DeviceState::default();
                     self.scrolled_to = None;
                 }
@@ -265,19 +282,42 @@ impl StompApp {
                         Origin::Pedal => self.rx_flash = now,
                         Origin::Host => self.tx_flash = now,
                     }
-                    let ev = self.state.apply(&bytes, origin);
-                    if !ev.redundant {
-                        self.note_activity(&ev, &bytes, now);
+                    if origin == Origin::Pedal {
+                        if bytes.first().is_some_and(|b| b & 0xF0 == 0xC0) && self.held_since.is_none() {
+                            self.held_since = Some(now);
+                        }
+                        self.pedal_msg_at = now;
                     }
-                    self.log.push_event(local(at), ev);
-                    if let Some(r) = self.log.rows.last() {
-                        self.row_flash.insert(r.id, now);
+                    // everything waits while holding, so host edits keep their order
+                    if self.held_since.is_some() {
+                        self.held.push((at, origin, bytes));
+                    } else {
+                        self.apply_message(at, origin, &bytes, now);
                     }
                 }
             }
         }
+        if let Some(since) = self.held_since
+            && (now - self.pedal_msg_at >= SETTLE_SECS || now - since >= MAX_HOLD_SECS)
+        {
+            self.held_since = None;
+            for (at, origin, bytes) in std::mem::take(&mut self.held) {
+                self.apply_message(at, origin, &bytes, now);
+            }
+        }
         if self.row_flash.len() > 256 {
             self.row_flash.retain(|_, t| now - *t < FLASH_SECS);
+        }
+    }
+
+    fn apply_message(&mut self, at: std::time::SystemTime, origin: Origin, bytes: &[u8], now: f64) {
+        let ev = self.state.apply(bytes, origin);
+        if !ev.redundant {
+            self.note_activity(&ev, bytes, now);
+        }
+        self.log.push_event(local(at), ev);
+        if let Some(r) = self.log.rows.last() {
+            self.row_flash.insert(r.id, now);
         }
     }
 
@@ -1852,6 +1892,9 @@ impl eframe::App for StompApp {
     fn ui(&mut self, ui: &mut Ui, _frame: &mut eframe::Frame) {
         let now = ui.input(|i| i.time);
         self.poll(now);
+        if self.held_since.is_some() {
+            ui.ctx().request_repaint_after(std::time::Duration::from_secs_f64(SETTLE_SECS / 2.0));
+        }
         screenshot_hook(ui.ctx(), now);
 
         egui::Panel::top("top")

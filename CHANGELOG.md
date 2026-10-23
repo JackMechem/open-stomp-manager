@@ -16,6 +16,9 @@ to 0.2.0). The format follows
 ### Changed
 - macOS: the bundle's Info.plist has a Bluetooth usage description (macOS kills an app that uses Bluetooth without one).
 - Linux: building needs the D-Bus headers (`libdbus-1-dev`) too.
+- Turning the pedal's preset knob several clicks jumps to where it stopped instead of stepping through every preset
+  on the way: after a preset change from the pedal, its messages are held until it has been quiet for 0.15 s (at
+  most 5 s), then applied together. Over Bluetooth each click's data trickles in for a few tenths of a second.
 - The edit-buffer read is padded like the official app's (open-stomp fix), so it can't return a stale record.
 
 ## [0.7.1] - 2026-10-22
