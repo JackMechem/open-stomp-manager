@@ -24,6 +24,8 @@
 	<string>11.0</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.music</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Open Stomp Manager connects to the pedal over Bluetooth when its Wireless setting is on.</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>

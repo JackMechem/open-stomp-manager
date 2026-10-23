@@ -7,6 +7,17 @@ to 0.2.0). The format follows
 
 ## [Unreleased]
 
+### Added
+- Wireless: with the pedal's Wireless setting on, the app also finds and connects to it over Bluetooth LE MIDI, with
+  no pairing (open-stomp `ble` feature). It is listed in the port menu as "JME STOMPBOX (Bluetooth)" with a Bluetooth
+  sign, the header says "· Bluetooth", and everything works as over USB except that the sync takes about 20 s.
+  Auto-connect and the port menu prefer USB. NAM/IR imports over Bluetooth are untested.
+
+### Changed
+- macOS: the bundle's Info.plist has a Bluetooth usage description (macOS kills an app that uses Bluetooth without one).
+- Linux: building needs the D-Bus headers (`libdbus-1-dev`) too.
+- The edit-buffer read is padded like the official app's (open-stomp fix), so it can't return a stale record.
+
 ## [0.7.1] - 2026-10-22
 
 ### Added

@@ -242,8 +242,12 @@ impl StompApp {
                 Update::Ports(p) => {
                     self.ports = p;
                     if self.port_choice.as_ref().is_none_or(|c| !self.ports.contains(c)) {
-                        self.port_choice =
-                            self.ports.iter().find(|p| open_stomp::is_stomp_port(p)).or(self.ports.first()).cloned();
+                        // the pedal over USB first, then over Bluetooth, like the engine's auto-connect
+                        let pedal = |ble: bool| {
+                            let is = |p: &&String| open_stomp::is_stomp_port(p) && open_stomp::is_ble_port(p) == ble;
+                            self.ports.iter().find(is)
+                        };
+                        self.port_choice = pedal(false).or_else(|| pedal(true)).or(self.ports.first()).cloned();
                     }
                 }
                 Update::Status(s) => self.status = s,
@@ -368,17 +372,23 @@ impl StompApp {
 
     fn status_pill(&mut self, ui: &mut Ui, now: f64) {
         let (dot, text, sub) = match &self.status {
-            Status::Connected { .. } => {
+            Status::Connected { port, .. } => {
                 let name = self.state.product.clone().unwrap_or_else(|| "Pedal".into());
                 let fw = self.state.firmware.clone().unwrap_or_default();
-                (GOOD, format!("Connected · {name}"), fw)
+                let via = if open_stomp::is_ble_port(port) {
+                    format!(" · {} Bluetooth", icon::BLUETOOTH)
+                } else {
+                    String::new()
+                };
+                (GOOD, format!("Connected · {name}{via}"), fw)
             }
             Status::Replaying { file, progress } => {
                 (MARK, format!("Replaying {file}"), format!("{:.0}%", progress * 100.0))
             }
             Status::Disconnected => {
                 let pulse = 0.5 + 0.5 * (now * 3.0).sin() as f32;
-                (mix(TEXT_FAINT, ACCENT, pulse), "Searching for pedal…".into(), "plug in via USB".into())
+                let hint = "plug in via USB, or turn on Wireless".into();
+                (mix(TEXT_FAINT, ACCENT, pulse), "Searching for pedal…".into(), hint)
             }
         };
         egui::Frame::new()
@@ -447,7 +457,13 @@ impl StompApp {
                 ui.label(RichText::new("No MIDI input ports").color(TEXT_DIM));
             }
             for p in self.ports.clone() {
-                let star = if open_stomp::is_stomp_port(&p) { format!("{}  ", icon::GUITAR) } else { String::new() };
+                let star = if open_stomp::is_ble_port(&p) {
+                    format!("{}  ", icon::BLUETOOTH)
+                } else if open_stomp::is_stomp_port(&p) {
+                    format!("{}  ", icon::GUITAR)
+                } else {
+                    String::new()
+                };
                 if ui.selectable_label(self.port_choice.as_ref() == Some(&p), format!("{star}{p}")).clicked() {
                     self.port_choice = Some(p.clone());
                     self.dev.connect(p);
@@ -456,7 +472,7 @@ impl StompApp {
             }
         })
         .response
-        .on_hover_text("MIDI input port; picking one connects to it");
+        .on_hover_text("MIDI input port, or the pedal over Bluetooth (Wireless on); picking one connects to it");
         if matches!(self.status, Status::Connected { .. }) {
             if ui.button(format!("{}  Disconnect", icon::PLUGS)).clicked() {
                 self.dev.disconnect();

@@ -26,6 +26,20 @@ window. For installing see the [README](../README.md#install); for building from
 Plug the pedal in over USB and start the app, in either order. It finds the pedal by its MIDI port name ("JME
 STOMPBOX") and connects by itself, and reconnects if you unplug and replug it. No driver is needed on any OS.
 
+### Wireless (Bluetooth)
+
+With the pedal's **Wireless** setting on, the app also finds it over Bluetooth, with no pairing: it shows up in the
+port menu as **JME STOMPBOX (Bluetooth)** and the header says *Connected · JME STOMPBOX · Bluetooth*. Everything
+works as over USB: editing, presets, saving, settings, looper, drum and tuner. The differences:
+
+* The startup sync takes about 20 seconds instead of under one, since every reply takes about 0.1 s over Bluetooth.
+* Knob drags are sent at most every 15 ms, and only the latest value of a drag is kept when the link is busy.
+* The official app doesn't import NAM models or IRs over Bluetooth. Ours doesn't stop you, but it is untested; use
+  USB for imports.
+* USB wins: if you plug the cable in while connected over Bluetooth, the app moves to USB.
+* On macOS the app asks for Bluetooth permission the first time. If you refuse (or Bluetooth is off) it carries on
+  with USB only.
+
 On connect the app reads everything the official app reads: firmware and product name, system settings, user
 NAM/IR slot names, all 99 presets and the live edit buffer. The status pill shows a progress bar (`syncing 42/127`);
 it takes well under a second.
@@ -34,7 +48,7 @@ The menu button (☰) at the right of the top bar holds the controls:
 
 | Item | What it does |
 |---|---|
-| Port | All MIDI input ports; the pedal's are marked with a guitar. Picking one connects to it |
+| Port | All MIDI input ports and the pedal over Bluetooth; the pedal's ports are marked with a guitar, Bluetooth with the Bluetooth sign. Picking one connects to it |
 | **Disconnect** / **Connect** | Close the connection (also stops auto-connect until you connect again), or connect to the chosen port |
 | **Re-sync from pedal** | Re-read presets and state from the pedal |
 | **Listen only** | Never send anything to the pedal ([below](#listen-only)) |
@@ -254,7 +268,7 @@ docs and visual checks).
 
 | Symptom | Try |
 |---|---|
-| *Searching for pedal…* forever | Check the USB cable and that the pedal is on. On Linux, `amidi -l` should list "JME STOMPBOX". Pick the port by hand in the port menu |
+| *Searching for pedal…* forever | Check the USB cable and that the pedal is on. On Linux, `amidi -l` should list "JME STOMPBOX". Pick the port by hand in the port menu. For Bluetooth, check the pedal's Wireless setting and that the app has Bluetooth permission (macOS: System Settings → Privacy & Security → Bluetooth) |
 | Connected but nothing can be edited | *Listen only* is on, or the log says there is no MIDI output to the pedal (Windows: quit the official app) |
 | *No reply from pedal to …* in the log | A read timed out (1 s). Usually harmless; ⟳ re-reads everything |
 | The header says *Waiting for the pedal…* after syncing | The pedal had unsaved edits when the app connected; change preset once |

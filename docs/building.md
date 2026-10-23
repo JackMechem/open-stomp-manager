@@ -38,8 +38,9 @@ nix run --override-input open-stomp-lib path:../open-stomp-lib
 
 ### Without Nix
 
-You need Rust ≥ 1.95 (what egui 0.36 requires) and, on Linux, the ALSA headers (`libasound2-dev` on Debian/Ubuntu,
-`alsa-lib-devel` on Fedora). macOS and Windows need nothing extra.
+You need Rust ≥ 1.95 (what egui 0.36 requires) and, on Linux, the ALSA and D-Bus headers (`libasound2-dev
+libdbus-1-dev` on Debian/Ubuntu, `alsa-lib-devel dbus-devel` on Fedora; D-Bus is for Bluetooth, through BlueZ).
+macOS and Windows need nothing extra.
 
 ```sh
 cargo run -p open-stomp-manager
