@@ -1,59 +1,42 @@
-# project.md: Open Stomp Manager (reverse engineering + editor)
+# project.md: Open Stomp Manager (desktop editor + reverse-engineering workbench)
 
 ## Goal
 
-A native editor (Rust) for **Linux, macOS and Windows** for the SORAN Dual Stomp Lite with the features of the official *Stomp Manager*:
-live editing, preset management, settings, looper/drum/tuner, and eventually NAM/IR import.
+A native editor (Rust, egui) for **Linux, macOS and Windows** for the SORAN Dual Stomp Lite with the features of the
+official *Stomp Manager*: live editing, preset management, settings, looper/drum/tuner, and NAM/IR import.
 
-## Approach taken
+All protocol work (encode/decode, state, connection engine, uploads, NAM/IR conversion) and the protocol docs live
+in the [`open-stomp`](https://github.com/JackMechem/open-stomp-lib) library (`~/Projects/open-stomp/open-stomp-lib`),
+which this app depends on by path. The protocol cheat sheet, how it was recovered, and the protocol roadmap are in
+**that repo's project.md**. This file covers the app and the reverse-engineering workbench kept here.
 
-1. **Static analysis** of Stomp Manager 1.0.2 (macOS DMG / installed app): Flutter app, Dart 3.12.2 AOT
-   (obfuscated). Object pool dumped with a patched blutter; whole `__text` disassembled and annotated; native libs
-   (`nux_plugins` = JUCE audio converter, `imagelib` = NeuralAmpModelerCore) and firmware container inspected.
-   → [docs/08](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/08-static-analysis.md)
-2. **Live capture** by hooking CoreMIDI inside an ad-hoc re-signed copy of the app (bus-level USB sniffing isn't
-   possible on Apple Silicon without disabling SIP). Every pedal and app action was performed one at a time, marked
-   in the log, and the app window screenshotted and OCR'd to map model numbers to names.
-   → [docs/07](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/07-capture-methodology.md)
-3. **Decoding**: CC map per module, SysEx framing, the 8-in-7 packing, the preset layout (by correlating 99 preset
-   records with CC dumps), settings, the looper state machine, and the upload transport.
-   → [docs/02](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/02-midi-cc-reference.md)–[05](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/05-uploads-nam-ir.md)
+## What lives here
 
-## Key facts (cheat sheet)
-
-* USB `3962:2000`, class-compliant UAC2 + USB-MIDI. No vendor interface.
-* Pedal → host: ch 1. Host → pedal: ch 2. Same CC numbers both ways.
-* Head CC per module = `(off?0x40:0) | model`: OD/FX `0x00`, AMP `0x01`, CAB `0x02`, MOD `0x03`, DLY `0x04`,
-  RVB `0x05`, GATE `0x06`, EQ `0x07`. Params: OD/FX `0x0C–0F`, GATE `0x08–09`, AMP `0x12–17`, CAB `0x1A–1E`,
-  EQ `0x20–2B`, MOD `0x2C–2F`, DLY `0x30–33`, RVB `0x36–39`. VOL `0x3A`, page `0x3B`.
-* Presets: PC index 0–98 (= P01–P99).
-* SysEx: `F0 00 21 7A 70 <cmd> <dir> … F7`, dir 0 read / 1 write / 2 reply / 3 ack; `7E` = notify.
-  cmds: 09 IR slot, 0B preset, 0C edit buffer, 10 IR data, 12 name, 14 settings, 15 state, 18 loop, 19 drum,
-  58 user amp/NAM, 6F tuner.
-* Packed records: 7-bit LSB-first bitstream (126 MIDI bytes ↔ 110 struct bytes for a preset).
+* `crates/open-stomp-manager/`: the egui app.
+* The reverse-engineering workbench that produced the library's docs
+  ([07](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/07-capture-methodology.md),
+  [08](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/08-static-analysis.md)):
+  `tools/sniffer` (CoreMIDI interposer), `tools/decode` (decoders, OCR), `tools/namconv`, `analysis/`
+  (static-analysis artefacts), `captures/` (raw logs, `LAB_NOTES.md`).
 
 ## Roadmap
 
-- [x] Static analysis
-- [x] Capture + decode all pedal-side controls
-- [x] Capture + decode app-side live control, rename/save, settings, uploads (transport)
-- [x] Documentation + tooling
-- [ ] Fill open questions that matter for v1 ([docs/09](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/09-open-questions.md) #4–#6): #5 mostly confirmed
-      on Linux (host `0x40`/`0x42`/`0x43`); `0x4A`, tuner control, #4 and #6 still open
-- [x] `stomp-proto` crate (pure encode/decode + tests against `captures/logs`), now the standalone
-      [`open-stomp`](https://github.com/JackMechem/open-stomp-lib) library in `~/Projects/open-stomp-lib` (protocol,
-      state, request queue, connection engine; full docs copy + library guide). The GUI depends on it by path
-- [x] GUI live monitor (`open-stomp-manager`, egui): auto-connect, read-only sync, active preset, chain,
-      params, tuner/looper/drum, coalescing activity log, capture replay
+- [x] GUI live monitor: auto-connect, read-only sync, active preset, chain, params, tuner/looper/drum, coalescing
+      activity log, capture replay
 - [x] Cross-platform (Linux/macOS/Windows): CI on all three, tag-triggered release packages, icons, versioning
       (single source: workspace `Cargo.toml`, see CHANGELOG.md)
-- [ ] `stompctl` CLI (info, monitor, preset get/set/backup)
 - [x] GUI editor: send CC/PC edits, preset save/rename, settings page (save sequence verified byte-for-byte
       against the capture; live CCs verified on hardware; preset/settings *writes* not yet run on hardware)
-- [ ] IR upload (needs the transform: capture a short cab IR)
-- [ ] NAM upload (needs `imagelib` conversion reversed)
+- [x] Import NAM model (0.6.0): background conversion with progress/cancel, optimised or official algorithm
+- [x] Import IR: optimised (default) or official conversion, upload to user IR slots
+- [ ] Run preset/settings writes on hardware from the app
+- [ ] Release the IR import (currently Unreleased in CHANGELOG.md)
+- [ ] Captures for the library's open questions (`0x4A` loop mode, tuner control, preset unknown bytes, edit-buffer
+      write; library docs/09)
 
 ## Environment notes
 
-* The re-signed instrumented copy lives in `work/` (git-ignored). Rebuild with `tools/sniffer/build.sh`.
+* The re-signed instrumented copy of the official app lives in `work/` (git-ignored). Rebuild with
+  `tools/sniffer/build.sh`.
 * Pedal firmware during captures: V1.1.1. Stomp Manager: 1.0.2+1.
+* `STOMP_DEV=import` / `STOMP_DEV=import-ir` open the NAM / IR import dialogs at startup (screenshots).

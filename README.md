@@ -1,7 +1,7 @@
 # Open Stomp Manager
 
 An open editor for the SORAN Dual Stomp Lite ·
-Version **0.7.0** · Linux · macOS · Windows · [changelog](CHANGELOG.md)
+Version **0.7.0** · Linux · macOS · Windows · [documentation](https://jackmechem.github.io/open-stomp-lib/) · [changelog](CHANGELOG.md)
 
 Open Stomp Manager is a cross-platform desktop editor and live monitor for the **SORAN Dual Stomp Lite** guitar
 multi-effects pedal. The vendor's editor, *Stomp Manager*, only runs on macOS and Windows. This one also runs on
@@ -28,6 +28,9 @@ reverse-engineering documentation.
 * **System settings:** input trim, global EQ, wireless, USB loopback.
 * **Activity log** of everything that happens on the pedal in plain English, with knob sweeps merged into one row,
   category filters, search and raw bytes.
+* **Import NAM models and cab IRs** into the user slots, with open-stomp's optimised conversions (closer to the
+  real model and cab on the pedal than the official app's; [results](https://jackmechem.github.io/open-stomp-lib/analysis/results.html)) or the
+  official app's algorithm.
 * **Listen-only mode** that never sends anything, and **capture replay** to try the app without a pedal.
 
 | Area | Status |
@@ -35,7 +38,7 @@ reverse-engineering documentation.
 | Monitor: presets, chain, params, tuner, looper, drum, settings, user slots | ✅ |
 | Live edits (presets, models, on/off, knobs, volume, looper, drum) | ✅ verified on hardware |
 | Preset save / rename, settings writes | ✅ byte-identical to the official app, not yet run on hardware |
-| IR / NAM upload | ❌ not yet (see the library's [open questions](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/09-open-questions.md)) |
+| NAM model and IR import | ✅ optimised or official conversion, uploaded to the user slots (NAM since 0.6, IR since 0.7) |
 
 ## Install
 
@@ -71,6 +74,9 @@ nix run                                             # or with Nix (nix develop f
 
 ## Documentation
 
+**All of it is on the [documentation site](https://jackmechem.github.io/open-stomp-lib/)**, together with the library's guides, the protocol docs
+and the NAM / IR analysis.
+
 | | |
 |---|---|
 | [User guide](docs/user-guide.md) | Connecting, presets, chain, knobs, saving, looper/drum/tuner, settings, activity log, replay, troubleshooting |
@@ -102,7 +108,7 @@ packaging/            icons (+ generator), Linux .desktop, macOS bundle script, 
 .github/workflows/    CI (Linux/macOS/Windows) and tag-triggered release builds
 flake.nix             Nix package + dev shell
 CHANGELOG.md          release history
-project.md            project notes and roadmap
+project.md            app notes and roadmap (protocol notes: the library's project.md)
 ```
 
 The reverse-engineering workbench (documented in the library's docs 07 and 08) also lives here:
