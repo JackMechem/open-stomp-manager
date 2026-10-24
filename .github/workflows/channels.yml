@@ -3,6 +3,9 @@ name: Channels
 # Moves the `stable` and `unstable` branches to the newest releases (packaging/update-channels.sh)
 # after each successful release, and when a release is edited (e.g. its pre-release box ticked)
 # or deleted. Run it by hand (Actions → Channels → Run workflow) to re-sync.
+#
+# It pushes with a deploy key (secret CHANNELS_DEPLOY_KEY, the private half of a write-access deploy
+# key): GITHUB_TOKEN may not move a branch to a commit whose .github/workflows differ from main's.
 on:
   workflow_run:
     workflows: [Release]
@@ -12,7 +15,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read # releases list; the push uses the deploy key
 
 concurrency: channels
 
@@ -21,9 +24,15 @@ jobs:
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
+      - name: Check the deploy key is set
+        env:
+          KEY: ${{ secrets.CHANNELS_DEPLOY_KEY }}
+        run: |
+          [[ -n "$KEY" ]] || { echo "::error::no CHANNELS_DEPLOY_KEY secret (see the top of channels.yml)"; exit 1; }
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0 # all tags
+          ssh-key: ${{ secrets.CHANNELS_DEPLOY_KEY }} # origin over SSH, pushes with the key
       - run: packaging/update-channels.sh
         env:
           GH_TOKEN: ${{ github.token }}
