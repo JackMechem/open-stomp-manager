@@ -53,7 +53,9 @@ Download a package from [Releases](https://github.com/JackMechem/open-stomp-mana
 * **macOS:** the app is ad-hoc signed, not notarized. The first time, right-click it and choose *Open* (or run
   `xattr -dr com.apple.quarantine "Open Stomp Manager.app"`).
 * **Windows:** a MIDI port can be open in only one program at a time, so quit the official Stomp Manager first.
-* **Nix:** `nix run github:JackMechem/open-stomp-manager`.
+* **Nix:** `nix run github:JackMechem/open-stomp-manager/stable` (the newest release), `…/unstable` (the newest
+  release or pre-release) or `github:JackMechem/open-stomp-manager` (`main`). As a flake input,
+  `url = "github:JackMechem/open-stomp-manager/stable";` and `nix flake update` brings in each new release.
 
 Then plug the pedal in. See the **[user guide](docs/user-guide.md)** for everything in the window.
 

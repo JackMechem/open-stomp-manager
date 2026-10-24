@@ -46,6 +46,7 @@
       },
       "original": {
         "owner": "JackMechem",
+        "ref": "stable",
         "repo": "open-stomp-lib",
         "type": "github"
       }

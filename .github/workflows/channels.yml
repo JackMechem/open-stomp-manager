@@ -1,0 +1,29 @@
+name: Channels
+
+# Moves the `stable` and `unstable` branches to the newest releases (packaging/update-channels.sh)
+# after each successful release, and when a release is edited (e.g. its pre-release box ticked)
+# or deleted. Run it by hand (Actions → Channels → Run workflow) to re-sync.
+on:
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
+  release:
+    types: [published, edited, deleted]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency: channels
+
+jobs:
+  channels:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # all tags
+      - run: packaging/update-channels.sh
+        env:
+          GH_TOKEN: ${{ github.token }}

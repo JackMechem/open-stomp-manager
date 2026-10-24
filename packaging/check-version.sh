@@ -13,8 +13,11 @@ fail() { echo "error: $*" >&2; ok=0; }
 
 [[ -n "$v" ]] || fail "no version in Cargo.toml"
 [[ $# -eq 0 || "$1" == "$v" ]] || fail "expected version $1, Cargo.toml has $v"
-grep -q "Version \*\*$v\*\*" README.md || fail "README.md does not say 'Version **$v**'"
-grep -q "^## \[$v\]" CHANGELOG.md || fail "CHANGELOG.md has no '## [$v]' section"
+# a pre-release (0.8.0-beta.1) leaves the README and CHANGELOG on the last stable release
+if [[ "$v" != *-* ]]; then
+    grep -q "Version \*\*$v\*\*" README.md || fail "README.md does not say 'Version **$v**'"
+    grep -q "^## \[$v\]" CHANGELOG.md || fail "CHANGELOG.md has no '## [$v]' section"
+fi
 grep -q "name = \"open-stomp-manager\"" Cargo.lock && \
     awk '/name = "open-stomp-manager"/{getline; print}' Cargo.lock | grep -q "\"$v\"" || fail "Cargo.lock is stale (run cargo build)"
 

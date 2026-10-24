@@ -1,6 +1,8 @@
 name: Release
 
-# Push a tag `vX.Y.Z` matching the workspace version to build and publish binaries.
+# Push a tag `vX.Y.Z` matching the workspace version to build and publish binaries. A tag with a
+# pre-release suffix (vX.Y.Z-beta.N) is published as a pre-release. channels.yml then moves the
+# stable / unstable branches.
 on:
   push:
     tags: ["v*"]
@@ -35,6 +37,16 @@ jobs:
       - name: Check out open-stomp-lib next to this repo
         shell: bash
         run: git clone --depth 1 --branch "$OPEN_STOMP_LIB_REF" https://github.com/JackMechem/open-stomp-lib ../open-stomp-lib
+      - name: Check flake.lock pins the same library
+        if: runner.os == 'Linux'
+        # the stable / unstable channels are Nix builds of this tag, so they must match the binaries
+        run: |
+          want=$(git -C ../open-stomp-lib rev-parse HEAD)
+          have=$(jq -r '.nodes["open-stomp-lib"].locked.rev' flake.lock)
+          [[ "$have" == "$want" ]] || {
+            echo "::error::flake.lock pins open-stomp-lib $have, but $OPEN_STOMP_LIB_REF is $want (nix flake update open-stomp-lib)"
+            exit 1
+          }
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ runner.os == 'macOS' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
@@ -89,7 +101,10 @@ jobs:
         run: |
           v=${GITHUB_REF_NAME#v}
           awk -v v="$v" '/^## \[/{p = index($0, "[" v "]") > 0; next} p' CHANGELOG.md > notes.md
+          # a pre-release (vx.y.z-beta.n) needs no section of its own: fall back to [Unreleased]
+          [[ -s notes.md || "$v" != *-* ]] || awk '/^## \[/{p = index($0, "[Unreleased]") > 0; next} p' CHANGELOG.md > notes.md
       - uses: softprops/action-gh-release@v2
         with:
+          prerelease: ${{ contains(github.ref_name, '-') }}
           files: dist/*
           body_path: notes.md

@@ -29,8 +29,9 @@ nix build                     # result/bin/open-stomp-manager
 nix develop                   # dev shell: cargo, rust-analyzer, ALSA, amidi
 ```
 
-The flake fetches the library as the `open-stomp-lib` input (`github:JackMechem/open-stomp-lib`, pinned in
-`flake.lock`; `nix flake update open-stomp-lib` moves it). To build against your local checkout instead:
+The flake fetches the library as the `open-stomp-lib` input (`github:JackMechem/open-stomp-lib/stable`, the
+library's newest release, pinned in `flake.lock`; `nix flake update open-stomp-lib` moves it). To build against your
+local checkout instead:
 
 ```sh
 nix run --override-input open-stomp-lib path:../open-stomp-lib
@@ -110,8 +111,19 @@ errors, tests, and a release build. A separate job checks the minimum Rust versi
 ## Releasing
 
 1. If the app needs library changes, release the library first (tag it there) and set `OPEN_STOMP_LIB_REF` in both
-   workflows to that tag, so the release builds against a fixed library version.
+   workflows to that tag, so the release builds against a fixed library version. Once the library's `stable` branch
+   has moved, run `nix flake update open-stomp-lib` so the Nix build uses the same version (the release checks it).
 2. Bump `Cargo.toml`, add a `## [x.y.z]` section to [CHANGELOG.md](../CHANGELOG.md), update the version line at the
    top of the README, and run `cargo build` so `Cargo.lock` follows. `packaging/check-version.sh` checks all of this.
 3. Commit, then `git tag vx.y.z && git push --tags`. `.github/workflows/release.yml` builds the Linux, macOS and
    Windows packages and publishes a GitHub release with the changelog section as its notes.
+
+A pre-release is a tag with a suffix, `vx.y.z-beta.n` (with that version in `Cargo.toml`). It needs no README or
+CHANGELOG changes (its notes are the `[Unreleased]` section) and is published as a GitHub pre-release. If it needs a
+library pre-release, point the flake input at `github:JackMechem/open-stomp-lib/unstable` for it.
+
+**Channels.** After each successful release, `.github/workflows/channels.yml` moves two branches
+(`packaging/update-channels.sh`): `stable` to the newest release and `unstable` to the newest release or
+pre-release. Ticking or clearing a release's pre-release box, or deleting it, moves them again; Actions → Channels →
+Run workflow re-syncs them by hand. A Nix config that follows `github:JackMechem/open-stomp-manager/stable` gets
+each release with `nix flake update`; the library comes from this flake's `flake.lock`.

@@ -4,10 +4,11 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    # the pedal library, a path dependency on a sibling checkout (../open-stomp-lib).
+    # the pedal library, a path dependency on a sibling checkout (../open-stomp-lib). Follows its
+    # stable channel; flake.lock pins the release (the one OPEN_STOMP_LIB_REF in the workflows names).
     # Local checkout instead: nix run --override-input open-stomp-lib path:../open-stomp-lib
     open-stomp-lib = {
-      url = "github:JackMechem/open-stomp-lib";
+      url = "github:JackMechem/open-stomp-lib/stable";
       flake = false;
     };
   };
