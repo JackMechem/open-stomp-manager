@@ -1,7 +1,7 @@
 # Open Stomp Manager
 
 An open editor for the SORAN Dual Stomp Lite ·
-Version **0.8.0** · Linux · macOS · Windows · [documentation](https://jackmechem.github.io/open-stomp-lib/) · [changelog](CHANGELOG.md)
+Version **0.8.1** · Linux · macOS · Windows · [documentation](https://jackmechem.github.io/open-stomp-lib/) · [changelog](CHANGELOG.md)
 
 Open Stomp Manager is a cross-platform desktop editor and live monitor for the **SORAN Dual Stomp Lite** guitar
 multi-effects pedal. The vendor's editor, *Stomp Manager*, only runs on macOS and Windows. This one also runs on

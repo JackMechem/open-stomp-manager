@@ -7,6 +7,11 @@ to 0.2.0). The format follows
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-10-24
+
+### Changed
+- Built against open-stomp-lib 0.6.1 (a CI-only patch; no library behaviour change from 0.6.0).
+
 ## [0.8.0] - 2026-10-23
 
 ### Added
@@ -145,7 +150,8 @@ to 0.2.0). The format follows
 - `stomp-manager`: live monitor GUI with auto-connect, read-only sync, active preset, signal
   chain, parameters, tuner/looper/drum, coalescing activity log and capture replay.
 
-[Unreleased]: https://github.com/JackMechem/open-stomp-manager/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/JackMechem/open-stomp-manager/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/JackMechem/open-stomp-manager/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.7.1...v0.8.0
 [0.7.1]: https://github.com/JackMechem/open-stomp-manager/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/JackMechem/open-stomp-manager/compare/v0.6.0...v0.7.0
