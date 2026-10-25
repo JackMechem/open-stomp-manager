@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](#license)
 
 Version **0.8.1** · [Download](https://github.com/JackMechem/open-stomp-manager/releases) ·
-[User guide](docs/user-guide.md) · [Changelog](CHANGELOG.md)
+[User guide](https://jackmechem.github.io/open-stomp-lib/manager/user-guide.html) · [Changelog](CHANGELOG.md)
 
 Open Stomp Manager does what the vendor's *Stomp Manager* does, and also runs on Linux. Edit presets, watch the
 pedal live, and import NAM amp models and cab IRs with conversions that sound closer to the original than the
@@ -48,7 +48,7 @@ Download the package for your platform from [Releases](https://github.com/JackMe
 - **Windows:** quit the official Stomp Manager first; only one program can use the pedal's MIDI port at a time.
 - **Nix:** `nix run github:JackMechem/open-stomp-manager/stable`. Use `/unstable` for pre-releases.
 
-Then plug in the pedal. The [user guide](docs/user-guide.md) explains everything in the window.
+Then plug in the pedal. The [user guide](https://jackmechem.github.io/open-stomp-lib/manager/user-guide.html) explains everything in the window.
 
 ## Building from source
 
@@ -75,7 +75,7 @@ See [docs/building.md](docs/building.md) for packaging and platform details.
 
 ## Documentation
 
-- [User guide](docs/user-guide.md): using the app, troubleshooting
+- [User guide](https://jackmechem.github.io/open-stomp-lib/manager/user-guide.html): using the app, troubleshooting
 - [Building](docs/building.md): builds, packaging, CI and releases
 - [Architecture](docs/architecture.md): how the app is put together
 
