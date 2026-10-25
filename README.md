@@ -7,7 +7,7 @@
 [![Docs](https://img.shields.io/badge/docs-site-blue)](https://jackmechem.github.io/open-stomp-lib/)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](#license)
 
-Version **0.8.1** · [Download](https://github.com/JackMechem/open-stomp-manager/releases) ·
+Version **0.9.0** · [Download](https://github.com/JackMechem/open-stomp-manager/releases) ·
 [User guide](https://jackmechem.github.io/open-stomp-lib/manager/user-guide.html) · [Changelog](CHANGELOG.md)
 
 Open Stomp Manager does what the vendor's *Stomp Manager* does, and also runs on Linux. Edit presets, watch the

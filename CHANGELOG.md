@@ -7,6 +7,8 @@ to 0.2.0). The format follows
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-25
+
 ### Added
 - Release channels: the `stable` branch follows the newest release and `unstable` the newest release or pre-release
   (`vx.y.z-beta.n` tags, published as GitHub pre-releases). Follow one from Nix or cargo instead of a version tag.
