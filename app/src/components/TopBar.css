@@ -1,0 +1,186 @@
+.topbar {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  height: 56px;
+  min-width: 0;
+  padding: 0 20px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--stroke);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.brand-mark {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--accent);
+  /* the two footswitches */
+  background-image: radial-gradient(circle at 30% 50%, transparent 3px, var(--bg) 3.5px, var(--bg) 5px, transparent 5.5px),
+    radial-gradient(circle at 70% 50%, transparent 3px, var(--bg) 3.5px, var(--bg) 5px, transparent 5.5px);
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tone);
+  box-shadow: 0 0 8px var(--tone);
+}
+
+.status-good { --tone: var(--good); }
+.status-busy { --tone: var(--accent); }
+.status-off { --tone: var(--text-faint); }
+
+.status-busy .status-dot {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.status-sub {
+  color: var(--text-faint);
+  font-weight: 400;
+}
+
+.lights {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 2px;
+}
+
+.light {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--card-hi);
+  color: var(--text-faint);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* each message remounts the light, which replays the blink */
+.light-in {
+  animation: blink-in 0.35s ease-out;
+}
+
+.light-out {
+  animation: blink-out 0.35s ease-out;
+}
+
+@keyframes blink-in {
+  from {
+    background: color-mix(in srgb, var(--accent) 45%, var(--card-hi));
+    color: var(--text);
+  }
+}
+
+@keyframes blink-out {
+  from {
+    background: color-mix(in srgb, var(--host) 45%, var(--card-hi));
+    color: var(--text);
+  }
+}
+
+.sync-bar {
+  width: 80px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--card-hi);
+  overflow: hidden;
+}
+
+.sync-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.2s;
+}
+
+.topbar-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.port-select {
+  height: 32px;
+  min-width: 0;
+  max-width: 260px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--stroke);
+  background: var(--card);
+}
+
+.toggle {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--stroke);
+  background: var(--card);
+  color: var(--text-dim);
+  font-weight: 600;
+  font-size: 13px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.toggle:hover:not(:disabled) {
+  background: var(--card-hi);
+  color: var(--text);
+}
+
+.toggle:disabled {
+  opacity: 0.4;
+}
+
+.toggle-on {
+  background: color-mix(in srgb, var(--accent) 18%, var(--card));
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--stroke));
+  color: var(--accent);
+}
+
+/* narrow windows: icon-only buttons (the title says what they do) */
+@media (max-width: 1100px) {
+  .toggle-label,
+  .brand-name,
+  .status-sub,
+  .lights {
+    display: none;
+  }
+
+  .port-select {
+    max-width: 150px;
+  }
+}

@@ -1,0 +1,85 @@
+.current {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.current-empty h1 {
+  margin: 0 0 4px;
+  font-size: 22px;
+}
+
+.current-empty p {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+.current-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--card-hi);
+  color: var(--accent);
+}
+
+.current-label {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 16%, var(--card-hi));
+  color: var(--accent);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.current-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.current-name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.current-name h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.current-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip-modified {
+  background: color-mix(in srgb, var(--accent) 18%, var(--card-hi));
+  color: var(--accent);
+}
+
+.current-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.current-volume {
+  flex: 0 1 300px;
+  margin-left: auto;
+}

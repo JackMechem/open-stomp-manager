@@ -1,0 +1,57 @@
+.app {
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "top top"
+    "presets main";
+  height: 100%;
+}
+
+.app-log {
+  grid-template-columns: 290px minmax(0, 1fr) minmax(360px, 30%);
+  grid-template-areas:
+    "top top top"
+    "presets main log";
+}
+
+.main {
+  grid-area: main;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  padding: var(--gap) 24px 24px;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+/* narrower windows: a slimmer preset list and log */
+@media (max-width: 1280px) {
+  .app {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  .app-log {
+    grid-template-columns: 220px minmax(0, 1fr) minmax(300px, 32%);
+  }
+}
+
+/* narrow windows: the log slides over the page instead of taking a column */
+@media (max-width: 1000px) {
+  .app-log {
+    grid-template-columns: 220px minmax(0, 1fr);
+    grid-template-areas:
+      "top top"
+      "presets main";
+  }
+
+  .app-log .log {
+    position: fixed;
+    z-index: 20;
+    top: 56px;
+    right: 0;
+    bottom: 0;
+    width: min(440px, 92vw);
+    box-shadow: -16px 0 40px rgb(0 0 0 / 0.45);
+  }
+}

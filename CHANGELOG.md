@@ -7,6 +7,8 @@ to 0.2.0). The format follows
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-25
+
 ### Added
 - Release channels: the `stable` branch follows the newest release and `unstable` the newest release or pre-release
   (`vx.y.z-beta.n` tags, published as GitHub pre-releases). Follow one from Nix or cargo instead of a version tag.
@@ -14,7 +16,18 @@ to 0.2.0). The format follows
 - A contributing guide (`CONTRIBUTING.md`) and issue and pull request templates.
 
 ### Changed
+- **New interface.** The app is now built with [Tauri](https://tauri.app): the same Rust engine, with a React
+  interface in the system's web view (WebKitGTK on Linux, WebView2 on Windows, WKWebView on macOS) instead of egui.
+  Everything the egui app did is still there; the window is laid out the same way and adapts to narrow windows.
+- **New downloads:** `.deb`, `.rpm` and `.AppImage` on Linux, a `.dmg` (and the zipped app) on macOS, and an
+  installer (plus a portable `.zip`) on Windows. On Linux the app now needs WebKitGTK 4.1; the packages pull it in.
 - Rewrote the README to be shorter and easier to follow.
+- Developing: `pnpm tauri dev` in `app/` reloads the window as you edit the interface (docs/building.md). The Nix dev
+  shell has Node, pnpm and WebKitGTK; `tools/dev/shot.py` takes screenshots through WebDriver, headless.
+
+### Removed
+- The egui interface (`crates/open-stomp-manager`). Its `STOMP_SCREENSHOT` hook is replaced by `tools/dev/shot.py`,
+  and `tools/dev/watch.sh` by `pnpm tauri dev`.
 
 ## [0.8.1] - 2026-10-24
 

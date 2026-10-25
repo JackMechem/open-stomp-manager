@@ -7,7 +7,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  # the open-stomp library is a path dependency on a sibling checkout (crates/open-stomp-manager/Cargo.toml)
+  # the open-stomp library is a path dependency on a sibling checkout (app/src-tauri/Cargo.toml)
   OPEN_STOMP_LIB_REF: v0.6.1
 
 jobs:
@@ -26,13 +26,29 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
-      - name: Install ALSA and D-Bus headers
+      - name: Install ALSA, D-Bus and WebKitGTK headers
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libasound2-dev libdbus-1-dev
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev libdbus-1-dev libwebkit2gtk-4.1-dev librsvg2-dev
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: app/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: app/pnpm-lock.yaml
       - uses: Swatinem/rust-cache@v2
+      # type-checks the frontend and builds app/dist, which release builds embed
+      - name: Frontend
+        working-directory: app
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo test --workspace
-      - run: cargo build --release -p open-stomp-manager
+      - name: Release build (no installers)
+        working-directory: app
+        run: pnpm tauri build --no-bundle
 
   msrv:
     runs-on: ubuntu-latest
@@ -42,9 +58,18 @@ jobs:
         shell: bash
         run: git clone --depth 1 --branch "$OPEN_STOMP_LIB_REF" https://github.com/JackMechem/open-stomp-lib ../open-stomp-lib
       - uses: dtolnay/rust-toolchain@1.95
-      - run: sudo apt-get update && sudo apt-get install -y libasound2-dev libdbus-1-dev
+      - run: sudo apt-get update && sudo apt-get install -y libasound2-dev libdbus-1-dev libwebkit2gtk-4.1-dev librsvg2-dev
       - uses: Swatinem/rust-cache@v2
       - run: cargo check --workspace
+
+  nix:
+    name: nix build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: cachix/install-nix-action@v31
+      # the package the stable / unstable channels serve (and app/pnpm-lock.yaml matches its hash)
+      - run: nix build -L .#open-stomp-manager
 
   version:
     name: version is consistent

@@ -26,11 +26,13 @@ first, then use it here. The library has its own [contributing guide](https://gi
 
 ## Setting up
 
-You need [Rust](https://rustup.rs) 1.95 or newer. On Linux, also install the ALSA and D-Bus headers:
+You need [Rust](https://rustup.rs) 1.95 or newer, [Node](https://nodejs.org) 22 or newer and
+[pnpm](https://pnpm.io) (`corepack enable` gets the right version). On Linux, also install the WebKitGTK, ALSA and
+D-Bus headers:
 
 ```sh
-sudo apt install libasound2-dev libdbus-1-dev pkg-config     # Debian, Ubuntu
-sudo dnf install alsa-lib-devel dbus-devel pkgconf           # Fedora
+sudo apt install libwebkit2gtk-4.1-dev librsvg2-dev libasound2-dev libdbus-1-dev pkg-config   # Debian, Ubuntu
+sudo dnf install webkit2gtk4.1-devel librsvg2-devel alsa-lib-devel dbus-devel pkgconf         # Fedora
 ```
 
 The app uses the library from a sibling checkout, so clone both side by side:
@@ -38,8 +40,9 @@ The app uses the library from a sibling checkout, so clone both side by side:
 ```sh
 git clone https://github.com/JackMechem/open-stomp-lib
 git clone https://github.com/JackMechem/open-stomp-manager
-cd open-stomp-manager
-cargo run -p open-stomp-manager
+cd open-stomp-manager/app
+pnpm install
+pnpm tauri dev
 ```
 
 Library changes in `../open-stomp-lib` are picked up by the next build. With Nix, `nix develop` gives you a shell
@@ -48,30 +51,31 @@ with everything.
 ### Project layout
 
 ```
-crates/open-stomp-manager/  the app: main.rs (startup), app.rs (panels), slot_import.rs (NAM/IR import),
-                            logbook.rs (activity log), widgets.rs, theme.rs
+app/src/                    the interface (React, TypeScript, CSS): components/, store.ts, types.ts
+app/src-tauri/              the Rust side: hub.rs (engine and state), view.rs (what the interface sees),
+                            log.rs (activity log), import.rs (NAM/IR import), tauri.conf.json (packaging)
 docs/                       user guide, building, architecture
-packaging/                  icons, Linux .desktop file, macOS bundle script, release helpers
-tools/dev/                  live-reload and screenshot scripts for UI work
+packaging/                  release helpers
+tools/dev/                  scripts that drive the app (WebDriver) and take screenshots
 tools/, captures/, analysis/  reverse-engineering tools and data (see below)
 ```
 
 ### Working without a pedal
 
-Replay a recorded session to develop the UI without a pedal:
+Replay a recorded session to develop without a pedal:
 
 ```sh
-cargo run -p open-stomp-manager -- --replay captures/logs/01-main-session.log --speed 8
-tools/dev/watch.sh      # rebuild and relaunch on every save, replaying a capture (needs Nix)
+cd app
+pnpm tauri dev -- -- --replay ../captures/logs/01-main-session.log --speed 8
 ```
 
-In debug builds, **F12** opens egui's style editor and inspector. [docs/building.md](docs/building.md#live-preview-styling)
-has more development shortcuts.
+Editing a `.tsx` or `.css` file updates the window at once. Right-click → **Inspect** opens the web inspector.
+[docs/building.md](docs/building.md#developing) has more development shortcuts.
 
 ### Working with a pedal
 
 Live edits only change the pedal's current sound, so they are safe to experiment with. Saving presets and changing
-settings overwrite stored data: back up your presets first. **Listen only** in the menu stops the app from
+settings overwrite stored data: back up your presets first. **Listen only** in the top bar stops the app from
 sending anything.
 
 ## Checks
@@ -79,18 +83,21 @@ sending anything.
 CI runs these on Linux, macOS and Windows. Run them before opening a pull request:
 
 ```sh
+(cd app && pnpm typecheck)
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 ```
 
 ## Code guidelines
 
-- **Match the surrounding code.** The codebase isn't formatted with `rustfmt`, so please don't reformat code you
-  aren't otherwise changing. Lines go up to about 120 columns.
-- **Read state, send through the engine.** Panels only read `DeviceState`; user actions go through the `Device`
-  helpers so listen-only mode and the activity log keep working. [docs/architecture.md](docs/architecture.md)
-  explains why.
-- **Reuse the widgets and theme.** `widgets.rs` and `theme.rs` keep new UI consistent with the rest.
+- **Match the surrounding code.** The Rust isn't formatted with `rustfmt`, so please don't reformat code you aren't
+  otherwise changing. Lines go up to about 120 columns.
+- **Read state, send through the hub.** Components only read the store; user actions go through `send` and the
+  hub's commands, which use the `Device` helpers so listen-only mode and the activity log keep working.
+  [docs/architecture.md](docs/architecture.md) explains why.
+- **Keep `types.ts` in step** with `view.rs` and `hub::Cmd` when you change what the two sides exchange.
+- **Reuse the styles.** Colours, spacing and buttons are in `app/src/styles/global.css`; each component has its own
+  `.css` next to it.
 - **Include a screenshot** in pull requests that change the UI.
 
 ## Pull requests
@@ -109,7 +116,7 @@ If your change needs an unreleased library change, open the library pull request
 - **Preset backup and restore** to a file.
 - **Preset and settings writes on hardware.** They send exactly what the official app sends, but haven't been run
   on a pedal from the app yet. Reports either way help.
-- **Linux packaging** beyond the tarball and Nix: Flatpak, AppImage, distribution packages.
+- **Linux packaging** beyond `.deb`, `.rpm`, AppImage and Nix: Flatpak, distribution repositories.
 - **New captures** for the library's [open questions](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/09-open-questions.md)
   (see below).
 
