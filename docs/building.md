@@ -108,6 +108,11 @@ errors, tests, and a release build. A separate job checks the minimum Rust versi
 `packaging/check-version.sh`. Each build job first clones `open-stomp-lib` next to the checkout, at the ref in
 `OPEN_STOMP_LIB_REF` (top of the workflow).
 
+The documentation site is built in open-stomp-lib from both repositories' docs. When `docs/`, `CHANGELOG.md` or
+`Cargo.toml` change on `main`, `.github/workflows/docs.yml` starts that build. It needs a `DOCS_SITE_TOKEN` secret:
+a fine-grained token with **Actions: Read and write** on open-stomp-lib only. Without it the job skips with a
+warning, and the site catches up at its daily rebuild.
+
 ## Releasing
 
 1. If the app needs library changes, release the library first (tag it there) and set `OPEN_STOMP_LIB_REF` in both

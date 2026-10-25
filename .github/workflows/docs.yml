@@ -1,0 +1,28 @@
+name: Docs site
+
+# The documentation site is built in open-stomp-lib from both repositories' docs (its pages.yml). When this
+# repository's docs, changelog or version change, start that build so the site doesn't wait for its daily rebuild.
+# Needs the DOCS_SITE_TOKEN secret: a fine-grained token with "Actions: Read and write" on open-stomp-lib.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "CHANGELOG.md"
+      - "Cargo.toml"
+  workflow_dispatch:
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Start the docs site build in open-stomp-lib
+        env:
+          GH_TOKEN: ${{ secrets.DOCS_SITE_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::DOCS_SITE_TOKEN is not set; the site will update at its daily rebuild"
+            exit 0
+          fi
+          gh workflow run pages.yml --repo JackMechem/open-stomp-lib --ref main
