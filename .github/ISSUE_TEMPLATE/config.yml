@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Protocol, library or other pedals
+    url: https://github.com/JackMechem/open-stomp-lib/issues
+    about: The pedal protocol, NAM/IR conversion, the Python bindings, and hardware reports go in open-stomp-lib.
+  - name: User guide
+    url: https://github.com/JackMechem/open-stomp-manager/blob/main/docs/user-guide.md
+    about: Everything in the window, plus troubleshooting.

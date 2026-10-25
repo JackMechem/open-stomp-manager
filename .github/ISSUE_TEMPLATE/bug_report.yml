@@ -1,0 +1,45 @@
+name: Bug report
+description: Something in the app doesn't work as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead. Screenshots help.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      placeholder: |
+        1. Open preset P05
+        2. Turn the AMP gain knob
+        3. …
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Shown at the bottom of the menu (☰), or by `open-stomp-manager --version`.
+      placeholder: "0.8.1"
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "Ubuntu 24.04 (Wayland), macOS 15, Windows 11, …"
+    validations:
+      required: true
+  - type: input
+    id: pedal
+    attributes:
+      label: Pedal, firmware and connection
+      placeholder: "Dual Stomp Lite, V1.1.1, USB"
+  - type: textarea
+    id: log
+    attributes:
+      label: Activity log
+      description: If it's about the pedal's behaviour, copy the relevant rows from the activity log (Ctrl+L / ⌘L).
+      render: text

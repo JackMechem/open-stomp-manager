@@ -1,137 +1,104 @@
 # Open Stomp Manager
 
-An open editor for the SORAN Dual Stomp Lite ·
-Version **0.8.1** · Linux · macOS · Windows · [documentation](https://jackmechem.github.io/open-stomp-lib/) · [changelog](CHANGELOG.md)
+**An open-source editor for the SORAN Dual Stomp Lite guitar pedal, for Linux, macOS and Windows.**
 
-Open Stomp Manager is a cross-platform desktop editor and live monitor for the **SORAN Dual Stomp Lite** guitar
-multi-effects pedal. The vendor's editor, *Stomp Manager*, only runs on macOS and Windows. This one also runs on
-**Linux**.
+[![CI](https://github.com/JackMechem/open-stomp-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/JackMechem/open-stomp-manager/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/JackMechem/open-stomp-manager)](https://github.com/JackMechem/open-stomp-manager/releases)
+[![Docs](https://img.shields.io/badge/docs-site-blue)](https://jackmechem.github.io/open-stomp-lib/)
+[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](#license)
+
+Version **0.8.1** · [Download](https://github.com/JackMechem/open-stomp-manager/releases) ·
+[User guide](docs/user-guide.md) · [Changelog](CHANGELOG.md)
+
+Open Stomp Manager does what the vendor's *Stomp Manager* does, and also runs on Linux. Edit presets, watch the
+pedal live, and import NAM amp models and cab IRs with conversions that sound closer to the original than the
+official app's.
 
 ![Open Stomp Manager](docs/images/main-window.png)
 
-It is built on **[open-stomp](https://github.com/JackMechem/open-stomp-lib)**, the library that implements the
-pedal's reverse-engineered USB-MIDI protocol. The library's repository also holds the protocol and
-reverse-engineering documentation.
-
-> Probably also works with the Dual Stomp and Tiny Stomp (same firmware family, same vendor app). Only the Dual Stomp
-> Lite on firmware **V1.1.1** has been tested.
+> **Compatibility.** Tested on the Dual Stomp Lite, firmware V1.1.1. The Dual Stomp and Tiny Stomp share the
+> firmware family and probably work too. Reports from owners are welcome.
 
 ## Features
 
-* **Connects automatically** when the pedal is plugged in (no driver on any OS) and reads all 99 presets, the live
-  sound, settings and user NAM/IR slot names, like the official app.
-* **Live view** of the active preset, signal chain, every block's model and parameters, tuner, looper and drum
-  machine. Changes made on the pedal show up instantly and glow briefly.
-* **Editing:** select presets, pick models, switch blocks on/off, turn knobs (drag, scroll wheel, Shift for fine
-  steps), set preset volume, and run the looper and drum machine. Edits change the live sound until you save.
-* **Save** and **Save as…** (rename and/or store in another slot) with the official app's exact message sequence.
-* **System settings:** input trim, global EQ, wireless, USB loopback.
-* **Activity log** of everything that happens on the pedal in plain English, with knob sweeps merged into one row,
-  category filters, search and raw bytes.
-* **Import NAM models and cab IRs** into the user slots, with open-stomp's optimised conversions (closer to the
-  real model and cab on the pedal than the official app's; [results](https://jackmechem.github.io/open-stomp-lib/analysis/results.html)) or the
-  official app's algorithm.
-* **Listen-only mode** that never sends anything, and **capture replay** to try the app without a pedal.
+- **Connects by itself** over USB or Bluetooth, with no driver, and reads all 99 presets, settings and user slots.
+- **Live view** of the active preset, signal chain, every block's parameters, tuner, looper and drum machine.
+  Changes made on the pedal show up instantly.
+- **Editing:** pick models, switch blocks, turn knobs, set preset volume, run the looper and drum machine.
+- **Save and rename** presets, and change system settings (input trim, global EQ, wireless, USB loopback).
+- **Import NAM models and cab IRs** into the user slots
+  ([how the conversion compares](https://jackmechem.github.io/open-stomp-lib/analysis/results.html)).
+- **Activity log** of everything happening on the pedal, in plain English, with filters and search.
+- **Listen-only mode** that never sends anything, and **capture replay** to try the app without a pedal.
 
-| Area | Status |
-|---|---|
-| Monitor: presets, chain, params, tuner, looper, drum, settings, user slots | ✅ |
-| Live edits (presets, models, on/off, knobs, volume, looper, drum) | ✅ verified on hardware |
-| Preset save / rename, settings writes | ✅ byte-identical to the official app, not yet run on hardware |
-| NAM model and IR import | ✅ optimised or official conversion, uploaded to the user slots (NAM since 0.6, IR since 0.7) |
+Live editing and imports are verified on hardware. Preset save and settings writes send exactly what the official
+app sends, but haven't been run on hardware yet, so back up your presets first.
 
 ## Install
 
-Download a package from [Releases](https://github.com/JackMechem/open-stomp-manager/releases):
+Download the package for your platform from [Releases](https://github.com/JackMechem/open-stomp-manager/releases):
 
 | Platform | Package |
 |---|---|
-| Linux (x86_64) | `…-linux-x86_64.tar.gz`: binary, `.desktop` file, icon |
-| macOS 11+ (Apple Silicon + Intel) | `…-macos-universal.zip`: `Open Stomp Manager.app` |
-| Windows 10+ (x86_64) | `…-windows-x86_64.zip`: `open-stomp-manager.exe` |
+| Linux (x86_64) | `open-stomp-manager-…-linux-x86_64.tar.gz` |
+| macOS 11+ (Apple Silicon and Intel) | `open-stomp-manager-…-macos-universal.zip` |
+| Windows 10+ (x86_64) | `open-stomp-manager-…-windows-x86_64.zip` |
 
-* **macOS:** the app is ad-hoc signed, not notarized. The first time, right-click it and choose *Open* (or run
-  `xattr -dr com.apple.quarantine "Open Stomp Manager.app"`).
-* **Windows:** a MIDI port can be open in only one program at a time, so quit the official Stomp Manager first.
-* **Nix:** `nix run github:JackMechem/open-stomp-manager/stable` (the newest release), `…/unstable` (the newest
-  release or pre-release) or `github:JackMechem/open-stomp-manager` (`main`). As a flake input,
-  `url = "github:JackMechem/open-stomp-manager/stable";` and `nix flake update` brings in each new release.
+- **macOS:** the app isn't notarized. The first time, right-click it and choose *Open*.
+- **Windows:** quit the official Stomp Manager first; only one program can use the pedal's MIDI port at a time.
+- **Nix:** `nix run github:JackMechem/open-stomp-manager/stable`. Use `/unstable` for pre-releases.
 
-Then plug the pedal in. See the **[user guide](docs/user-guide.md)** for everything in the window.
+Then plug in the pedal. The [user guide](docs/user-guide.md) explains everything in the window.
 
-## Build from source
+## Building from source
 
-The app uses the library as a sibling checkout:
+The app depends on the [open-stomp](https://github.com/JackMechem/open-stomp-lib) library through a sibling
+checkout, so clone both side by side:
 
 ```sh
 git clone https://github.com/JackMechem/open-stomp-lib
 git clone https://github.com/JackMechem/open-stomp-manager
 cd open-stomp-manager
-cargo run -p open-stomp-manager                     # Rust ≥ 1.95; on Linux also libasound2-dev / alsa-lib-devel
-cargo run -p open-stomp-manager -- --replay captures/logs/01-main-session.log --speed 8   # no pedal needed
-nix run                                             # or with Nix (nix develop for a dev shell)
+cargo run -p open-stomp-manager
 ```
 
-[building.md](docs/building.md) covers platforms, packaging, CI, versioning and releases.
+You need Rust 1.95 or newer. On Linux, also install the ALSA and D-Bus headers (`libasound2-dev libdbus-1-dev` on
+Debian/Ubuntu, `alsa-lib-devel dbus-devel` on Fedora). With Nix, `nix run` or `nix develop` covers everything.
+
+No pedal? Replay a recorded session:
+
+```sh
+cargo run -p open-stomp-manager -- --replay captures/logs/01-main-session.log --speed 8
+```
+
+See [docs/building.md](docs/building.md) for packaging and platform details.
 
 ## Documentation
 
-**All of it is on the [documentation site](https://jackmechem.github.io/open-stomp-lib/)**, together with the library's guides, the protocol docs
-and the NAM / IR analysis.
+- [User guide](docs/user-guide.md): using the app, troubleshooting
+- [Building](docs/building.md): builds, packaging, CI and releases
+- [Architecture](docs/architecture.md): how the app is put together
 
-| | |
-|---|---|
-| [User guide](docs/user-guide.md) | Connecting, presets, chain, knobs, saving, looper/drum/tuner, settings, activity log, replay, troubleshooting |
-| [Building](docs/building.md) | Source layout, Nix and cargo builds, platforms, packaging, CI, releasing |
-| [Architecture](docs/architecture.md) | How the app is built on the library: data flow, editing, the activity log, adding features |
+The pedal's protocol, the library and the NAM/IR analysis are documented in
+[open-stomp-lib](https://github.com/JackMechem/open-stomp-lib). Everything is on the
+[documentation site](https://jackmechem.github.io/open-stomp-lib/).
 
-**Protocol and reverse engineering** are documented in the library's repository,
-[open-stomp-lib](https://github.com/JackMechem/open-stomp-lib):
+## Contributing
 
-| | |
-|---|---|
-| [01 Overview](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/01-overview.md) | Hardware, USB interfaces, protocol summary, the official app |
-| [02 MIDI CC reference](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/02-midi-cc-reference.md) | Every CC/PC: all models and params, looper, drum, tuner |
-| [03 SysEx protocol](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/03-sysex-protocol.md) | Framing, command table, handshake, encodings, captured write sequences |
-| [04 Data structures](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/04-data-structures.md) | Preset, settings, IR/NAM slot, drum/loop/tuner records |
-| [05 NAM & IR uploads](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/05-uploads-nam-ir.md) | Upload transport and what's known about the conversion |
-| [06 Rust/Linux guide](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/06-rust-linux-guide.md) | Talking to the pedal from Rust and a Linux shell |
-| [07 Capture methodology](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/07-capture-methodology.md) | How the official app was sniffed, and how to make new captures with `tools/` here |
-| [08 Static analysis](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/08-static-analysis.md) | App binary (Flutter/Dart AOT), native libs, firmware notes (`analysis/` here) |
-| [09 Open questions](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/09-open-questions.md) | What's left and how to find out |
-| [10 Library guide](https://github.com/JackMechem/open-stomp-lib/blob/main/docs/10-library-guide.md) | Using the `open-stomp` crate to build your own tools |
-
-## Repository layout
-
-```
-crates/open-stomp-manager/ the egui desktop app (built on ../open-stomp-lib)
-docs/                 user guide, building, architecture
-packaging/            icons (+ generator), Linux .desktop, macOS bundle script, version check
-.github/workflows/    CI (Linux/macOS/Windows) and tag-triggered release builds
-flake.nix             Nix package + dev shell
-CHANGELOG.md          release history
-project.md            app notes and roadmap (protocol notes: the library's project.md)
-```
-
-The reverse-engineering workbench (documented in the library's docs 07 and 08) also lives here:
-
-```
-tools/sniffer/        macOS CoreMIDI interposer + helpers used to capture the official app
-tools/decode/         Python decoders: live.py (human-readable live decode), analyze.py, unpack.py,
-                      preset_layout.py, nam_extract.py; ocr.swift (screenshot OCR)
-captures/logs/        raw capture logs (01-main-session.log = 2 h annotated session); also the
-                      library's test vectors
-captures/LAB_NOTES.md running notebook from the capture session (superseded by the library's docs)
-analysis/             static-analysis dumps and scripts (large/proprietary artefacts are git-ignored)
-```
-
-## Legal
-
-This is an independent interoperability project. It is not affiliated with or endorsed by SORAN, NUX/Cherub or
-JiYou. Product names are trademarks of their owners. The repo contains **no vendor binaries or firmware**: only our
-own code and tools, and captures of traffic between the author's own pedal and app. Third-party NAM/IR files are not
-included. Use at your own risk: writing bad data to a pedal could corrupt presets. Back them up first.
+Bug reports, feature ideas and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
+Changes to how the app talks to the pedal usually belong in the
+[library](https://github.com/JackMechem/open-stomp-lib) first.
 
 ## License
 
-TBD by the repository owner. MIT/Apache-2.0 is suggested for the code and CC-BY-4.0 for the docs.
+Licensed under either of [Apache License 2.0](LICENSE-APACHE) or [MIT](LICENSE-MIT), at your option. Unless you
+state otherwise, any contribution you submit is dual-licensed the same way, without additional terms.
+
+The bundled Inter font is licensed under the SIL Open Font License 1.1
+([details](crates/open-stomp-manager/assets/fonts/README.md)).
+
+## Disclaimer
+
+Open Stomp Manager is an independent interoperability project. It is not affiliated with or endorsed by SORAN,
+NUX/Cherub or JiYou; product names are trademarks of their owners. This repository contains no vendor binaries or
+firmware. Use it at your own risk.
