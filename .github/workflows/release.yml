@@ -9,7 +9,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  # the open-stomp library is a path dependency on a sibling checkout (crates/open-stomp-manager/Cargo.toml)
+  # the open-stomp library is a path dependency on a sibling checkout (app/src-tauri/Cargo.toml)
   OPEN_STOMP_LIB_REF: v0.6.1
 
 permissions:
@@ -50,43 +50,66 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ runner.os == 'macOS' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
-      - name: Install ALSA and D-Bus headers
+      - name: Install ALSA, D-Bus and WebKitGTK headers
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libasound2-dev libdbus-1-dev
+        # patchelf: for the AppImage
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev libdbus-1-dev libwebkit2gtk-4.1-dev librsvg2-dev patchelf
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: app/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: app/pnpm-lock.yaml
       - uses: Swatinem/rust-cache@v2
+      - name: Install frontend dependencies
+        working-directory: app
+        run: pnpm install --frozen-lockfile
 
+      # `tauri build` builds the frontend (pnpm build), the app and the installers. The assets get
+      # stable names: open-stomp-manager-<tag>-<platform>.<ext>
       - name: Package (Linux)
         if: runner.os == 'Linux'
+        working-directory: app
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: 1 # no FUSE on the runner
         run: |
-          cargo build --release -p open-stomp-manager
-          d=open-stomp-manager-${GITHUB_REF_NAME}-${{ matrix.name }}
-          mkdir -p $d
-          cp target/release/open-stomp-manager packaging/open-stomp-manager.desktop README.md CHANGELOG.md $d/
-          cp packaging/icons/icon.png $d/open-stomp-manager.png
-          tar czf $d.tar.gz $d
-          echo "ASSET=$d.tar.gz" >> $GITHUB_ENV
+          pnpm tauri build --bundles deb,rpm,appimage
+          b=../target/release/bundle
+          p=open-stomp-manager-${GITHUB_REF_NAME}-${{ matrix.name }}
+          mkdir -p ../out
+          cp $b/deb/*.deb ../out/$p.deb
+          cp $b/rpm/*.rpm ../out/$p.rpm
+          cp $b/appimage/*.AppImage ../out/$p.AppImage
       - name: Package (macOS)
         if: runner.os == 'macOS'
+        working-directory: app
+        # ad-hoc signed, not notarized (signingIdentity "-" in tauri.conf.json)
         run: |
-          packaging/macos/bundle.sh
-          d=open-stomp-manager-${GITHUB_REF_NAME}-${{ matrix.name }}
-          ditto -c -k --keepParent "target/macos/Open Stomp Manager.app" $d.zip
-          echo "ASSET=$d.zip" >> $GITHUB_ENV
+          pnpm tauri build --target universal-apple-darwin --bundles app,dmg
+          b=../target/universal-apple-darwin/release/bundle
+          p=open-stomp-manager-${GITHUB_REF_NAME}-${{ matrix.name }}
+          mkdir -p ../out
+          cp $b/dmg/*.dmg ../out/$p.dmg
+          ditto -c -k --keepParent "$b/macos/Open Stomp Manager.app" ../out/$p.zip
       - name: Package (Windows)
         if: runner.os == 'Windows'
+        working-directory: app
         shell: bash
+        # the installer adds the WebView2 runtime if Windows lacks it; the zip relies on it being there
         run: |
-          cargo build --release -p open-stomp-manager
-          d=open-stomp-manager-${GITHUB_REF_NAME}-${{ matrix.name }}
-          mkdir -p $d
-          cp target/release/open-stomp-manager.exe README.md CHANGELOG.md $d/
-          7z a $d.zip $d
-          echo "ASSET=$d.zip" >> $GITHUB_ENV
+          pnpm tauri build --bundles nsis
+          p=open-stomp-manager-${GITHUB_REF_NAME}-${{ matrix.name }}
+          mkdir -p ../out/$p
+          cp ../target/release/bundle/nsis/*-setup.exe ../out/$p-setup.exe
+          cp ../target/release/open-stomp-manager.exe ../README.md ../CHANGELOG.md ../out/$p/
+          (cd ../out && 7z a $p.zip $p && rm -r $p)
 
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.name }}
-          path: ${{ env.ASSET }}
+          path: out/*
 
   publish:
     needs: build

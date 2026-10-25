@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Open Stomp Manager
-Comment=Live monitor and editor for the SORAN Dual Stomp
-Exec=open-stomp-manager
-Icon=open-stomp-manager
-Terminal=false
-Categories=AudioVideo;Audio;Music;
-StartupWMClass=open-stomp-manager

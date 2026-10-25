@@ -1,0 +1,75 @@
+.slider {
+  display: grid;
+  grid-template-columns: 84px 1fr 48px;
+  align-items: center;
+  gap: 12px;
+  min-height: 30px;
+}
+
+.slider-label {
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.slider-track {
+  position: relative;
+  height: 20px;
+  cursor: pointer;
+  touch-action: none;
+}
+
+/* the groove */
+.slider-track::before {
+  content: "";
+  position: absolute;
+  inset: 8px 0;
+  border-radius: 2px;
+  background: var(--card-hi);
+}
+
+.slider-fill {
+  position: absolute;
+  top: 8px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--mod, var(--accent));
+}
+
+.slider-thumb {
+  position: absolute;
+  top: 3px;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  border-radius: 50%;
+  background: var(--text);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.5);
+  transition: transform 0.12s;
+}
+
+.slider-track:hover .slider-thumb,
+.slider-active .slider-thumb {
+  transform: scale(1.15);
+}
+
+.slider-value {
+  font-weight: 700;
+  text-align: right;
+}
+
+.slider-active .slider-value {
+  color: var(--mod, var(--accent));
+}
+
+.slider-off .slider-track {
+  cursor: default;
+}
+
+.slider-off .slider-fill {
+  background: color-mix(in srgb, var(--mod, var(--accent)) 45%, var(--card-hi));
+}
+
+.slider-off .slider-thumb {
+  display: none;
+}

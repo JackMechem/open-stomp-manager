@@ -1,0 +1,67 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Open Stomp Manager",
+  "identifier": "io.github.jackmechem.open-stomp-manager",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Open Stomp Manager",
+        "width": 1440,
+        "height": 900,
+        "minWidth": 760,
+        "minHeight": 520
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "Music",
+    "shortDescription": "Editor and live monitor for the SORAN Dual Stomp",
+    "longDescription": "Open Stomp Manager edits presets, follows the pedal live, and imports NAM amp models and cab IRs for the SORAN Dual Stomp Lite, over USB or Bluetooth.",
+    "publisher": "Jack Mechem",
+    "homepage": "https://github.com/JackMechem/open-stomp-manager",
+    "license": "MIT OR Apache-2.0",
+    "copyright": "MIT OR Apache-2.0",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/256x256.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "linux": {
+      "deb": {
+        "depends": [
+          "libasound2t64 | libasound2",
+          "libdbus-1-3"
+        ]
+      },
+      "rpm": {
+        "depends": [
+          "alsa-lib",
+          "dbus-libs"
+        ]
+      }
+    },
+    "macOS": {
+      "minimumSystemVersion": "11.0",
+      "signingIdentity": "-"
+    },
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      }
+    }
+  }
+}

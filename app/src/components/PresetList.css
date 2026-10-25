@@ -1,0 +1,107 @@
+.presets {
+  grid-area: presets;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--panel);
+  border-right: 1px solid var(--stroke);
+}
+
+.preset-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 14px 8px;
+  padding: 0 10px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  color: var(--text-faint);
+}
+
+.preset-search:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--stroke));
+}
+
+.preset-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: none;
+  color: var(--text);
+}
+
+.preset-items {
+  flex: 1;
+  margin: 0;
+  padding: 4px 8px 16px;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.preset {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  transition: background 0.12s;
+}
+
+.preset:hover:not(:disabled) {
+  background: var(--card);
+}
+
+.preset-label {
+  width: 30px;
+  color: var(--text-faint);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.preset-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preset-unknown {
+  color: var(--text-faint);
+}
+
+.preset-active {
+  background: color-mix(in srgb, var(--accent) 14%, var(--card));
+}
+
+.preset-active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.preset-active .preset-label {
+  color: var(--accent);
+}
+
+.preset-active .preset-name {
+  font-weight: 600;
+}
+
+.preset-modified {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}

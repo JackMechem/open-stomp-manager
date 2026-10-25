@@ -40,35 +40,40 @@ Download the package for your platform from [Releases](https://github.com/JackMe
 
 | Platform | Package |
 |---|---|
-| Linux (x86_64) | `open-stomp-manager-…-linux-x86_64.tar.gz` |
-| macOS 11+ (Apple Silicon and Intel) | `open-stomp-manager-…-macos-universal.zip` |
-| Windows 10+ (x86_64) | `open-stomp-manager-…-windows-x86_64.zip` |
+| Linux (x86_64) | `…-linux-x86_64.deb` (Debian, Ubuntu), `….rpm` (Fedora, openSUSE) or `….AppImage` (any distribution) |
+| macOS 11+ (Apple Silicon and Intel) | `…-macos-universal.dmg`, or the same app as a `.zip` |
+| Windows 10+ (x86_64) | `…-windows-x86_64-setup.exe`, or the portable `.zip` |
 
 - **macOS:** the app isn't notarized. The first time, right-click it and choose *Open*.
 - **Windows:** quit the official Stomp Manager first; only one program can use the pedal's MIDI port at a time.
+  The app uses Windows' built-in WebView2, which the installer adds if it's missing.
+- **Linux:** the app uses the system's WebKitGTK; the `.deb` and `.rpm` pull it in.
 - **Nix:** `nix run github:JackMechem/open-stomp-manager/stable`. Use `/unstable` for pre-releases.
 
 Then plug in the pedal. The [user guide](https://jackmechem.github.io/open-stomp-lib/manager/user-guide.html) explains everything in the window.
 
 ## Building from source
 
-The app depends on the [open-stomp](https://github.com/JackMechem/open-stomp-lib) library through a sibling
-checkout, so clone both side by side:
+The app is a Rust ([Tauri](https://tauri.app)) program with a React and TypeScript interface. It depends on the
+[open-stomp](https://github.com/JackMechem/open-stomp-lib) library through a sibling checkout, so clone both side by
+side:
 
 ```sh
 git clone https://github.com/JackMechem/open-stomp-lib
 git clone https://github.com/JackMechem/open-stomp-manager
-cd open-stomp-manager
-cargo run -p open-stomp-manager
+cd open-stomp-manager/app
+pnpm install
+pnpm tauri dev
 ```
 
-You need Rust 1.95 or newer. On Linux, also install the ALSA and D-Bus headers (`libasound2-dev libdbus-1-dev` on
-Debian/Ubuntu, `alsa-lib-devel dbus-devel` on Fedora). With Nix, `nix run` or `nix develop` covers everything.
+You need Rust 1.95 or newer, Node 22 or newer and pnpm. On Linux, also install the WebKitGTK, ALSA and D-Bus headers
+(`libwebkit2gtk-4.1-dev librsvg2-dev libasound2-dev libdbus-1-dev` on Debian/Ubuntu). With Nix, `nix develop` has
+everything, and `nix run` builds and starts the app.
 
-No pedal? Replay a recorded session:
+`pnpm tauri dev` reloads the window as you edit the interface. No pedal? Replay a recorded session:
 
 ```sh
-cargo run -p open-stomp-manager -- --replay captures/logs/01-main-session.log --speed 8
+pnpm tauri dev -- -- --replay ../captures/logs/01-main-session.log --speed 8
 ```
 
 See [docs/building.md](docs/building.md) for packaging and platform details.
@@ -95,7 +100,7 @@ Licensed under either of [Apache License 2.0](LICENSE-APACHE) or [MIT](LICENSE-M
 state otherwise, any contribution you submit is dual-licensed the same way, without additional terms.
 
 The bundled Inter font is licensed under the SIL Open Font License 1.1
-([details](crates/open-stomp-manager/assets/fonts/README.md)).
+([details](app/src/assets/fonts/README.md)).
 
 ## Disclaimer
 

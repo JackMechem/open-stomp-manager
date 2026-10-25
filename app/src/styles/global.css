@@ -1,0 +1,213 @@
+/* Design tokens and base styles. Change a colour here and every component follows. */
+
+@font-face {
+  font-family: "Inter";
+  src: url("../assets/fonts/Inter-Regular.ttf") format("truetype");
+  font-weight: 400;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("../assets/fonts/Inter-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("../assets/fonts/Inter-Bold.ttf") format("truetype");
+  font-weight: 700;
+}
+
+:root {
+  --bg: #0d0f13;
+  --panel: #13161c;
+  --card: #191d25;
+  --card-hi: #212630;
+  --stroke: #2a303c;
+  --text: #e9ebf1;
+  --text-dim: #9aa2b2;
+  --text-faint: #5e6675;
+  --accent: #ffae42;
+  --good: #3edb8a;
+  --bad: #ff5d6c;
+  --host: #6ca8ff;
+
+  /* one colour per module, used through var(--mod) on [data-module] */
+  --mod-gate: #7fd8c0;
+  --mod-odfx: #ff9f43;
+  --mod-amp: #ff5e5b;
+  --mod-cab: #d6ae82;
+  --mod-eq: #fed35a;
+  --mod-mod: #4cd7f6;
+  --mod-delay: #5b9cff;
+  --mod-reverb: #a98bff;
+  --mod-loop: #ff6fb0;
+  --mod-drum: #3edb8a;
+
+  --radius: 14px;
+  --radius-sm: 8px;
+  --gap: 16px;
+  --font: "Inter", system-ui, sans-serif;
+
+  color-scheme: dark;
+}
+
+[data-module="gate"] { --mod: var(--mod-gate); }
+[data-module="odfx"] { --mod: var(--mod-odfx); }
+[data-module="amp"] { --mod: var(--mod-amp); }
+[data-module="cab"] { --mod: var(--mod-cab); }
+[data-module="eq"] { --mod: var(--mod-eq); }
+[data-module="mod"] { --mod: var(--mod-mod); }
+[data-module="delay"] { --mod: var(--mod-delay); }
+[data-module="reverb"] { --mod: var(--mod-reverb); }
+[data-module="loop"] { --mod: var(--mod-loop); }
+[data-module="drum"] { --mod: var(--mod-drum); }
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  font-feature-settings: "tnum"; /* tabular digits, so values don't jitter */
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  overflow: hidden;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+button:disabled {
+  cursor: default;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--card-hi);
+  color: var(--text-dim);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+/* Buttons used across the app */
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  background: var(--card-hi);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.button:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+
+.button:disabled {
+  opacity: 0.45;
+}
+
+.button-primary {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 11px;
+  border-radius: var(--radius-sm);
+  background: var(--card-hi);
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pill:hover:not(:disabled) {
+  color: var(--text);
+  filter: brightness(1.15);
+}
+
+.pill:disabled {
+  opacity: 0.6;
+}
+
+.pill-main,
+.pill-on {
+  background: color-mix(in srgb, var(--mod, var(--accent)) 25%, var(--card-hi));
+  color: var(--text);
+}
+
+/* A highlight that plays once each time its element is remounted (see store flashes). */
+.glow {
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: glow 0.9s ease-out forwards;
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mod, var(--accent)) 70%, transparent),
+      0 0 24px color-mix(in srgb, var(--mod, var(--accent)) 50%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 3px transparent, 0 0 24px transparent;
+  }
+}
