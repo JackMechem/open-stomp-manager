@@ -7,6 +7,10 @@ to 0.2.0). The format follows
 
 ## [Unreleased]
 
+### Changed
+- README install notes: opening the unnotarized app on macOS 15 and newer (*Open Anyway* in Privacy & Security),
+  and getting past Windows SmartScreen's warning for the unsigned app.
+
 ## [0.9.0] - 2026-10-25
 
 ### Added

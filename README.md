@@ -44,8 +44,12 @@ Download the package for your platform from [Releases](https://github.com/JackMe
 | macOS 11+ (Apple Silicon and Intel) | `…-macos-universal.dmg`, or the same app as a `.zip` |
 | Windows 10+ (x86_64) | `…-windows-x86_64-setup.exe`, or the portable `.zip` |
 
-- **macOS:** the app isn't notarized. The first time, right-click it and choose *Open*.
-- **Windows:** quit the official Stomp Manager first; only one program can use the pedal's MIDI port at a time.
+- **macOS:** the app isn't notarized, so macOS blocks it the first time. Open it, click *Done* on the warning, then
+  go to *System Settings → Privacy & Security*, scroll down and click *Open Anyway*. (On macOS 14 and older,
+  right-clicking the app and choosing *Open* also works.) If macOS says the app is damaged, run
+  `xattr -dr com.apple.quarantine "/Applications/Open Stomp Manager.app"` in Terminal and open it again.
+- **Windows:** the app isn't signed, so SmartScreen may show *Windows protected your PC*. Click *More info*, then
+  *Run anyway*. Quit the official Stomp Manager first; only one program can use the pedal's MIDI port at a time.
   The app uses Windows' built-in WebView2, which the installer adds if it's missing.
 - **Linux:** the app uses the system's WebKitGTK; the `.deb` and `.rpm` pull it in.
 - **Nix:** `nix run github:JackMechem/open-stomp-manager/stable`. Use `/unstable` for pre-releases.
