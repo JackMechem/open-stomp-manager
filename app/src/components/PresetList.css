@@ -105,3 +105,51 @@
   border-radius: 50%;
   background: var(--accent);
 }
+
+.preset-tools {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px 14px;
+  border-top: 1px solid var(--stroke);
+}
+
+.preset-tools .pill {
+  flex: 1;
+  justify-content: center;
+}
+
+.preset-row {
+  position: relative;
+}
+
+/* export button: shows on hover over the row */
+.preset-export {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: var(--card-hi);
+  color: var(--text-dim);
+  opacity: 0;
+  transform: translateY(-50%);
+  transition: opacity 0.12s;
+}
+
+.preset-row:hover .preset-export,
+.preset-export:focus-visible {
+  opacity: 1;
+}
+
+.preset-export:hover {
+  color: var(--text);
+  filter: brightness(1.15);
+}
+
+/* keep the name clear of the button */
+.preset-row:hover .preset-name {
+  padding-right: 28px;
+}

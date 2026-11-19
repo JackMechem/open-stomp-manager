@@ -8,6 +8,9 @@ export type Dialog =
   | { kind: "save"; slot: number; name: string }
   | { kind: "rename"; slotKind: SlotKind; slot: number; name: string }
   | { kind: "import"; slotKind: SlotKind; slot: number | null }
+  | { kind: "export"; preset: number | null }
+  /** `path`: a preset file to open straight away. */
+  | { kind: "restore"; path?: string }
   | { kind: "replay" };
 
 interface UiState {
@@ -44,6 +47,8 @@ export function useUi<T>(select: (s: UiState) => T): T {
 }
 
 export const openDialog = (dialog: Dialog) => set({ dialog });
+// for tools/dev/webdriver.py, which can't drive native file dialogs
+if (import.meta.env.DEV) Object.assign(window, { __openDialog: openDialog });
 export const closeDialog = () => set({ dialog: null });
 
 export function setShowLog(showLog: boolean) {

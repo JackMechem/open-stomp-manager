@@ -1,4 +1,4 @@
-import { MagnifyingGlassIcon } from "@phosphor-icons/react";
+import { MagnifyingGlassIcon, TrayArrowDownIcon, TrayArrowUpIcon } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { send, useStore } from "../store";
 import { openDialog } from "../ui";
@@ -64,7 +64,7 @@ export default function PresetList() {
         {items.map((p) => {
           const active = p.index === current;
           return (
-            <li key={p.index}>
+            <li key={p.index} className="preset-row">
               <button
                 ref={active ? currentRef : undefined}
                 className={`preset ${active ? "preset-active" : ""}`}
@@ -80,10 +80,23 @@ export default function PresetList() {
                 <span className={`preset-name ${p.name ? "" : "preset-unknown"}`}>{p.name || "—"}</span>
                 {active && presets?.modified && <span className="preset-modified" title="Edited, not saved" />}
               </button>
+              {p.name != null && (
+                <button className="preset-export" title={`Export ${p.label} to a file`} onClick={() => openDialog({ kind: "export", preset: p.index })}>
+                  <TrayArrowUpIcon size={14} />
+                </button>
+              )}
             </li>
           );
         })}
       </ol>
+      <div className="preset-tools">
+        <button className="pill" onClick={() => openDialog({ kind: "restore" })} title="Put presets from a file on the pedal">
+          <TrayArrowDownIcon size={14} /> Import…
+        </button>
+        <button className="pill" onClick={() => openDialog({ kind: "export", preset: null })} title="Save presets, or a backup of the whole pedal, to a file">
+          <TrayArrowUpIcon size={14} /> Export…
+        </button>
+      </div>
     </aside>
   );
 }

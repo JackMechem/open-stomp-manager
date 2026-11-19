@@ -7,6 +7,7 @@
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod backup;
 mod hub;
 mod import;
 mod log;
@@ -15,7 +16,7 @@ mod view;
 
 use std::path::PathBuf;
 
-use hub::{Cmd, Hub, Snapshot};
+use hub::{Call, Cmd, Hub, Snapshot};
 use tauri::{Manager, State};
 
 /// The release version (workspace `Cargo.toml`, the single source of truth).
@@ -64,12 +65,25 @@ fn log_export(hub: State<'_, Hub>) -> String {
     hub.log().export()
 }
 
+/// What importing a preset file would do ([`backup::Plan`]).
+#[tauri::command]
+async fn read_preset_file(hub: State<'_, Hub>, path: String) -> Result<serde_json::Value, String> {
+    hub.call(Call::Plan { path })
+}
+
+/// Save preset `preset` (0-based), or everything when `None`, to `path`, reading the models it
+/// uses from the pedal first.
+#[tauri::command]
+async fn export_presets(hub: State<'_, Hub>, preset: Option<u8>, path: String) -> Result<serde_json::Value, String> {
+    hub.call(Call::Export { preset, path })
+}
+
 fn main() {
     #[cfg(windows)]
     if std::env::args().len() > 1 {
         attach_console();
     }
-    let mut opts = hub::Options { replay: None, speed: 4.0 };
+    let mut opts = hub::Options { replay: None, speed: 4.0, library: None };
     let mut args = std::env::args().skip(1);
     while let Some(a) = args.next() {
         match a.as_str() {
@@ -101,11 +115,20 @@ fn main() {
             if let Some(w) = app.get_webview_window("main") {
                 let _ = w.set_title(&format!("Open Stomp Manager {VERSION}"));
             }
+            // the app's copy of each user slot's model, for backups
+            opts.library = app.path().app_data_dir().ok().map(|d| d.join("user-slots"));
             let hub = Hub::spawn(app.handle().clone(), opts);
             app.manage(hub);
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![snapshot, command, log_rows, log_export])
+        .invoke_handler(tauri::generate_handler![
+            snapshot,
+            command,
+            log_rows,
+            log_export,
+            read_preset_file,
+            export_presets
+        ])
         .run(tauri::generate_context!())
         .expect("run the Tauri app");
 }

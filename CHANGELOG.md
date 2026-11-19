@@ -7,6 +7,16 @@ to 0.2.0). The format follows
 
 ## [Unreleased]
 
+### Added
+- **Export and import presets** (*Export…* / *Import…* under the preset list): save one preset, or a backup of the
+  whole pedal (all 99 presets, the user AMP and IR slots, and the system settings), to an `.ospreset` file, and put it
+  back on this pedal or another one. On import, models the pedal already has (same name) are used where they are; the
+  others go into slots you pick, and the presets follow them. Each preset in the list has its own export button
+  (on hover), and the preset header has *Export…*.
+- Exports read each user slot's model back from the pedal (the converted data the pedal plays; the official app
+  can't do this), so a backup restores every NAM and IR slot exactly, whatever app imported it. The app also keeps
+  the original file of every model it imports, and exports include it.
+
 ### Changed
 - README install notes: opening the unnotarized app on macOS 15 and newer (*Open Anyway* in Privacy & Security),
   and getting past Windows SmartScreen's warning for the unsigned app.

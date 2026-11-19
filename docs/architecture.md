@@ -12,11 +12,12 @@ interface in the system's web view.
 
 | File | What it holds |
 |---|---|
-| `main.rs` | Command line, version strings, the Tauri commands (`snapshot`, `command`, `log_rows`, `log_export`), startup |
+| `main.rs` | Command line, version strings, the Tauri commands (`snapshot`, `command`, `log_rows`, `log_export`, and `read_preset_file` and `export_presets`, which wait on the hub through `Hub::call`), startup |
 | `hub.rs` | The hub thread: owns the `Device` engine and the `DeviceState`, applies updates, runs commands (`Cmd`), emits `state` events |
 | `view.rs` | The state cut into JSON sections for the frontend |
 | `log.rs`, `logbook.rs` | The activity log: rows, merging knob sweeps, filtering, text export, and the rows the frontend asks for |
 | `import.rs` | NAM / IR conversion on a worker thread, with progress and cancel |
+| `backup.rs` | Preset files (`.ospreset`): export, the import plan (which models the pedal already has, where the others go), rewriting presets to follow their models; the source file of each model the app imported (`Library`, `user-slots/` in the app data folder). The hub runs the export's reads (`Export`: read each slot back from the pedal, then write the file) and the import (`Restore`: convert, queue the writes, count the acks, re-read the pedal) |
 
 `app/src/` (TypeScript, React, CSS)
 
