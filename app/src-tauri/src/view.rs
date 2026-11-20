@@ -9,7 +9,8 @@ use open_stomp::state::preset_label;
 use open_stomp::{DeviceState, Module, is_ble_port};
 use serde::Serialize;
 
-use crate::import::{self, JobView};
+use crate::backup;
+use crate::import::{self, JobView, Kind};
 use crate::log::Summary;
 
 /// Everything the hub knows that the views are built from.
@@ -24,6 +25,9 @@ pub struct Inputs<'a> {
     pub replay_path: Option<&'a str>,
     pub log: Summary,
     pub import: ImportView,
+    pub restore: RestoreView,
+    /// An export reading models from the pedal.
+    pub export: Option<ExportView>,
     /// `STOMP_DEV` flags: dialogs and panels to open at startup (for screenshots).
     pub dev_flags: &'a [String],
 }
@@ -33,6 +37,31 @@ pub struct Inputs<'a> {
 pub struct ImportView {
     pub job: Option<JobView>,
     pub outcome: Option<Outcome>,
+}
+
+/// Replies received / expected while an export reads models from the pedal.
+#[derive(Serialize)]
+pub struct ExportView {
+    pub done: usize,
+    pub total: usize,
+}
+
+/// A preset file being imported, and how the last import ended.
+#[derive(Serialize, Default)]
+pub struct RestoreView {
+    pub job: Option<RestoreJobView>,
+    pub outcome: Option<Outcome>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RestoreJobView {
+    /// `converting` (can be cancelled) or `writing`.
+    pub stage: &'static str,
+    pub text: String,
+    pub done: usize,
+    pub total: usize,
+    pub started_ms: u64,
 }
 
 #[derive(Serialize, Clone)]
@@ -65,6 +94,8 @@ pub fn sections(i: &Inputs) -> Vec<(&'static str, serde_json::Value)> {
         ("device", json(serde_json::to_value(device(i.state)))),
         ("log", json(serde_json::to_value(&i.log))),
         ("import", json(serde_json::to_value(&i.import))),
+        ("restore", json(serde_json::to_value(&i.restore))),
+        ("export", json(serde_json::to_value(&i.export))),
         ("catalog", json(serde_json::to_value(catalog(i.dev_flags)))),
     ]
 }
@@ -130,16 +161,23 @@ pub struct Presets<'a> {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 struct PresetItem<'a> {
     index: u8,
     label: String,
     /// `None` until the startup sync has read the preset.
     name: Option<&'a str>,
+    /// The user AMP / IR slot it uses (0–9), if any.
+    user_amp: Option<u8>,
+    user_ir: Option<u8>,
 }
 
 fn presets(s: &DeviceState) -> Presets<'_> {
     let items = (0..PRESET_COUNT as u8)
-        .map(|i| PresetItem { index: i, label: preset_label(i), name: s.preset_name(i) })
+        .map(|i| {
+            let uses = |k| s.stored(i).and_then(|p| backup::user_slot(p, k));
+            PresetItem { index: i, label: preset_label(i), name: s.preset_name(i), user_amp: uses(Kind::Amp), user_ir: uses(Kind::Ir) }
+        })
         .collect();
     Presets { current: s.current, modified: s.modified(), items }
 }

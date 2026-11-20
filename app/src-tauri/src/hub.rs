@@ -6,7 +6,8 @@
 //! per frame, so a knob sweep doesn't flood the webview. Commands from the frontend arrive on the
 //! same channel as the wake-ups, so they run in order with the updates.
 
-use std::path::PathBuf;
+use std::collections::VecDeque;
+use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -15,14 +16,17 @@ use std::time::{Duration, Instant, SystemTime};
 use chrono::{DateTime, Local};
 use open_stomp::device::{Config, Device, Status, Update};
 use open_stomp::midi::host;
-use open_stomp::{Category, DeviceState, Module, Origin};
+use open_stomp::midi::req;
+use open_stomp::upload::{self, Chunk, Reassembler, UserAmpInfo, amp_sub};
+use open_stomp::{Category, DeviceState, Module, Msg as Midi, Origin};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use tauri::{AppHandle, Emitter};
 
+use crate::backup::{self, ConvertedData, Library, SlotModel};
 use crate::import::{self, Job, Kind};
 use crate::log::{FilterArgs, Log, RowKind};
-use crate::view::{self, ImportView, Inputs, Outcome};
+use crate::view::{self, ExportView, ImportView, Inputs, Outcome, RestoreJobView, RestoreView};
 
 /// After a preset change from the pedal, its messages are held until it has been quiet this long,
 /// then applied together, so turning the preset knob several clicks jumps instead of stepping.
@@ -31,6 +35,13 @@ const SETTLE: Duration = Duration::from_millis(150);
 const MAX_HOLD: Duration = Duration::from_secs(5);
 /// Shortest gap between two `state` events (one frame at 60 Hz).
 const FRAME: Duration = Duration::from_millis(16);
+/// A restore that has heard no ack for this long is taken as finished (some writes went unanswered).
+const ACK_IDLE: Duration = Duration::from_secs(8);
+/// SysEx commands whose write acks a restore counts: user AMP, IR data, IR name, preset name,
+/// preset, settings.
+const RESTORE_ACKS: [u8; 6] = [0x58, 0x10, 0x09, 0x12, 0x0B, 0x14];
+/// An export reading slots back gives up when the pedal has been silent this long.
+const READ_IDLE: Duration = Duration::from_secs(5);
 
 /// Something the frontend asks for (the `command` Tauri command). Module numbers are
 /// `Module as u8` (`OD/FX` 0, `AMP` 1, … `DRUM` 9).
@@ -60,6 +71,10 @@ pub enum Cmd {
     StartImport { request: import::Request },
     CancelImport,
     ClearImportOutcome,
+    /// Put the presets and models of a preset file on the pedal (see [`backup`]).
+    StartRestore { request: backup::RestoreRequest },
+    CancelRestore,
+    ClearRestoreOutcome,
     SetLogFilter { filter: FilterArgs },
     ClearLog,
     Connect { port: String },
@@ -109,6 +124,15 @@ enum Activity {
 enum Msg {
     Wake,
     Cmd(Cmd),
+    Call(Call, Sender<Result<Value, String>>),
+}
+
+/// Something the frontend asks for and waits on (the preset-file Tauri commands).
+pub enum Call {
+    /// Read a preset file and say what importing it would do ([`backup::Plan`]).
+    Plan { path: String },
+    /// Save preset `preset`, or everything (`None`), to `path`, reading its models from the pedal.
+    Export { preset: Option<u8>, path: String },
 }
 
 /// Handle kept in Tauri's state.
@@ -121,6 +145,8 @@ pub struct Hub {
 pub struct Options {
     pub replay: Option<PathBuf>,
     pub speed: f32,
+    /// Where the app keeps its copy of each user slot's model; `None` keeps them in memory only.
+    pub library: Option<PathBuf>,
 }
 
 fn local(at: SystemTime) -> DateTime<Local> {
@@ -173,6 +199,10 @@ impl Hub {
             dev_flags,
             job: None,
             outcome: None,
+            library: Library::open(opts.library),
+            restore: None,
+            restore_outcome: None,
+            export: None,
             activity: vec![],
             received: 0,
             sent: 0,
@@ -193,6 +223,14 @@ impl Hub {
 
     pub fn command(&self, c: Cmd) {
         let _ = self.tx.send(Msg::Cmd(c));
+    }
+
+    /// Run `c` on the hub and wait for its answer.
+    pub fn call(&self, c: Call) -> Result<Value, String> {
+        let (tx, rx) = mpsc::channel();
+        self.tx.send(Msg::Call(c, tx)).map_err(|_| "the app is shutting down".to_owned())?;
+        // an export reads models from the pedal: about 6 s a slot over Bluetooth
+        rx.recv_timeout(Duration::from_secs(600)).map_err(|_| "no answer from the pedal engine".to_owned())?
     }
 
     pub fn snapshot(&self) -> Snapshot {
@@ -232,6 +270,12 @@ struct Worker {
     dev_flags: Vec<String>,
     job: Option<Job>,
     outcome: Option<Outcome>,
+    /// The app's copy of each user slot's model.
+    library: Library,
+    restore: Option<Restore>,
+    restore_outcome: Option<Outcome>,
+    /// An export waiting for its models to be read from the pedal.
+    export: Option<Export>,
     activity: Vec<Activity>,
     /// Messages from / to the pedal since the last event.
     received: u32,
@@ -252,13 +296,19 @@ impl Worker {
                     self.command(c);
                     self.dirty = true;
                 }
-                Ok(Msg::Wake) => self.dirty |= self.job.is_some(),
+                Ok(Msg::Call(c, reply)) => {
+                    self.call(c, reply);
+                    self.dirty = true;
+                }
+                Ok(Msg::Wake) => self.dirty |= self.job.is_some() || self.restore.is_some(),
                 Err(RecvTimeoutError::Timeout) => {}
                 Err(RecvTimeoutError::Disconnected) => return,
             }
             self.poll();
             self.release_held();
             self.finish_import();
+            self.step_restore();
+            self.step_export();
             if self.dirty && self.last_emit.elapsed() >= FRAME {
                 self.emit();
             }
@@ -269,7 +319,9 @@ impl Worker {
     fn next_deadline(&self) -> Option<Instant> {
         let release = self.held_since.map(|since| (self.pedal_msg_at + SETTLE).min(since + MAX_HOLD));
         let emit = self.dirty.then(|| self.last_emit + FRAME);
-        release.into_iter().chain(emit).min()
+        let restore = self.restore.as_ref().and_then(|r| r.writing.as_ref()).map(|w| w.last_ack + ACK_IDLE);
+        let export = self.export.as_ref().map(|e| e.last + READ_IDLE);
+        release.into_iter().chain(emit).chain(restore).chain(export).min()
     }
 
     fn inputs(&self) -> Inputs<'_> {
@@ -283,6 +335,8 @@ impl Worker {
             replay_path: self.replay_path.as_deref(),
             log: self.log.lock().expect("log lock").summary(),
             import: ImportView { job: self.job.as_ref().map(Job::view), outcome: self.outcome.clone() },
+            restore: RestoreView { job: self.restore.as_ref().map(Restore::view), outcome: self.restore_outcome.clone() },
+            export: self.export.as_ref().map(|e| ExportView { done: e.done, total: e.total }),
             dev_flags: &self.dev_flags,
         }
     }
@@ -372,15 +426,37 @@ impl Worker {
                     Kind::Amp => self.dev.rename_user_amp(slot, name),
                     Kind::Ir => self.dev.rename_user_ir(slot, name),
                 };
-                if let Err(e) = sent {
-                    self.note(RowKind::Error, format!("Rename failed: {e}"));
+                match sent {
+                    Err(e) => self.note(RowKind::Error, format!("Rename failed: {e}")),
+                    Ok(()) => {
+                        if let Err(e) = self.library.rename(kind, slot, name) {
+                            self.note(RowKind::Error, format!("Couldn't update the app's copy of {}: {e}", kind.slot_label(slot)));
+                        }
+                    }
                 }
             }
             Cmd::StartImport { request } => {
-                if self.job.is_none() {
+                if self.job.is_none() && self.restore.is_none() && self.export.is_none() {
                     self.start_import(request, false);
                 }
             }
+            Cmd::StartRestore { request } => {
+                if self.job.is_none() && self.restore.is_none() && self.export.is_none() {
+                    self.start_restore(&request);
+                }
+            }
+            Cmd::CancelRestore => {
+                // only while converting: once writing has started, the pedal's queue runs to the end
+                if self.restore.as_ref().is_some_and(|r| r.writing.is_none())
+                    && let Some(r) = self.restore.take()
+                {
+                    if let Some(c) = &r.converting {
+                        c.job.cancel();
+                    }
+                    self.restore_outcome = Some(Outcome { text: "Import cancelled; nothing was written to the pedal.".into(), error: true });
+                }
+            }
+            Cmd::ClearRestoreOutcome => self.restore_outcome = None,
             Cmd::CancelImport => {
                 if let Some(job) = self.job.take() {
                     job.cancel();
@@ -444,6 +520,13 @@ impl Worker {
                 match sent {
                     Err(e) => (format!("Upload failed: {e}"), true),
                     Ok(()) => {
+                        self.remember(SlotModel {
+                            kind: job.kind,
+                            slot: job.slot,
+                            name: job.name.clone(),
+                            source: backup::read_source(&job.path, job.optimised, job.normalise).ok(),
+                            converted: Some(ConvertedData::new(&data, factor)),
+                        });
                         let secs = job.elapsed_secs();
                         let how = match (job.kind, job.optimised) {
                             (Kind::Amp, true) => format!(" (optimised, {}:{:02})", secs / 60, secs % 60),
@@ -458,6 +541,265 @@ impl Worker {
         // also in the log, in case the dialog was closed meanwhile
         self.note(if error { RowKind::Error } else { RowKind::Info }, text.clone());
         self.outcome = Some(Outcome { text, error });
+    }
+
+    /// Keep `m` as the app's copy of its slot (for backups); a failure only goes to the log.
+    fn remember(&mut self, m: SlotModel) {
+        let label = m.kind.slot_label(m.slot);
+        if let Err(e) = self.library.store(m) {
+            self.note(RowKind::Error, format!("Couldn't keep a copy of {label} for backups: {e}"));
+        }
+    }
+
+    fn call(&mut self, c: Call, reply: Sender<Result<Value, String>>) {
+        match c {
+            Call::Plan { path } => {
+                let plan = backup::plan(Path::new(&path), &self.state).and_then(|p| serde_json::to_value(p).map_err(|e| e.to_string()));
+                let _ = reply.send(plan);
+            }
+            Call::Export { preset, path } => self.start_export(preset, path, reply),
+        }
+    }
+
+    /// Read the models an export needs from the pedal, then write the file ([`Worker::step_export`]).
+    /// Without a connection, the models come from the app's copy or go by name only.
+    fn start_export(&mut self, preset: Option<u8>, path: String, reply: Sender<Result<Value, String>>) {
+        if self.export.is_some() || self.restore.is_some() {
+            let _ = reply.send(Err("Wait for the current import or export to finish.".into()));
+            return;
+        }
+        let mut e = Export { preset, path, reply, data: backup::PedalData::new(), factors: Default::default(), done: 0, total: 0, last: Instant::now(), amp: Reassembler::default(), ir: Reassembler::default() };
+        if self.editable() {
+            for (kind, slot, _) in backup::export_slots(&self.state, preset) {
+                let sent = match kind {
+                    Kind::Amp => {
+                        // the slot-info record carries the factor
+                        self.dev.write(vec![req::user_amp(slot)]);
+                        e.total += 1;
+                        self.dev.read_user_amp(slot)
+                    }
+                    Kind::Ir => self.dev.read_user_ir(slot),
+                };
+                if sent.is_ok() {
+                    e.total += upload::user_amp_read(slot).len();
+                }
+            }
+        }
+        self.export = Some(e);
+        self.step_export();
+    }
+
+    /// A reply while an export is reading slots.
+    fn export_reply(&mut self, bytes: &[u8]) {
+        let Some(e) = &mut self.export else { return };
+        let Midi::Nep { cmd, dir: 2, payload } = Midi::parse(bytes) else { return };
+        let Some(c) = Chunk::parse(&payload) else { return };
+        let done = match cmd {
+            0x58 if c.sub == amp_sub::READ_INFO => {
+                if let Some(info) = UserAmpInfo::parse(&payload) {
+                    e.factors.insert(info.slot, info.factor);
+                }
+                None
+            }
+            0x58 if c.sub == amp_sub::READ_DATA => e.amp.push(&c).map(|(s, d)| (Kind::Amp, s, d)),
+            0x10 => e.ir.push(&c).map(|(s, d)| (Kind::Ir, s, d)),
+            _ => return,
+        };
+        e.done += 1;
+        e.last = Instant::now();
+        if let Some((kind, slot, floats)) = done {
+            let factor = if kind == Kind::Amp { e.factors.get(&slot).copied().unwrap_or(1.0) } else { 1.0 };
+            e.data.insert((kind, slot), ConvertedData::new(&floats, factor));
+        }
+    }
+
+    /// Write the export once every reply is in (or the pedal went quiet), and answer the frontend.
+    fn step_export(&mut self) {
+        let Some(e) = &self.export else { return };
+        let quiet = e.last.elapsed() >= READ_IDLE;
+        if e.done < e.total && !quiet {
+            return;
+        }
+        let Some(e) = self.export.take() else { return };
+        self.dirty = true;
+        let result = self.write_export(&e, quiet && e.done < e.total);
+        let _ = e.reply.send(result);
+    }
+
+    fn write_export(&mut self, e: &Export, stalled: bool) -> Result<Value, String> {
+        if stalled {
+            return Err(format!("The pedal stopped answering while its models were being read ({} of {} replies). Nothing was saved.", e.done, e.total));
+        }
+        let by = format!("Open Stomp Manager {}", crate::version_long());
+        let file = backup::export(&self.state, e.preset, &self.library, &e.data, &by, &Local::now().to_rfc3339())?;
+        backup::write_file(&file, Path::new(&e.path))?;
+        let missing: Vec<String> = file.models.iter().filter(|m| !m.has_data()).map(|m| m.name.clone()).collect();
+        let models = file.models.len() - missing.len();
+        self.note(RowKind::Info, format!("Exported {} preset(s) and {models} model(s) to {}", file.presets.len(), e.path));
+        Ok(serde_json::json!({ "presets": file.presets.len(), "models": models, "missing": missing }))
+    }
+
+    /// Check a restore and start it: convert the models that need it, then write.
+    fn start_restore(&mut self, req: &backup::RestoreRequest) {
+        self.restore_outcome = None;
+        if !self.editable() {
+            self.restore_outcome = Some(Outcome { text: "Connect to the pedal (with Listen only off) to import.".into(), error: true });
+            return;
+        }
+        let work = match backup::work(req, &self.state) {
+            Ok(w) => w,
+            Err(text) => {
+                self.restore_outcome = Some(Outcome { text, error: true });
+                return;
+            }
+        };
+        let (ready, pending): (Vec<_>, Vec<_>) = work.uploads.into_iter().partition(|(_, _, m)| m.converted.is_some());
+        let started_ms = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).map_or(0, |d| d.as_millis() as u64);
+        self.restore = Some(Restore {
+            ready,
+            to_convert: pending.len(),
+            pending: pending.into(),
+            converting: None,
+            present: work.present,
+            presets: work.presets,
+            settings: work.settings,
+            writing: None,
+            started_ms,
+        });
+        self.dirty = true;
+    }
+
+    /// Move a restore along: finish a conversion, start the next, or queue the writes; once the
+    /// pedal has acked them all, re-read it.
+    fn step_restore(&mut self) {
+        let Some(r) = &mut self.restore else { return };
+        if let Some(w) = &r.writing {
+            if w.acked < w.expected && w.last_ack.elapsed() < ACK_IDLE {
+                return;
+            }
+            let Some(r) = self.restore.take() else { return };
+            self.finish_restore(r);
+            return;
+        }
+        if let Some(c) = &r.converting {
+            let Some(result) = c.job.finished() else { return };
+            let Some(Converting { kind, slot, mut model, .. }) = r.converting.take() else { return };
+            match result {
+                Ok((data, factor)) => {
+                    model.converted = Some(ConvertedData::new(&data, factor));
+                    r.ready.push((kind, slot, model));
+                }
+                Err(e) => {
+                    self.restore = None;
+                    let text = format!("Couldn't convert “{}”: {e}. Nothing was written to the pedal.", model.name);
+                    self.restore_outcome = Some(Outcome { text, error: true });
+                    return;
+                }
+            }
+            self.dirty = true;
+        }
+        if let Some((kind, slot, model)) = r.pending.pop_front() {
+            let src = model.source.clone().expect("pending models have a source");
+            let path = match backup::source_to_temp(&model) {
+                Ok(p) => p,
+                Err(e) => {
+                    self.restore = None;
+                    self.restore_outcome = Some(Outcome { text: format!("Couldn't convert “{}”: {e}", model.name), error: true });
+                    return;
+                }
+            };
+            let tx = self.tx.clone();
+            let request = import::Request { kind, slot, path: path.display().to_string(), optimised: src.optimised, normalise: src.normalise };
+            let job = Job::start(request, false, move || {
+                let _ = tx.send(Msg::Wake);
+            });
+            r.converting = Some(Converting { kind, slot, model, job });
+            self.dirty = true;
+            return;
+        }
+        self.write_restore();
+    }
+
+    /// Queue everything on the pedal, in order: models, presets, settings.
+    fn write_restore(&mut self) {
+        if !self.editable() {
+            self.restore = None;
+            let text = "The pedal disconnected before the import could be written; nothing was changed.".into();
+            self.restore_outcome = Some(Outcome { text, error: true });
+            return;
+        }
+        let current = self.state.current;
+        let Some(r) = &mut self.restore else { return };
+        let mut expected = 0;
+        let mut failed = vec![];
+        for (kind, slot, m) in &r.ready {
+            let floats = m.converted.as_ref().map(ConvertedData::floats);
+            let Some(Ok(floats)) = floats else {
+                failed.push(m.name.clone());
+                continue;
+            };
+            let factor = m.converted.as_ref().map_or(1.0, |c| c.factor);
+            let sent = match kind {
+                Kind::Amp => self.dev.import_user_amp(*slot, &m.name, &floats, factor),
+                Kind::Ir => self.dev.import_user_ir(*slot, &m.name, &floats),
+            };
+            match sent {
+                Ok(()) => {
+                    expected += match kind {
+                        Kind::Amp => upload::user_amp_upload(&UserAmpInfo::new(*slot, &m.name, factor), &floats).len(),
+                        Kind::Ir => upload::user_ir_upload(*slot, &m.name, &floats).len(),
+                    }
+                }
+                Err(_) => failed.push(m.name.clone()),
+            }
+        }
+        r.ready.retain(|(_, _, m)| !failed.contains(&m.name));
+        for p in &r.presets {
+            // select the slot first, so the name write goes to it, like saving in place
+            let mut msgs = vec![host::program(p.index)];
+            msgs.extend(host::save_preset(p.index, p));
+            self.dev.write(msgs);
+            expected += 2;
+        }
+        if let Some(s) = &r.settings {
+            self.dev.write_settings(s);
+            expected += 1;
+        }
+        if let Some(c) = current {
+            self.dev.write(vec![host::program(c)]);
+        }
+        r.writing = Some(Writing { expected, acked: 0, last_ack: Instant::now(), failed });
+        self.dirty = true;
+    }
+
+    fn finish_restore(&mut self, r: Restore) {
+        let w = r.writing.expect("finished restores were written");
+        let uploaded = r.ready.len();
+        for (_, _, m) in r.ready.into_iter().chain(r.present.into_iter().filter(|(_, _, m)| m.has_data())) {
+            self.remember(m);
+        }
+        let mut text = format!(
+            "Imported {} preset{} and {} model{}{}.",
+            r.presets.len(),
+            if r.presets.len() == 1 { "" } else { "s" },
+            uploaded,
+            if uploaded == 1 { "" } else { "s" },
+            if r.settings.is_some() { ", and the system settings" } else { "" },
+        );
+        let mut error = false;
+        if !w.failed.is_empty() {
+            text.push_str(&format!(" Couldn't upload: {}.", w.failed.join(", ")));
+            error = true;
+        }
+        if w.acked < w.expected {
+            text.push_str(&format!(" The pedal confirmed only {} of {} writes; check the presets.", w.acked, w.expected));
+            error = true;
+        }
+        self.note(if error { RowKind::Error } else { RowKind::Info }, text.clone());
+        self.restore_outcome = Some(Outcome { text, error });
+        // read everything back, so the app shows what the pedal really holds now
+        self.dev.resync();
+        self.dirty = true;
     }
 
     fn poll(&mut self) {
@@ -481,6 +823,16 @@ impl Worker {
                     match origin {
                         Origin::Pedal => self.received += 1,
                         Origin::Host => self.sent += 1,
+                    }
+                    if origin == Origin::Pedal
+                        && let Some(w) = self.restore.as_mut().and_then(|r| r.writing.as_mut())
+                        && matches!(Midi::parse(&bytes), Midi::Nep { cmd, dir: 3, .. } if RESTORE_ACKS.contains(&cmd))
+                    {
+                        w.acked += 1;
+                        w.last_ack = Instant::now();
+                    }
+                    if origin == Origin::Pedal && self.export.is_some() {
+                        self.export_reply(&bytes);
                     }
                     if origin == Origin::Pedal {
                         if bytes.first().is_some_and(|b| b & 0xF0 == 0xC0) && self.held_since.is_none() {
@@ -572,6 +924,72 @@ impl Worker {
     }
 }
 
+/// An export reading its models back from the pedal.
+struct Export {
+    preset: Option<u8>,
+    path: String,
+    reply: Sender<Result<Value, String>>,
+    /// Slots read so far.
+    data: backup::PedalData,
+    /// AMP slot factors, from the slot-info records.
+    factors: std::collections::HashMap<u8, f32>,
+    /// Replies received / expected.
+    done: usize,
+    total: usize,
+    last: Instant,
+    amp: Reassembler,
+    ir: Reassembler,
+}
+
+/// A preset file being put on the pedal.
+struct Restore {
+    /// Models with converted data, ready to upload: (kind, target slot, model).
+    ready: Vec<(Kind, u8, SlotModel)>,
+    /// Models to convert from their source file first.
+    pending: VecDeque<(Kind, u8, SlotModel)>,
+    to_convert: usize,
+    converting: Option<Converting>,
+    /// Models the pedal already holds where they go.
+    present: Vec<(Kind, u8, SlotModel)>,
+    presets: Vec<open_stomp::Preset>,
+    settings: Option<open_stomp::Settings>,
+    /// Set once everything is queued on the pedal.
+    writing: Option<Writing>,
+    started_ms: u64,
+}
+
+struct Converting {
+    kind: Kind,
+    slot: u8,
+    model: SlotModel,
+    job: Job,
+}
+
+struct Writing {
+    /// Acks the queued writes will bring.
+    expected: usize,
+    acked: usize,
+    last_ack: Instant,
+    /// Models that couldn't be uploaded.
+    failed: Vec<String>,
+}
+
+impl Restore {
+    fn view(&self) -> RestoreJobView {
+        let (stage, text, done, total) = match (&self.writing, &self.converting) {
+            (Some(w), _) => ("writing", "Writing to the pedal…".to_owned(), w.acked, w.expected),
+            (None, Some(c)) => {
+                let v = c.job.view();
+                let n = self.to_convert - self.pending.len();
+                let text = format!("Converting “{}” ({n} of {}) for {}", c.model.name, self.to_convert, c.kind.slot_label(c.slot));
+                ("converting", text, v.done(), v.total())
+            }
+            (None, None) => ("converting", "Preparing…".to_owned(), 0, 1),
+        };
+        RestoreJobView { stage, text, done, total: total.max(1), started_ms: self.started_ms }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -601,5 +1019,8 @@ mod tests {
             {"kind": "amp", "slot": 5, "path": "/m.nam", "optimised": true, "normalise": false}}));
         assert!(matches!(start, Cmd::StartImport { request } if request.slot == 5 && !request.normalise));
         assert!(matches!(parse(json!({"type": "replay"})), Cmd::Replay { path: None, speed: None }));
+        let restore = parse(json!({"type": "startRestore", "request":
+            {"path": "/b.ospreset", "presets": [{"entry": 0, "to": 9}], "models": [2, null], "settings": false}}));
+        assert!(matches!(restore, Cmd::StartRestore { request } if request.presets[0].to == 9 && request.models == [Some(2), None]));
     }
 }

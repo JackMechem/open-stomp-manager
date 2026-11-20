@@ -1,4 +1,4 @@
-import { FloppyDiskIcon, PencilSimpleIcon, PlugsIcon } from "@phosphor-icons/react";
+import { FloppyDiskIcon, PencilSimpleIcon, PlugsIcon, TrayArrowUpIcon } from "@phosphor-icons/react";
 import { send, useStore } from "../store";
 import { openDialog } from "../ui";
 import Slider from "./Slider";
@@ -67,6 +67,15 @@ export default function CurrentPreset() {
             <button className="button" title="Rename and/or store in another slot" onClick={() => openDialog({ kind: "save", slot: current, name: saveName })}>
               <PencilSimpleIcon size={15} /> Save as…
             </button>
+            {item?.name != null && (
+              <button
+                className="button"
+                title={presets.modified ? `Export ${item.label} as saved (without the unsaved edits) to a file` : `Export ${item.label} to a file`}
+                onClick={() => openDialog({ kind: "export", preset: current })}
+              >
+                <TrayArrowUpIcon size={15} /> Export…
+              </button>
+            )}
           </div>
         )}
       </div>
