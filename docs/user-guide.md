@@ -151,7 +151,7 @@ saved slot becomes active.
 
 ## Tuner, looper and drums
 
-**Tuner:** switch the tuner on at the pedal. The card shows the note and how many cents sharp or flat, coloured by how
+**Tuner:** switch the tuner on at the pedal or with *Start tuner* on the card. The card shows the note and how many cents sharp or flat, coloured by how
 close it is (green within ±5 cents). The pedal only reports pitch while its tuner is on.
 
 **Looper:** state (*Empty*, *Recording*, *Playing*, *Overdubbing*, *Stopped*) and whether an overdub layer exists.

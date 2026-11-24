@@ -152,6 +152,7 @@ function CentsMeter({ cents, live }: { cents: number | null; live: boolean }) {
 
 export function TunerCard() {
   const t = useStore((s) => s.sections.extras?.tuner);
+  const editable = useStore((s) => s.sections.conn?.editable ?? false);
   if (!t) return null;
   const live = t.detected && t.note != null;
   const tone = !live || t.cents == null ? "" : Math.abs(t.cents) <= 5 ? "in-tune" : Math.abs(t.cents) <= 20 ? "close" : "off";
@@ -168,6 +169,14 @@ export function TunerCard() {
         </div>
       </div>
       <CentsMeter cents={t.cents} live={live} />
+      {editable && (
+        <div className="extra-buttons">
+          <button className="pill pill-main" onClick={() => send({ type: "setTuner", on: !t.active })}>
+            {t.active ? <StopIcon size={14} weight="fill" /> : <PlayIcon size={14} weight="fill" />}
+            {t.active ? "Stop tuner" : "Start tuner"}
+          </button>
+        </div>
+      )}
     </section>
   );
 }
