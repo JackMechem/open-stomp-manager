@@ -1,6 +1,6 @@
-import { FileArrowUpIcon, FileAudioIcon, GearIcon, PencilSimpleIcon } from "@phosphor-icons/react";
+import { ArrowsClockwiseIcon, FileArrowUpIcon, FileAudioIcon, GearIcon, PencilSimpleIcon } from "@phosphor-icons/react";
 import { send, useStore } from "../store";
-import type { Slot, SlotKind } from "../types";
+import type { Slot, SlotKind, UpdateState } from "../types";
 import { openDialog } from "../ui";
 import Slider from "./Slider";
 import "./DeviceCard.css";
@@ -28,6 +28,39 @@ function Toggle({ label, on, disabled, title, onChange }: { label: string; on: b
   );
 }
 
+function updateStatus(u: UpdateState | undefined): string | null {
+  switch (u?.kind) {
+    case "checking":
+      return u.manual ? "Checking…" : null;
+    case "upToDate":
+      return u.manual ? "Up to date" : null;
+    case "available":
+      return `${u.version} is available`;
+    case "downloading":
+    case "ready":
+    case "installing":
+      return `Updating to ${u.version}`;
+    case "failed":
+      return "Update failed";
+    default:
+      return null;
+  }
+}
+
+function CheckUpdates() {
+  const u = useStore((s) => s.sections.update);
+  const busy = u?.kind === "checking" || u?.kind === "downloading" || u?.kind === "ready" || u?.kind === "installing";
+  const status = updateStatus(u);
+  return (
+    <div className="check-updates">
+      <button className="pill" disabled={busy} onClick={() => send({ type: "checkUpdates" })}>
+        <ArrowsClockwiseIcon size={14} /> Check for updates
+      </button>
+      {status && <span className="faint">{status}</span>}
+    </div>
+  );
+}
+
 function System() {
   const d = useStore((s) => s.sections.device);
   const editable = useStore((s) => (s.sections.conn?.editable ?? false) && s.sections.device?.settings != null);
@@ -41,6 +74,7 @@ function System() {
       <Info label="Firmware" value={d?.firmware} />
       <Info label="Model ID" value={d?.modelId} />
       <Info label="App" value={version && `Open Stomp Manager ${version} · open-stomp ${lib}`} />
+      <CheckUpdates />
       <Slider label="Input trim" value={set?.inputTrim ?? null} max={20} centred format={trimDb} disabled={!editable} onChange={(v) => send({ type: "setSettings", inputTrim: v })} />
       <div className="switches">
         <Toggle label="Wireless" on={set?.wireless ?? false} disabled={!editable} title="Bluetooth MIDI and audio" onChange={(on) => send({ type: "setSettings", wireless: on })} />

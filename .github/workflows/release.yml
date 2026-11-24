@@ -67,6 +67,16 @@ jobs:
         working-directory: app
         run: pnpm install --frozen-lockfile
 
+      # macOS and Windows also get signed update bundles (.app.tar.gz, setup.exe + .sig) for the
+      # in-app updater; the publish job lists them in latest.json. Linux copies are updated by hand.
+      - name: Check the updater signing key is set
+        if: runner.os != 'Linux'
+        shell: bash
+        env:
+          KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          [[ -n "$KEY" ]] || { echo "::error::secret TAURI_SIGNING_PRIVATE_KEY is not set (docs/building.md)"; exit 1; }
+
       # `tauri build` builds the frontend (pnpm build), the app and the installers. The assets get
       # stable names: open-stomp-manager-<tag>-<platform>.<ext>
       - name: Package (Linux)
@@ -86,23 +96,32 @@ jobs:
         if: runner.os == 'macOS'
         working-directory: app
         # ad-hoc signed, not notarized (signingIdentity "-" in tauri.conf.json)
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
-          pnpm tauri build --target universal-apple-darwin --bundles app,dmg
+          pnpm tauri build --target universal-apple-darwin --bundles app,dmg --config '{"bundle":{"createUpdaterArtifacts":true}}'
           b=../target/universal-apple-darwin/release/bundle
           p=open-stomp-manager-${GITHUB_REF_NAME}-${{ matrix.name }}
           mkdir -p ../out
           cp $b/dmg/*.dmg ../out/$p.dmg
           ditto -c -k --keepParent "$b/macos/Open Stomp Manager.app" ../out/$p.zip
+          cp "$b/macos/Open Stomp Manager.app.tar.gz" ../out/$p.app.tar.gz
+          cp "$b/macos/Open Stomp Manager.app.tar.gz.sig" ../out/$p.app.tar.gz.sig
       - name: Package (Windows)
         if: runner.os == 'Windows'
         working-directory: app
         shell: bash
         # the installer adds the WebView2 runtime if Windows lacks it; the zip relies on it being there
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
-          pnpm tauri build --bundles nsis
+          pnpm tauri build --bundles nsis --config '{"bundle":{"createUpdaterArtifacts":true}}'
           p=open-stomp-manager-${GITHUB_REF_NAME}-${{ matrix.name }}
           mkdir -p ../out/$p
           cp ../target/release/bundle/nsis/*-setup.exe ../out/$p-setup.exe
+          cp ../target/release/bundle/nsis/*-setup.exe.sig ../out/$p-setup.exe.sig
           cp ../target/release/open-stomp-manager.exe ../README.md ../CHANGELOG.md ../out/$p/
           (cd ../out && 7z a $p.zip $p && rm -r $p)
 
@@ -126,6 +145,24 @@ jobs:
           awk -v v="$v" '/^## \[/{p = index($0, "[" v "]") > 0; next} p' CHANGELOG.md > notes.md
           # a pre-release (vx.y.z-beta.n) needs no section of its own: fall back to [Unreleased]
           [[ -s notes.md || "$v" != *-* ]] || awk '/^## \[/{p = index($0, "[Unreleased]") > 0; next} p' CHANGELOG.md > notes.md
+      # what the in-app updater reads (releases/latest/download/latest.json, so stable releases only)
+      - name: Update manifest (latest.json)
+        run: |
+          p=open-stomp-manager-${GITHUB_REF_NAME}
+          url=https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}
+          mac=$p-macos-universal.app.tar.gz
+          win=$p-windows-x86_64-setup.exe
+          jq -n --arg version "${GITHUB_REF_NAME#v}" --rawfile notes notes.md \
+            --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg mac "$url/$mac" --rawfile mac_sig "dist/$mac.sig" \
+            --arg win "$url/$win" --rawfile win_sig "dist/$win.sig" \
+            '{version: $version, notes: $notes, pub_date: $date, platforms: {
+              "darwin-aarch64": {url: $mac, signature: ($mac_sig | rtrimstr("\n"))},
+              "darwin-x86_64": {url: $mac, signature: ($mac_sig | rtrimstr("\n"))},
+              "windows-x86_64": {url: $win, signature: ($win_sig | rtrimstr("\n"))}
+            }}' > dist/latest.json
+          rm dist/*.sig
+          jq . dist/latest.json
       - uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ contains(github.ref_name, '-') }}

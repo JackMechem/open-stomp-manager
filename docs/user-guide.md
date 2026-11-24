@@ -14,6 +14,7 @@ window. For installing see the [README](../README.md#install); for building from
 * [Saving](#saving)
 * [Tuner, looper and drums](#tuner-looper-and-drums)
 * [Device and system settings](#device-and-system-settings)
+* [Updates](#updates)
 * [Importing a NAM model](#importing-a-nam-model)
 * [Importing an IR](#importing-an-ir)
 * [Renaming a user slot](#renaming-a-user-slot)
@@ -182,6 +183,20 @@ The device card shows the product, firmware and app versions, and the pedal's gl
 
 Settings are written whole each time you change one, starting from the record the pedal sent, so values the app does
 not understand are kept.
+
+## Updates
+
+The app looks for a newer release each time it starts. **Check for updates** under the app version in the device card
+looks again.
+
+* **macOS, and Windows installed with the setup program:** the update downloads (a bar at the top of the page shows
+  it), installs and restarts the app. If an import, restore or export is running, it waits for that to finish first.
+* **Linux, the Windows zip, and Nix:** the bar says a newer version is out, and **Get it** opens its release page.
+  Install it the way you installed this one (for Nix, `nix flake update`).
+
+Updates come from the newest stable release; pre-releases are never offered. If the check fails at startup (no
+network, say), the app says nothing. If a check you started fails, the bar shows the error and a link to the
+releases.
 
 ## Importing a NAM model
 

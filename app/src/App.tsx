@@ -8,6 +8,7 @@ import { DrumCard, LooperCard, TunerCard } from "./components/Extras";
 import LogPanel from "./components/LogPanel";
 import PresetList from "./components/PresetList";
 import TopBar from "./components/TopBar";
+import UpdateBanner from "./components/UpdateBanner";
 import { send, useStore } from "./store";
 import { openDialog, setShowLog, useUi } from "./ui";
 import "./styles/layout.css";
@@ -58,6 +59,7 @@ export default function App() {
       <TopBar />
       <PresetList />
       <main className="main">
+        <UpdateBanner />
         <CurrentPreset />
         <Chain shown={shown} pinned={pinned} onPick={pick} />
         <Detail module={shown} pinned={pinned != null} onUnpin={() => setPinned(null)} />
