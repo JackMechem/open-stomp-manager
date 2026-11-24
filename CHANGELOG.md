@@ -7,7 +7,7 @@ to 0.2.0). The format follows
 
 ## [Unreleased]
 
-## [0.9.1] - 2026-11-19
+## [0.9.1] - 2026-11-24
 
 ### Added
 - **Export and import presets** (*Export…* / *Import…* under the preset list): save one preset, or a backup of the
