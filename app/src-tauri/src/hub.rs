@@ -58,6 +58,7 @@ pub enum Cmd {
     LooperButton { button: LoopButton },
     SetLooper { rec_level: Option<u8>, play_level: Option<u8>, sync: Option<bool>, ar_mode: Option<bool> },
     SetDrum { playing: Option<bool>, pattern: Option<u8>, level: Option<u8> },
+    SetTuner { on: bool },
     /// Change some system settings; the rest stay as read from the pedal.
     SetSettings {
         input_trim: Option<u8>,
@@ -402,6 +403,7 @@ impl Worker {
                     self.dev.send(host::cc(cc, v));
                 }
             }
+            Cmd::SetTuner { on } if editable => self.dev.set_tuner(on),
             Cmd::SetDrum { playing, pattern, level } if editable => {
                 let ccs = [playing.map(|on| (0x3F, on as u8)), pattern.map(|p| (0x40, p)), level.map(|v| (0x41, v))];
                 for (cc, v) in ccs.into_iter().flatten() {
@@ -487,6 +489,7 @@ impl Worker {
             | Cmd::LooperButton { .. }
             | Cmd::SetLooper { .. }
             | Cmd::SetDrum { .. }
+            | Cmd::SetTuner { .. }
             | Cmd::SetSettings { .. }
             | Cmd::RenameSlot { .. } => {}
         }

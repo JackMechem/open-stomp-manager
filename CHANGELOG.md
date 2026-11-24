@@ -18,9 +18,14 @@ to 0.2.0). The format follows
 - Exports read each user slot's model back from the pedal (the converted data the pedal plays; the official app
   can't do this), so a backup restores every NAM and IR slot exactly, whatever app imported it. The app also keeps
   the original file of every model it imports, and exports include it.
+- **Start / stop the tuner** from the Tuner card ([#4](https://github.com/JackMechem/open-stomp-manager/issues/4)).
+
+### Fixed
+- The tuner showed every note three semitones sharp (G as A#, E as G)
+  ([#5](https://github.com/JackMechem/open-stomp-manager/issues/5)).
 
 ### Changed
-- Built against open-stomp-lib 0.6.2 (reads user slots back from the pedal).
+- Built against open-stomp-lib 0.6.3 (reads user slots back from the pedal, tuner fixes).
 - README install notes: opening the unnotarized app on macOS 15 and newer (*Open Anyway* in Privacy & Security),
   and getting past Windows SmartScreen's warning for the unsigned app.
 

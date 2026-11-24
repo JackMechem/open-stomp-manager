@@ -264,6 +264,7 @@ export type Cmd =
   | { type: "looperButton"; button: "recPlayDub" | "stop" | "undoRedo" | "clear" }
   | { type: "setLooper"; recLevel?: number; playLevel?: number; sync?: boolean; arMode?: boolean }
   | { type: "setDrum"; playing?: boolean; pattern?: number; level?: number }
+  | { type: "setTuner"; on: boolean }
   | ({ type: "setSettings" } & Partial<Settings>)
   | { type: "renameSlot"; kind: SlotKind; slot: number; name: string }
   | {
