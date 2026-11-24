@@ -13,7 +13,7 @@ to 0.2.0). The format follows
   (after any import, restore or export in progress) and restarts. On Linux, the Windows zip and Nix it says a newer
   version is out and links to the release.
 
-## [0.9.1] - 2026-11-19
+## [0.9.1] - 2026-11-24
 
 ### Added
 - **Export and import presets** (*Export…* / *Import…* under the preset list): save one preset, or a backup of the
