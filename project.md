@@ -34,6 +34,10 @@ which this app depends on by path. The protocol cheat sheet, how it was recovere
 - [x] Import NAM model (0.6.0): background conversion with progress/cancel, optimised or official algorithm
 - [x] Import IR (0.7.0): optimised (default) or official conversion, upload to user IR slots
 - [x] Rename user AMP/IR slots (0.7.1): right-click a slot under User slots; changes only the name
+- [x] Export / import presets (`.ospreset`, unreleased): one preset or a whole-pedal backup with the NAM/IR models
+      (read back from the pedal: lib `upload::user_amp_read` / `user_ir_read`); import maps models by name and
+      asks for slots for the missing ones. Verified on the pedal (2026-11-19, USB): preset copy byte-exact, NAM/IR
+      converted and uploaded into slot 10 with the preset remapped, then P99 and slot 10 restored from a backup
 - [x] Bluetooth LE MIDI (0.8.0, lib 0.6.0): auto-connects with no pairing, prefers USB; imports work over BLE too
 - [x] Release channels: `stable` / `unstable` branches moved by `channels.yml`; pre-releases are `vX.Y.Z-beta.N`
       (`nix run github:JackMechem/open-stomp-manager/stable`)
@@ -41,7 +45,7 @@ which this app depends on by path. The protocol cheat sheet, how it was recovere
       (live edits, NAM/IR import into USER AMP/IR 10, rename); `tauri build` installers in release.yml; Nix package
       via cargo-tauri.hook + fetchPnpmDeps (bump the `pnpmDeps` hash when `app/pnpm-lock.yaml` changes)
 - [ ] Release it (0.9.0) once CI is green on GitHub (macOS/Windows bundles have only been built in CI config, not run)
-- [ ] Run preset/settings writes on hardware from the app
+- [ ] Run settings writes on hardware from the app (preset writes verified 2026-11-19 through preset import)
 - [ ] Captures for the library's open questions (`0x4A` loop mode, tuner control, preset unknown bytes, edit-buffer
       write; library docs/09)
 

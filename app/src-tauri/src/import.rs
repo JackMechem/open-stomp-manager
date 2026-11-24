@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 const STEPS: usize = 300;
 
 /// Which kind of user slot.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Kind {
     /// USER AMP 01–10: `.nam` models.
@@ -54,6 +54,9 @@ pub struct Job {
     pub slot: u8,
     pub name: String,
     pub optimised: bool,
+    pub normalise: bool,
+    /// The file being converted.
+    pub path: PathBuf,
     /// Convert only, never upload (`STOMP_DEBUG_IMPORT`).
     pub dry_run: bool,
     done: Arc<AtomicUsize>,
@@ -74,6 +77,16 @@ pub struct JobView {
     total: usize,
     /// Unix time in ms, so the frontend can show the elapsed time without updates from here.
     started_ms: u64,
+}
+
+impl JobView {
+    pub fn done(&self) -> usize {
+        self.done
+    }
+
+    pub fn total(&self) -> usize {
+        self.total
+    }
 }
 
 /// The slot name the official app would use: the file name without its extension (IRs: the first
@@ -135,9 +148,11 @@ impl Job {
         let name = slot_name(req.kind, &path);
         let (kind, optimised, normalise) = (req.kind, req.optimised, req.normalise);
         let (d, t, c) = (done.clone(), total.clone(), cancel.clone());
+        let file = path.clone();
         std::thread::Builder::new()
             .name("slot-import".into())
             .spawn(move || {
+                let path = file;
                 let result = convert_file(kind, &path, optimised, normalise, &mut |step, steps| {
                     d.store(step, Ordering::Relaxed);
                     t.store(steps, Ordering::Relaxed);
@@ -149,7 +164,7 @@ impl Job {
             })
             .expect("spawn the import thread");
         let started_ms = SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |d| d.as_millis() as u64);
-        Job { kind, slot: req.slot, name, optimised, dry_run, done, total, cancel, rx, started_ms }
+        Job { kind, slot: req.slot, name, optimised, normalise, path, dry_run, done, total, cancel, rx, started_ms }
     }
 
     pub fn cancel(&self) {

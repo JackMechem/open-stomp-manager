@@ -145,8 +145,9 @@ When you can edit, the preset header has two buttons:
 Saving sends the exact sequence the official app sends (name, preset record, then selecting the saved slot), and the
 saved slot becomes active.
 
-> Preset and settings **writes** match the official app byte for byte but have not yet been run on hardware from this
-> app. Back up your presets before relying on them.
+> Settings **writes** match the official app byte for byte but have not yet been run on hardware from this app.
+> Preset writes have (through preset import). Back up your presets before relying on them (**Export…** → *Everything*, see
+> [Exporting and importing presets](#exporting-and-importing-presets)).
 
 ## Tuner, looper and drums
 
@@ -219,6 +220,37 @@ Select it on the CAB block as **USER IR NN**.
 Hover a user AMP or IR slot under **User slots** and click its pencil. Only the name changes; the slot's sound stays
 exactly as it is. Names can be up to 16 characters, ASCII only. You need to be connected with Listen only off. The
 official app can't do this.
+
+## Exporting and importing presets
+
+**Export…** and **Import…** under the preset list save presets to a file (`.ospreset`) and put them back, on this
+pedal or another one, from any computer with Open Stomp Manager.
+
+To export one preset, hover it in the list and click its export button, or use **Export…** in the preset header.
+**Export…** under the list saves either one preset or **everything**: all 99 presets, every user AMP (NAM) and IR slot in use, and the
+system settings. Back up everything before trying new firmware, for instance. The file holds each preset's raw
+record, so settings the app doesn't understand yet are kept too.
+
+The dialog lists the user AMP and IR slots the file will include, and exporting reads each one's model data back from
+the pedal (about a second for all twenty over USB, longer over Bluetooth). That is the converted model the pedal
+plays, not the original `.nam` or WAV file (those never reach the pedal), so importing it puts the slot back exactly as
+it was, with no conversion. Models you import with Open Stomp also keep their original file (in the app's data
+folder), and exports include it. You need to be connected with Listen only off for the models to be read; otherwise
+they go in by name only and can only be used on a pedal that already has a slot with that name.
+
+**Import…** opens a file and shows what it holds:
+
+* **Presets**: a single preset goes to the slot you pick (it warns which preset it replaces). A backup lists every
+  preset, ticked; each goes back to its own number, replacing what's there.
+* **Models**: a model the pedal already has (a user slot with the same name) is used where it is. For the others, pick
+  the slot to import them into: by default their old slot if it's empty, else the first empty one (after new firmware,
+  everything goes back where it was). The presets are changed to point at wherever their models end up. **Don't
+  import** leaves a model out; presets that use it then play whatever is in that slot.
+* **System settings** (backups only): tick it to restore input trim, global EQ, wireless and loopback too.
+
+Importing converts any models the file has no converted copy of first (about a minute each for NAM; this part can be
+cancelled and nothing is written until it's done), then writes the models, the presets and the settings, and reads
+everything back from the pedal. You need to be connected with Listen only off.
 
 ## Activity log
 

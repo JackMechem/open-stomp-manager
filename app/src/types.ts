@@ -24,6 +24,9 @@ export interface PresetItem {
   label: string;
   /** null until the startup sync has read it. */
   name: string | null;
+  /** The user AMP / IR slot (0–9) it uses, if any. */
+  userAmp: number | null;
+  userIr: number | null;
 }
 
 export interface Presets {
@@ -133,6 +136,51 @@ export interface ImportState {
   outcome: { text: string; error: boolean } | null;
 }
 
+export interface RestoreState {
+  job: {
+    /** "converting" can be cancelled; "writing" runs to the end. */
+    stage: "converting" | "writing";
+    text: string;
+    done: number;
+    total: number;
+    startedMs: number;
+  } | null;
+  outcome: { text: string; error: boolean } | null;
+}
+
+/** What importing a preset file would do (backup.rs `Plan`, from `read_preset_file`). */
+export interface Plan {
+  path: string;
+  createdBy: string;
+  created: string;
+  presets: { index: number; name: string; models: number[] }[];
+  models: PlanModel[];
+  hasSettings: boolean;
+}
+
+export interface PlanModel {
+  kind: SlotKind;
+  /** The slot it was in when exported. */
+  slot: number;
+  name: string;
+  /** The file has the model itself, not just its name. */
+  hasData: boolean;
+  /** ...already converted, so it uploads without converting again. */
+  converted: boolean;
+  /** The pedal slot that already holds it (same name). */
+  found: number | null;
+  /** Where it goes by default; null leaves it out. */
+  target: number | null;
+}
+
+/** `export_presets` result. */
+export interface ExportResult {
+  presets: number;
+  models: number;
+  /** Models exported by name only. */
+  missing: string[];
+}
+
 export interface Catalog {
   /** [style, [[pattern value, name], …]] */
   drumStyles: [string, [number, string][]][];
@@ -151,6 +199,9 @@ export interface Sections {
   device?: DeviceInfo;
   log?: LogSummary;
   import?: ImportState;
+  restore?: RestoreState;
+  /** Replies received / expected while an export reads models from the pedal. */
+  export?: { done: number; total: number } | null;
   catalog?: Catalog;
 }
 
@@ -221,6 +272,12 @@ export type Cmd =
     }
   | { type: "cancelImport" }
   | { type: "clearImportOutcome" }
+  | {
+      type: "startRestore";
+      request: { path: string; presets: { entry: number; to: number }[]; models: (number | null)[]; settings: boolean };
+    }
+  | { type: "cancelRestore" }
+  | { type: "clearRestoreOutcome" }
   | { type: "setLogFilter"; filter: LogFilter }
   | { type: "clearLog" }
   | { type: "connect"; port: string }
