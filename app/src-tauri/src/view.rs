@@ -12,6 +12,7 @@ use serde::Serialize;
 use crate::backup;
 use crate::import::{self, JobView, Kind};
 use crate::log::Summary;
+use crate::update::UpdateView;
 
 /// Everything the hub knows that the views are built from.
 pub struct Inputs<'a> {
@@ -28,6 +29,7 @@ pub struct Inputs<'a> {
     pub restore: RestoreView,
     /// An export reading models from the pedal.
     pub export: Option<ExportView>,
+    pub update: &'a UpdateView,
     /// `STOMP_DEV` flags: dialogs and panels to open at startup (for screenshots).
     pub dev_flags: &'a [String],
 }
@@ -96,6 +98,7 @@ pub fn sections(i: &Inputs) -> Vec<(&'static str, serde_json::Value)> {
         ("import", json(serde_json::to_value(&i.import))),
         ("restore", json(serde_json::to_value(&i.restore))),
         ("export", json(serde_json::to_value(&i.export))),
+        ("update", json(serde_json::to_value(i.update))),
         ("catalog", json(serde_json::to_value(catalog(i.dev_flags)))),
     ]
 }

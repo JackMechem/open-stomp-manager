@@ -90,6 +90,10 @@ using it.
 | `STOMP_DEV=log,import,import-ir,save,rename` | Open the activity log or that dialog at startup |
 | `STOMP_DEV=devtools` | Open the web inspector at startup (debug builds) |
 | `STOMP_DEBUG_IMPORT=<file.nam or .wav>` | Convert the file at startup into USER AMP/IR 10, **without uploading it** |
+| `STOMP_UPDATE_URL=<latest.json URL>` | Check this update manifest instead of the newest release's (debug builds; `http` allowed) |
+
+Debug builds don't check for updates at startup, and never install one: **Check for updates** only reports what it
+finds.
 
 ### Driving the app from scripts (Linux)
 
@@ -156,6 +160,18 @@ warning, and the site catches up at its daily rebuild.
 3. Commit, then `git tag vx.y.z && git push --tags`. `.github/workflows/release.yml` runs `tauri build` on Linux,
    macOS and Windows and publishes a GitHub release with the changelog section as its notes. The downloads are named
    `open-stomp-manager-vx.y.z-<platform>.<ext>`.
+
+**Updates.** The app's updater (`app/src-tauri/src/update.rs`) reads `latest.json` from the newest stable release.
+The release workflow writes it: the version, the changelog notes, and for macOS and Windows a signed update bundle
+(`.app.tar.gz`, and the NSIS `-setup.exe`). The bundles are signed with the updater key, whose public half is
+`plugins.updater.pubkey` in `tauri.conf.json`. The release needs two repository secrets:
+
+* `TAURI_SIGNING_PRIVATE_KEY`: the contents of the private key file (`tauri signer generate` makes the pair).
+* `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`: its password (empty for a key made without one).
+
+Keep a backup of the private key. Without it, no copy already installed will accept another update: a new key
+means a new `pubkey`, which only the copies built with it trust. `createUpdaterArtifacts` is switched on only in the
+release workflow, so other builds (CI, Nix, local `tauri build`) don't need the key.
 
 A pre-release is a tag with a suffix, `vx.y.z-beta.n` (with that version in `Cargo.toml`). It needs no README or
 CHANGELOG changes (its notes are the `[Unreleased]` section) and is published as a GitHub pre-release. If it needs a

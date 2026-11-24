@@ -26,6 +26,7 @@ use tauri::{AppHandle, Emitter};
 use crate::backup::{self, ConvertedData, Library, SlotModel};
 use crate::import::{self, Job, Kind};
 use crate::log::{FilterArgs, Log, RowKind};
+use crate::update::{self, UpdateView};
 use crate::view::{self, ExportView, ImportView, Inputs, Outcome, RestoreJobView, RestoreView};
 
 /// After a preset change from the pedal, its messages are held until it has been quiet this long,
@@ -85,6 +86,10 @@ pub enum Cmd {
     /// Replay a capture log; without a path, the default one (`replayPath` in `conn`).
     Replay { path: Option<String>, speed: Option<f32> },
     StopReplay,
+    CheckUpdates,
+    /// Open the release page the `update` section links to.
+    OpenRelease,
+    DismissUpdate,
 }
 
 #[derive(Deserialize, Debug, Clone, Copy)]
@@ -126,6 +131,7 @@ enum Msg {
     Wake,
     Cmd(Cmd),
     Call(Call, Sender<Result<Value, String>>),
+    Update(update::Event),
 }
 
 /// Something the frontend asks for and waits on (the preset-file Tauri commands).
@@ -204,6 +210,8 @@ impl Hub {
             restore: None,
             restore_outcome: None,
             export: None,
+            update: UpdateView::Idle,
+            pending_update: None,
             activity: vec![],
             received: 0,
             sent: 0,
@@ -214,6 +222,10 @@ impl Hub {
         if let Ok(path) = std::env::var("STOMP_DEBUG_IMPORT") {
             let kind = if path.to_ascii_lowercase().ends_with(".nam") { Kind::Amp } else { Kind::Ir };
             worker.start_import(import::Request { kind, slot: 9, path, optimised: true, normalise: true }, true);
+        }
+        // debug builds only check when asked (and never install)
+        if !cfg!(debug_assertions) {
+            worker.check_updates(false);
         }
         thread::Builder::new()
             .name("open-stomp-hub".into())
@@ -277,6 +289,9 @@ struct Worker {
     restore_outcome: Option<Outcome>,
     /// An export waiting for its models to be read from the pedal.
     export: Option<Export>,
+    update: UpdateView,
+    /// Downloaded, waiting for the import / restore / export in progress to finish.
+    pending_update: Option<(Box<tauri_plugin_updater::Update>, Vec<u8>)>,
     activity: Vec<Activity>,
     /// Messages from / to the pedal since the last event.
     received: u32,
@@ -302,6 +317,16 @@ impl Worker {
                     self.dirty = true;
                 }
                 Ok(Msg::Wake) => self.dirty |= self.job.is_some() || self.restore.is_some(),
+                Ok(Msg::Update(e)) => {
+                    match e {
+                        update::Event::View(v) => self.update = v,
+                        update::Event::Ready(u, bytes) => {
+                            self.update = UpdateView::Ready { version: u.version.clone() };
+                            self.pending_update = Some((u, bytes));
+                        }
+                    }
+                    self.dirty = true;
+                }
                 Err(RecvTimeoutError::Timeout) => {}
                 Err(RecvTimeoutError::Disconnected) => return,
             }
@@ -310,6 +335,7 @@ impl Worker {
             self.finish_import();
             self.step_restore();
             self.step_export();
+            self.install_update();
             if self.dirty && self.last_emit.elapsed() >= FRAME {
                 self.emit();
             }
@@ -338,6 +364,7 @@ impl Worker {
             import: ImportView { job: self.job.as_ref().map(Job::view), outcome: self.outcome.clone() },
             restore: RestoreView { job: self.restore.as_ref().map(Restore::view), outcome: self.restore_outcome.clone() },
             export: self.export.as_ref().map(|e| ExportView { done: e.done, total: e.total }),
+            update: &self.update,
             dev_flags: &self.dev_flags,
         }
     }
@@ -484,6 +511,14 @@ impl Worker {
                 }
             }
             Cmd::StopReplay => self.dev.stop_replay(),
+            Cmd::CheckUpdates if !self.update.busy() => self.check_updates(true),
+            Cmd::OpenRelease => {
+                if let Some(url) = self.update.url() {
+                    update::open(url);
+                }
+            }
+            Cmd::DismissUpdate if !self.update.busy() => self.update = UpdateView::Idle,
+            Cmd::CheckUpdates | Cmd::DismissUpdate => {}
             // edits while disconnected or listen-only: the UI disables them, so just drop them
             Cmd::SetVolume { .. }
             | Cmd::LooperButton { .. }
@@ -505,6 +540,25 @@ impl Worker {
     }
 
     /// Upload a finished conversion, and say how it went.
+    fn check_updates(&mut self, manual: bool) {
+        let tx = self.tx.clone();
+        update::check(self.app.clone(), manual, move |e| {
+            let _ = tx.send(Msg::Update(e));
+        });
+    }
+
+    /// Install a downloaded update once nothing is talking to the pedal for the user.
+    fn install_update(&mut self) {
+        if self.job.is_some() || self.restore.is_some() || self.export.is_some() {
+            return;
+        }
+        let Some((u, bytes)) = self.pending_update.take() else { return };
+        self.update = UpdateView::Installing { version: u.version.clone() };
+        self.emit();
+        self.update = update::install(&self.app, &u, &bytes);
+        self.dirty = true;
+    }
+
     fn finish_import(&mut self) {
         let Some(result) = self.job.as_ref().and_then(Job::finished) else { return };
         let Some(job) = self.job.take() else { return };

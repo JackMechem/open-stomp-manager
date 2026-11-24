@@ -202,8 +202,22 @@ export interface Sections {
   restore?: RestoreState;
   /** Replies received / expected while an export reads models from the pedal. */
   export?: { done: number; total: number } | null;
+  update?: UpdateState;
   catalog?: Catalog;
 }
+
+/** The update check (update.rs). `manual`: the user asked, so even "nothing new" is shown. */
+export type UpdateState =
+  | { kind: "idle" }
+  | { kind: "checking"; manual: boolean }
+  | { kind: "upToDate"; manual: boolean }
+  /** Newer, but this copy (Linux, portable, Nix) is updated by hand. */
+  | { kind: "available"; version: string; url: string }
+  | { kind: "downloading"; version: string; percent: number | null }
+  /** Downloaded; installs once the import / restore / export in progress is done. */
+  | { kind: "ready"; version: string }
+  | { kind: "installing"; version: string }
+  | { kind: "failed"; message: string; url: string };
 
 export interface LogRow {
   id: number;
@@ -286,4 +300,7 @@ export type Cmd =
   | { type: "resync" }
   | { type: "setListenOnly"; on: boolean }
   | { type: "replay"; path?: string; speed?: number }
-  | { type: "stopReplay" };
+  | { type: "stopReplay" }
+  | { type: "checkUpdates" }
+  | { type: "openRelease" }
+  | { type: "dismissUpdate" };

@@ -7,6 +7,12 @@ to 0.2.0). The format follows
 
 ## [Unreleased]
 
+### Added
+- **Updates**: the app checks for a newer release when it starts, and with **Check for updates** in the device
+  card. On macOS, and on Windows when installed with the setup program, it downloads the update, installs it
+  (after any import, restore or export in progress) and restarts. On Linux, the Windows zip and Nix it says a newer
+  version is out and links to the release.
+
 ## [0.9.1] - 2026-11-19
 
 ### Added

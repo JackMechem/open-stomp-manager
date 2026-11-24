@@ -12,6 +12,7 @@ mod hub;
 mod import;
 mod log;
 mod logbook;
+mod update;
 mod view;
 
 use std::path::PathBuf;
@@ -104,6 +105,7 @@ fn main() {
     }
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(move |app| {
             // `STOMP_DEV=devtools` opens the web inspector (debug builds; or right-click → Inspect)
             #[cfg(debug_assertions)]

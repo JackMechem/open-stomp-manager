@@ -1,0 +1,60 @@
+.update-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--stroke));
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--accent) 10%, var(--card));
+  color: var(--text);
+  font-size: 13px;
+}
+
+.update-banner > svg {
+  flex: none;
+  color: var(--accent);
+}
+
+.update-failed {
+  border-color: color-mix(in srgb, var(--bad) 45%, var(--stroke));
+  background: color-mix(in srgb, var(--bad) 10%, var(--card));
+}
+
+.update-failed > svg {
+  color: var(--bad);
+}
+
+.update-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.update-bar {
+  flex: none;
+  width: 120px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--card-hi);
+  overflow: hidden;
+}
+
+.update-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.2s;
+}
+
+.update-close {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: var(--text-dim);
+}
+
+.update-close:hover {
+  background: var(--card-hi);
+  color: var(--text);
+}
