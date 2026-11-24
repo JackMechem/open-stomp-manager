@@ -37,11 +37,11 @@
     "open-stomp-lib": {
       "flake": false,
       "locked": {
-        "lastModified": 1795118883,
-        "narHash": "sha256-+NEZA95XnECsg5aSB+hbp4PJzzJBU/LMslQ91gIz3xM=",
+        "lastModified": 1795546890,
+        "narHash": "sha256-71OenWO3QRf7Z5Y7buJ0MshcdYqGFHnR22MEJtaTSsw=",
         "owner": "JackMechem",
         "repo": "open-stomp-lib",
-        "rev": "7c90cbc9b84d068494df8268d08574c4dcab8b0d",
+        "rev": "0e1e200f2d017ed55b72a44b486270b639da0539",
         "type": "github"
       },
       "original": {
